@@ -91,10 +91,10 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2)):
     Construct a dynamic Qiskit circuit for the M-sender, N-receiver protocol.
 
     The circuit performs:
-      1) shared resource-state preparation |Psi^(M,N)>,
-      2) sender local phase unitaries from `thetas`,
-      3) sender Fourier-basis measurements,
-      4) classical feedforward correction on receiver qubits.
+    1) shared resource-state preparation |Psi^(M,N)>,
+    2) sender local phase unitaries from `thetas`,
+    3) sender Fourier-basis measurements,
+    4) classical feedforward correction on receiver qubits.
 
     Parameters
     ----------
@@ -124,7 +124,7 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2)):
     qc = QuantumCircuit(senders, receivers, c_senders, name="MN_broadcast")
 
     init_state = _build_initial_statevector(M=M, N=N, alpha=alphas)
-    qc.initialize(init_state, list(senders) + list(receivers))
+    qc.initialize(init_state, list(senders) + list(receivers)) # type: ignore
 
     for j, theta in enumerate(thetas):
         qslice = [senders[j * nq + b] for b in range(nq)]
