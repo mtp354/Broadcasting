@@ -1,6 +1,6 @@
 import itertools
 from math import ceil, log2
-
+from qiskit.quantum_info import SparsePauliOp
 import numpy as np
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.circuit.library import UnitaryGate
@@ -84,6 +84,55 @@ def _fourier_measurement_rotation(N: int, nq: int) -> UnitaryGate:
     U = np.eye(dim, dtype=complex)
     U[:d, :d] = F.conj().T
     return UnitaryGate(U, label="Fdg")
+
+
+def add_fidelity(circuit, N, thetas):
+    # TODO: Only add this to the qubits for the receivers, no need to measure sender qubits.
+    """
+    Append basis-rotation gates and measurements so that, for each of the first N qubits,
+    P(measurement = 0) equals the fidelity to the target XY-plane state whose angle is
+
+        phi = sum(thetas) mod 2*pi.
+
+    Assumptions:
+    - The output qubits whose fidelities you want are qubits 0, 1, ..., N-1.
+    - These qubits are in their final output state at the point this function is called.
+    - They have not already been irreversibly measured/reset in a way that destroys the final state you want to test.
+
+    Mutates:
+    - `circuit` in place.
+
+    Returns:
+    circuit   : the same circuit object, after modification
+    reg_name  : name of the new classical register holding the fidelity measurements
+    phi       : target-state angle in [0, 2*pi)
+    """
+    if N < 1:
+        raise ValueError("N must be at least 1.")
+    if N > circuit.num_qubits:
+        raise ValueError(f"N={N} exceeds circuit.num_qubits={circuit.num_qubits}.")
+
+    phi = float(np.mod(np.sum(thetas), 2 * np.pi))
+
+    # Create a unique classical register name.
+    existing_names = {creg.name for creg in circuit.cregs}
+    base_name = "fid"
+    reg_name = base_name
+    k = 0
+    while reg_name in existing_names:
+        k += 1
+        reg_name = f"{base_name}_{k}"
+
+    fid_reg = ClassicalRegister(N, reg_name)
+    circuit.add_register(fid_reg)
+
+    # Rotate each qubit so that the target state maps to |0>, then measure.
+    for i in range(N):
+        circuit.rz(-phi, i)
+        circuit.h(i)
+        circuit.measure(i, fid_reg[i])
+
+    return circuit, reg_name, phi
 
 
 def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2)):
