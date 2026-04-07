@@ -2,6 +2,7 @@ import itertools
 from math import ceil, log2
 import numpy as np
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
+from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate
 
 
@@ -150,7 +151,7 @@ def add_fidelity(circuit, N, thetas, receiver_qubits=None):
     return circuit, reg_name, phi
 
 
-def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2)):
+def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2), tau=None, delay_unit="dt"):
     """
     Construct a dynamic Qiskit circuit for the M-sender, N-receiver protocol.
 
@@ -170,6 +171,12 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2)):
         Length-M list/array of sender angles.
     alphas : complex, optional
         Alpha parameter from the protocol (default 1/sqrt(2)).
+    tau : float | Parameter | None, optional
+        Delay duration inserted after state preparation and before sender
+        unitaries. If None, the circuit is created with a symbolic parameter
+        `tau` so it can be swept over a range of values.
+    delay_unit : str, optional
+        Unit used by Qiskit's delay instruction (default "dt").
 
     Returns
     -------
@@ -189,6 +196,10 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2)):
 
     init_state = _build_initial_statevector(M=M, N=N, alpha=alphas)
     qc.initialize(init_state, list(senders) + list(receivers)) # type: ignore
+
+    tau_param = Parameter("tau") if tau is None else tau
+    for qb in list(senders) + list(receivers):
+        qc.delay(tau_param, qb, unit=delay_unit)
 
     for j, theta in enumerate(thetas):
         qslice = [senders[j * nq + b] for b in range(nq)]
