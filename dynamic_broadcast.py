@@ -98,7 +98,7 @@ def add_fidelity(circuit, N, thetas, receiver_qubits=None):
 
     Assumptions:
     - By default, receivers are assumed to be the last N qubits in the circuit.
-      This matches `generate_qiskit_circuit` where receiver register comes after senders.
+    This matches `generate_qiskit_circuit` where receiver register comes after senders.
     - These qubits are in their final output state at the point this function is called.
     - They have not already been irreversibly measured/reset in a way that destroys the final state you want to test.
 
