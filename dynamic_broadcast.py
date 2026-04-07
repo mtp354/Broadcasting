@@ -1,6 +1,5 @@
 import itertools
 from math import ceil, log2
-from qiskit.quantum_info import SparsePauliOp
 import numpy as np
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.circuit.library import UnitaryGate
@@ -86,16 +85,16 @@ def _fourier_measurement_rotation(N: int, nq: int) -> UnitaryGate:
     return UnitaryGate(U, label="Fdg")
 
 
-def add_fidelity(circuit, N, thetas):
-    # TODO: Only add this to the qubits for the receivers, no need to measure sender qubits.
+def add_fidelity(circuit, N, thetas, receiver_qubits=None):
     """
-    Append basis-rotation gates and measurements so that, for each of the first N qubits,
+    Append basis-rotation gates and measurements so that, for each receiver qubit,
     P(measurement = 0) equals the fidelity to the target XY-plane state whose angle is
 
         phi = sum(thetas) mod 2*pi.
 
     Assumptions:
-    - The output qubits whose fidelities you want are qubits 0, 1, ..., N-1.
+    - By default, receivers are assumed to be the last N qubits in the circuit.
+      This matches `generate_qiskit_circuit` where receiver register comes after senders.
     - These qubits are in their final output state at the point this function is called.
     - They have not already been irreversibly measured/reset in a way that destroys the final state you want to test.
 
@@ -112,6 +111,18 @@ def add_fidelity(circuit, N, thetas):
     if N > circuit.num_qubits:
         raise ValueError(f"N={N} exceeds circuit.num_qubits={circuit.num_qubits}.")
 
+    if receiver_qubits is None:
+        receiver_qubits = list(range(circuit.num_qubits - N, circuit.num_qubits))
+    else:
+        receiver_qubits = list(receiver_qubits)
+
+    if len(receiver_qubits) != N:
+        raise ValueError(
+            f"receiver_qubits length ({len(receiver_qubits)}) must match N ({N})."
+        )
+    if any(q < 0 or q >= circuit.num_qubits for q in receiver_qubits):
+        raise ValueError("receiver_qubits contains an out-of-range qubit index.")
+
     phi = float(np.mod(np.sum(thetas), 2 * np.pi))
 
     # Create a unique classical register name.
@@ -127,10 +138,10 @@ def add_fidelity(circuit, N, thetas):
     circuit.add_register(fid_reg)
 
     # Rotate each qubit so that the target state maps to |0>, then measure.
-    for i in range(N):
-        circuit.rz(-phi, i)
-        circuit.h(i)
-        circuit.measure(i, fid_reg[i])
+    for i, qb in enumerate(receiver_qubits):
+        circuit.rz(-phi, qb)
+        circuit.h(qb)
+        circuit.measure(qb, fid_reg[i])
 
     return circuit, reg_name, phi
 
