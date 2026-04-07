@@ -198,7 +198,7 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2), tau=None, delay
     qc.initialize(init_state, list(senders) + list(receivers)) # type: ignore
 
     tau_param = Parameter("tau") if tau is None else tau
-    for qb in receivers:
+    for qb in list(senders) + list(receivers):
         qc.delay(tau_param, qb, unit=delay_unit)
 
     for j, theta in enumerate(thetas):
