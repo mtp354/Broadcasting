@@ -95,20 +95,20 @@ def _build_initial_statevector_qec_513(M: int, N: int, alpha: complex) -> np.nda
     """Build |Psi^(M,N)> with each receiver qubit encoded into a [[5,1,3]] block."""
     logical = _build_initial_statevector(M=M, N=N, alpha=alpha)
     v0, v1 = _five_qubit_logical_basis()
-    nq = _sender_encoding_qubits(N)
-    n_sender_qubits = M * nq
-    psi = logical.reshape((2,) * n_sender_qubits + (2,) * N)
-    E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
-    E[..., 0] = v0.reshape(2, 2, 2, 2, 2)
-    E[..., 1] = v1.reshape(2, 2, 2, 2, 2)
+    d = N + 1
+    psi = logical.reshape((2,) * N + (d,) * M)
 
     for ell in range(N):
-        ax = n_sender_qubits + 5 * ell
+        ax = N - 1 - ell
         R = psi.ndim
+        E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
+        E[..., 0] = v0.reshape(2, 2, 2, 2, 2)
+        E[..., 1] = v1.reshape(2, 2, 2, 2, 2)
         psi = np.tensordot(E, psi, axes=([5], [ax]))
         perm = list(range(5, 5 + ax)) + list(range(0, 5)) + list(range(5 + ax, 5 + (R - 1)))
         psi = np.transpose(psi, perm)
 
+    psi = np.transpose(psi, list(range(5 * N, 5 * N + M)) + list(range(0, 5 * N)))
     encoded = psi.reshape(-1)
     return encoded / np.linalg.norm(encoded)
 
