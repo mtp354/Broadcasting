@@ -90,7 +90,11 @@ def add_fidelity(circuit, N, thetas, receiver_qubits=None):
     Append basis-rotation gates and measurements so that, for each receiver qubit,
     P(measurement = 0) equals the fidelity to the target XY-plane state whose angle is
 
-        phi = sum(thetas) mod 2*pi.
+        phi = -2 * sum(thetas) mod 2*pi.
+
+    This convention matches the reference notebook target
+    |psi_target> = (exp(i*theta_total)|0> + exp(-i*theta_total)|1>) / sqrt(2)
+    when alpha = 1/sqrt(2), beta = 1/sqrt(2), theta_total = sum(thetas).
 
     Assumptions:
     - By default, receivers are assumed to be the last N qubits in the circuit.
@@ -123,7 +127,7 @@ def add_fidelity(circuit, N, thetas, receiver_qubits=None):
     if any(q < 0 or q >= circuit.num_qubits for q in receiver_qubits):
         raise ValueError("receiver_qubits contains an out-of-range qubit index.")
 
-    phi = float(np.mod(np.sum(thetas), 2 * np.pi))
+    phi = float(np.mod(-2.0 * np.sum(thetas), 2 * np.pi))
 
     # Create a unique classical register name.
     existing_names = {creg.name for creg in circuit.cregs}
