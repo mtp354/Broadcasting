@@ -56,6 +56,114 @@ def _build_initial_statevector(M: int, N: int, alpha: complex) -> np.ndarray:
     return state / norm
 
 
+def _five_qubit_logical_basis() -> tuple[np.ndarray, np.ndarray]:
+    """Return |0_L>, |1_L> for the [[5,1,3]] code (computational basis order)."""
+    v0 = np.zeros(32, dtype=complex)
+    plus_terms = ["00000", "10010", "01001", "10100", "01010", "00101"]
+    minus_terms = [
+        "11011",
+        "00110",
+        "11000",
+        "11101",
+        "00011",
+        "11110",
+        "01111",
+        "10001",
+        "01100",
+        "10111",
+    ]
+
+    def bits_to_index(bitstr: str) -> int:
+        idx = 0
+        for ch in bitstr:
+            idx = (idx << 1) | int(ch)
+        return idx
+
+    for s in plus_terms:
+        v0[bits_to_index(s)] += 0.25
+    for s in minus_terms:
+        v0[bits_to_index(s)] -= 0.25
+
+    v1 = np.zeros(32, dtype=complex)
+    for idx, amp in enumerate(v0):
+        if amp != 0:
+            v1[idx ^ 0b11111] = amp
+    return v0, v1
+
+
+def _build_initial_statevector_qec_513(M: int, N: int, alpha: complex) -> np.ndarray:
+    """Build |Psi^(M,N)> with each receiver qubit encoded into a [[5,1,3]] block."""
+    logical = _build_initial_statevector(M=M, N=N, alpha=alpha)
+    v0, v1 = _five_qubit_logical_basis()
+    d = N + 1
+    psi = logical.reshape((2,) * N + (d,) * M)
+
+    for ell in range(N):
+        ax = N - 1 - ell
+        R = psi.ndim
+        E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
+        E[..., 0] = v0.reshape(2, 2, 2, 2, 2)
+        E[..., 1] = v1.reshape(2, 2, 2, 2, 2)
+        psi = np.tensordot(E, psi, axes=([5], [ax]))
+        perm = list(range(5, 5 + ax)) + list(range(0, 5)) + list(range(5 + ax, 5 + (R - 1)))
+        psi = np.transpose(psi, perm)
+
+    psi = np.transpose(psi, list(range(5 * N, 5 * N + M)) + list(range(0, 5 * N)))
+    encoded = psi.reshape(-1)
+    return encoded / np.linalg.norm(encoded)
+
+
+def _five_qubit_decode_gate() -> UnitaryGate:
+    """Unitary U such that U|0_L>=|00000>, U|1_L>=|10000|."""
+    v0, v1 = _five_qubit_logical_basis()
+    basis = np.eye(32, dtype=complex)
+    basis[:, 0] = v0
+    basis[:, 16] = v1
+    q, _ = np.linalg.qr(basis)
+    U = q.conj().T
+    return UnitaryGate(U, label="dec513")
+
+
+def _five_qubit_syndrome_corrections() -> dict[int, tuple[str, int] | None]:
+    """Map 4-bit syndrome value to correction (Pauli, qubit index), or None for identity."""
+    I2 = np.eye(2, dtype=complex)
+    X = np.array([[0, 1], [1, 0]], dtype=complex)
+    Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+    Z = np.array([[1, 0], [0, -1]], dtype=complex)
+    pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
+    g_labels = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
+
+    def kron_all(mats):
+        out = mats[0]
+        for m in mats[1:]:
+            out = np.kron(out, m)
+        return out
+
+    G = [kron_all([pauli_dict[c] for c in lbl]) for lbl in g_labels]
+
+    def syndrome_of(E):
+        bits = []
+        for g in G:
+            comm = E @ g - g @ E
+            anticomm = E @ g + g @ E
+            if np.linalg.norm(comm) < 1e-8:
+                bits.append("0")
+            elif np.linalg.norm(anticomm) < 1e-8:
+                bits.append("1")
+            else:
+                raise RuntimeError("Syndrome detection failed.")
+        return int("".join(bits), 2)
+
+    corr: dict[int, tuple[str, int] | None] = {0: None}
+    for q in range(5):
+        for p in ("X", "Y", "Z"):
+            mats = [I2] * 5
+            mats[q] = pauli_dict[p]
+            s = syndrome_of(kron_all(mats))
+            corr[s] = (p, q)
+    return corr
+
+
 def _sender_phase_gate(theta: float, N: int, nq: int) -> UnitaryGate:
     """Diagonal gate implementing U_a(theta)|k> = exp(i(2k-N)theta)|k> for k=0..N."""
     dim = 2**nq
@@ -117,7 +225,11 @@ def add_fidelity(circuit, N, thetas, receiver_qubits=None):
         raise ValueError(f"N={N} exceeds circuit.num_qubits={circuit.num_qubits}.")
 
     if receiver_qubits is None:
-        receiver_qubits = list(range(circuit.num_qubits - N, circuit.num_qubits))
+        metadata = getattr(circuit, "metadata", None) or {}
+        receiver_qubits = metadata.get(
+            "receiver_output_qubits",
+            list(range(circuit.num_qubits - N, circuit.num_qubits)),
+        )
     else:
         receiver_qubits = list(receiver_qubits)
 
@@ -151,7 +263,15 @@ def add_fidelity(circuit, N, thetas, receiver_qubits=None):
     return circuit, reg_name, phi
 
 
-def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2), tau=None, delay_unit="dt"):
+def generate_qiskit_circuit(
+    M,
+    N,
+    thetas,
+    alphas=1 / np.sqrt(2),
+    tau=None,
+    delay_unit="dt",
+    use_receiver_qec_513=False,
+):
     """
     Construct a dynamic Qiskit circuit for the M-sender, N-receiver protocol.
 
@@ -188,18 +308,71 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2), tau=None, delay
 
     nq = _sender_encoding_qubits(N)
     n_sender_qubits = M * nq
+    n_receiver_physical = 5 * N if use_receiver_qec_513 else N
 
     senders = QuantumRegister(n_sender_qubits, "a")
-    receivers = QuantumRegister(N, "r")
+    receivers = QuantumRegister(n_receiver_physical, "r")
     c_senders = ClassicalRegister(n_sender_qubits, "m")
     qc = QuantumCircuit(senders, receivers, c_senders, name="MN_broadcast")
 
-    init_state = _build_initial_statevector(M=M, N=N, alpha=alphas)
-    qc.initialize(init_state, list(senders) + list(receivers)) # type: ignore
+    init_state = (
+        _build_initial_statevector_qec_513(M=M, N=N, alpha=alphas)
+        if use_receiver_qec_513
+        else _build_initial_statevector(M=M, N=N, alpha=alphas)
+    )
+    qc.initialize(init_state, list(senders) + list(receivers))  # type: ignore
 
     tau_param = Parameter("tau") if tau is None else tau
     for qb in receivers:
         qc.delay(tau_param, qb, unit=delay_unit)
+
+    active_receivers = list(receivers)
+    if use_receiver_qec_513:
+        anc = QuantumRegister(4, "syn")
+        qc.add_register(anc)
+        corrections = _five_qubit_syndrome_corrections()
+        decode_gate = _five_qubit_decode_gate()
+
+        stabilizers = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
+        for ell in range(N):
+            syn = ClassicalRegister(4, f"s{ell}")
+            qc.add_register(syn)
+            block = [receivers[5 * ell + t] for t in range(5)]
+
+            for sid, stab in enumerate(stabilizers):
+                qc.reset(anc[sid])
+                for qb, p in zip(block, stab):
+                    if p == "X":
+                        qc.h(qb)
+                        qc.cx(qb, anc[sid])
+                        qc.h(qb)
+                    elif p == "Y":
+                        qc.sdg(qb)
+                        qc.h(qb)
+                        qc.cx(qb, anc[sid])
+                        qc.h(qb)
+                        qc.s(qb)
+                    elif p == "Z":
+                        qc.cx(qb, anc[sid])
+                qc.measure(anc[sid], syn[sid])
+
+            for syndrome_value, correction in corrections.items():
+                if correction is None:
+                    continue
+                pauli, qidx = correction
+                with qc.if_test((syn, syndrome_value)):
+                    if pauli == "X":
+                        qc.x(block[qidx])
+                    elif pauli == "Y":
+                        qc.y(block[qidx])
+                    elif pauli == "Z":
+                        qc.z(block[qidx])
+
+            qc.append(decode_gate, block)
+
+        active_receivers = [receivers[5 * ell] for ell in range(N)]
+    qc.metadata = qc.metadata or {}
+    qc.metadata["receiver_output_qubits"] = [qc.find_bit(qb).index for qb in active_receivers]
 
     for j, theta in enumerate(thetas):
         qslice = [senders[j * nq + b] for b in range(nq)]
@@ -218,7 +391,7 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2), tau=None, delay
         packed = _packed_sender_value(outcomes, nq)
 
         with qc.if_test((c_senders, packed)):
-            for qb in receivers:
+            for qb in active_receivers:
                 qc.p(-phase, qb)
 
     return qc
