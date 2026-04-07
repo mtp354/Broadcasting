@@ -92,24 +92,47 @@ def _five_qubit_logical_basis() -> tuple[np.ndarray, np.ndarray]:
 
 
 def _build_initial_statevector_qec_513(M: int, N: int, alpha: complex) -> np.ndarray:
-    """Build |Psi^(M,N)> with each receiver qubit encoded into a [[5,1,3]] block."""
+    """
+    Build |Psi^(M,N)> with each receiver qubit encoded into a [[5,1,3]] block.
+
+    Important ordering convention (matches generate_qiskit_circuit):
+    - Sender *qubits* stay unchanged and remain first.
+    - Receiver logical qubits are encoded one-by-one into 5 physical qubits.
+    """
     logical = _build_initial_statevector(M=M, N=N, alpha=alpha)
     v0, v1 = _five_qubit_logical_basis()
-    d = N + 1
-    psi = logical.reshape((2,) * N + (d,) * M)
+    nq = _sender_encoding_qubits(N)
+    n_sender_qubits = M * nq
 
+    expected_dim = 2 ** (n_sender_qubits + N)
+    if logical.size != expected_dim:
+        raise ValueError(
+            f"Logical state dimension mismatch: got {logical.size}, expected {expected_dim}."
+        )
+
+    # Encoding tensor E[b1,b2,b3,b4,b5,q], where q is one logical receiver qubit.
+    E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
+    E[..., 0] = v0.reshape(2, 2, 2, 2, 2)
+    E[..., 1] = v1.reshape(2, 2, 2, 2, 2)
+
+    # Tensor axes: sender qubits first, then receiver logical qubits.
+    psi = logical.reshape((2,) * (n_sender_qubits + N))
+
+    # Encode receiver qubits left-to-right, preserving sender qubits exactly.
     for ell in range(N):
-        ax = N - 1 - ell
+        ax = n_sender_qubits + 5 * ell
         R = psi.ndim
-        E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
-        E[..., 0] = v0.reshape(2, 2, 2, 2, 2)
-        E[..., 1] = v1.reshape(2, 2, 2, 2, 2)
         psi = np.tensordot(E, psi, axes=([5], [ax]))
         perm = list(range(5, 5 + ax)) + list(range(0, 5)) + list(range(5 + ax, 5 + (R - 1)))
         psi = np.transpose(psi, perm)
 
-    psi = np.transpose(psi, list(range(5 * N, 5 * N + M)) + list(range(0, 5 * N)))
     encoded = psi.reshape(-1)
+    expected_encoded_dim = 2 ** (n_sender_qubits + 5 * N)
+    if encoded.size != expected_encoded_dim:
+        raise RuntimeError(
+            f"Encoded state dimension mismatch: got {encoded.size}, expected {expected_encoded_dim}."
+        )
+
     return encoded / np.linalg.norm(encoded)
 
 
