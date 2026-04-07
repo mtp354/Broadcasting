@@ -175,7 +175,12 @@ def _five_qubit_syndrome_corrections() -> dict[int, tuple[str, int] | None]:
                 bits.append("1")
             else:
                 raise RuntimeError("Syndrome detection failed.")
-        return int("".join(bits), 2)
+
+        # Qiskit interprets a ClassicalRegister condition as little-endian:
+        # register[0] is the least significant bit of the integer value.
+        # Syndromes are generated in stabilizer order (s0,s1,s2,s3), so we
+        # reverse before converting to the integer used in `if_test`.
+        return int("".join(bits[::-1]), 2)
 
     corr: dict[int, tuple[str, int] | None] = {0: None}
     for q in range(5):
