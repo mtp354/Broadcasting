@@ -193,6 +193,6 @@ def generate_qiskit_circuit(M, N, thetas, alphas=1 / np.sqrt(2)):
 
         with qc.if_test((c_senders, packed)):
             for qb in receivers:
-                qc.p(phase, qb)
+                qc.p(-phase, qb)
 
     return qc
