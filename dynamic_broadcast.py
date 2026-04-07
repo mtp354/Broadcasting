@@ -137,13 +137,37 @@ def _build_initial_statevector_qec_513(M: int, N: int, alpha: complex) -> np.nda
 
 
 def _five_qubit_decode_gate() -> UnitaryGate:
-    """Unitary U such that U|0_L>=|00000>, U|1_L>=|10000|."""
+    """
+    Unitary ``U`` that decodes the [[5,1,3]] logical subspace to qubit 0.
+
+    The mapping is fixed as
+        U|0_L> = |00000>
+        U|1_L> = |00001>
+
+    so the decoded logical qubit is always carried by the first qubit in the
+    Qiskit qubit list for each 5-qubit block (little-endian convention).
+    """
     v0, v1 = _five_qubit_logical_basis()
-    basis = np.eye(32, dtype=complex)
-    basis[:, 0] = v0
-    basis[:, 16] = v1
-    q, _ = np.linalg.qr(basis)
-    U = q.conj().T
+    # Build an orthonormal basis with v0 and v1 explicitly as the first two
+    # vectors, then complete with computational basis vectors.
+    cols: list[np.ndarray] = [v0 / np.linalg.norm(v0), v1 / np.linalg.norm(v1)]
+    eye = np.eye(32, dtype=complex)
+    for cand in eye.T:
+        w = cand.astype(complex)
+        for c in cols:
+            w = w - np.vdot(c, w) * c
+        nrm = np.linalg.norm(w)
+        if nrm > 1e-10:
+            cols.append(w / nrm)
+        if len(cols) == 32:
+            break
+
+    if len(cols) != 32:
+        raise RuntimeError("Failed to construct a full decode basis for [[5,1,3]].")
+
+    W = np.column_stack(cols)
+    # W maps computational basis -> physical basis, so U = W^† performs decode.
+    U = W.conj().T
     return UnitaryGate(U, label="dec513")
 
 
