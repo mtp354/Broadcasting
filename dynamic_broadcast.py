@@ -216,6 +216,111 @@ def _five_qubit_syndrome_corrections() -> dict[int, tuple[str, int] | None]:
     return corr
 
 
+def decode_qec_513(qc, encoded_blocks, ancilla_qubits=None):
+    """
+    Decode [[5,1,3]]-encoded qubit blocks in place.
+
+    Assumes that each group of 5 qubits in *encoded_blocks* already carries a
+    logical qubit encoded in the [[5,1,3]] stabiliser code.  For every block
+    this function appends:
+
+    1. Syndrome extraction using the four stabiliser generators
+       ``XZZXI, IXZZX, XIXZZ, ZXIXZ`` and 4 shared ancilla qubits.
+    2. Classical feedforward: a conditional Pauli correction selected by the
+       measured 4-bit syndrome value.
+    3. The 5-qubit decode unitary that maps ``|0_L> -> |00000>`` and
+       ``|1_L> -> |00001>``, so the decoded logical information ends up on the
+       **first** qubit of each block (Qiskit little-endian convention).
+
+    Parameters
+    ----------
+    qc : QuantumCircuit
+        Circuit to modify **in place**.  Must already contain the qubits
+        referenced by *encoded_blocks* (and *ancilla_qubits*, if supplied).
+    encoded_blocks : list[list[Qubit | int]]
+        Each element is a length-5 sequence identifying the physical qubits of
+        one [[5,1,3]] block, in stabiliser order.
+    ancilla_qubits : list[Qubit | int] | None
+        Four ancilla qubits used (and reused) for syndrome measurement.  If
+        ``None`` a fresh ``QuantumRegister(4, "syn")`` is added to *qc*.
+
+    Returns
+    -------
+    list[int]
+        Global qubit indices carrying the decoded logical qubits (one per
+        block).  These are always the first qubit of each block.
+    """
+    if not encoded_blocks:
+        return []
+
+    for i, block in enumerate(encoded_blocks):
+        if len(block) != 5:
+            raise ValueError(
+                f"encoded_blocks[{i}] has {len(block)} qubits; expected 5."
+            )
+
+    # Ancilla qubits -----------------------------------------------------------
+    if ancilla_qubits is None:
+        anc = QuantumRegister(4, "syn")
+        qc.add_register(anc)
+        ancilla_qubits = list(anc)
+    else:
+        ancilla_qubits = list(ancilla_qubits)
+        if len(ancilla_qubits) != 4:
+            raise ValueError(
+                f"ancilla_qubits has {len(ancilla_qubits)} qubits; expected 4."
+            )
+
+    corrections = _five_qubit_syndrome_corrections()
+    decode_gate = _five_qubit_decode_gate()
+    stabilizers = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
+
+    output_qubits: list[int] = []
+
+    for ell, block in enumerate(encoded_blocks):
+        # Classical register for this block's syndrome bits.
+        syn = ClassicalRegister(4, f"s{ell}")
+        qc.add_register(syn)
+
+        # --- Syndrome extraction ---
+        for sid, stab in enumerate(stabilizers):
+            qc.reset(ancilla_qubits[sid])
+            for qb, p in zip(block, stab):
+                if p == "X":
+                    qc.h(qb)
+                    qc.cx(qb, ancilla_qubits[sid])
+                    qc.h(qb)
+                elif p == "Y":
+                    qc.sdg(qb)
+                    qc.h(qb)
+                    qc.cx(qb, ancilla_qubits[sid])
+                    qc.h(qb)
+                    qc.s(qb)
+                elif p == "Z":
+                    qc.cx(qb, ancilla_qubits[sid])
+            qc.measure(ancilla_qubits[sid], syn[sid])
+
+        # --- Classical feedforward corrections ---
+        for syndrome_value, correction in corrections.items():
+            if correction is None:
+                continue
+            pauli, qidx = correction
+            with qc.if_test((syn, syndrome_value)):
+                if pauli == "X":
+                    qc.x(block[qidx])
+                elif pauli == "Y":
+                    qc.y(block[qidx])
+                elif pauli == "Z":
+                    qc.z(block[qidx])
+
+        # --- Decode ---
+        qc.append(decode_gate, block)
+
+        output_qubits.append(qc.find_bit(block[0]).index)
+
+    return output_qubits
+
+
 def _sender_phase_gate(theta: float, N: int, nq: int) -> UnitaryGate:
     """Diagonal gate implementing U_a(theta)|k> = exp(i(2k-N)theta)|k> for k=0..N."""
     dim = 2**nq
@@ -380,49 +485,11 @@ def generate_qiskit_circuit(
 
     active_receivers = list(receivers)
     if use_receiver_qec_513:
-        anc = QuantumRegister(4, "syn")
-        qc.add_register(anc)
-        corrections = _five_qubit_syndrome_corrections()
-        decode_gate = _five_qubit_decode_gate()
-
-        stabilizers = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
-        for ell in range(N):
-            syn = ClassicalRegister(4, f"s{ell}")
-            qc.add_register(syn)
-            block = [receivers[5 * ell + t] for t in range(5)]
-
-            for sid, stab in enumerate(stabilizers):
-                qc.reset(anc[sid])
-                for qb, p in zip(block, stab):
-                    if p == "X":
-                        qc.h(qb)
-                        qc.cx(qb, anc[sid])
-                        qc.h(qb)
-                    elif p == "Y":
-                        qc.sdg(qb)
-                        qc.h(qb)
-                        qc.cx(qb, anc[sid])
-                        qc.h(qb)
-                        qc.s(qb)
-                    elif p == "Z":
-                        qc.cx(qb, anc[sid])
-                qc.measure(anc[sid], syn[sid])
-
-            for syndrome_value, correction in corrections.items():
-                if correction is None:
-                    continue
-                pauli, qidx = correction
-                with qc.if_test((syn, syndrome_value)):
-                    if pauli == "X":
-                        qc.x(block[qidx])
-                    elif pauli == "Y":
-                        qc.y(block[qidx])
-                    elif pauli == "Z":
-                        qc.z(block[qidx])
-
-            qc.append(decode_gate, block)
-
-        active_receivers = [receivers[5 * ell] for ell in range(N)]
+        encoded_blocks = [
+            [receivers[5 * ell + t] for t in range(5)] for ell in range(N)
+        ]
+        output_indices = decode_qec_513(qc, encoded_blocks)
+        active_receivers = [qc.qubits[idx] for idx in output_indices]
     qc.metadata = qc.metadata or {}
     qc.metadata["receiver_output_qubits"] = [qc.find_bit(qb).index for qb in active_receivers]
 
