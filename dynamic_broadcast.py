@@ -111,12 +111,15 @@ def _build_initial_statevector_qec_513(M: int, N: int, alpha: complex) -> np.nda
         )
 
     # Encoding tensor E[b1,b2,b3,b4,b5,q], where q is one logical receiver qubit.
+    # Use Fortran order so that axis j corresponds to qubit j (bit j of the
+    # state-vector index), matching Qiskit's little-endian convention.
     E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
-    E[..., 0] = v0.reshape(2, 2, 2, 2, 2)
-    E[..., 1] = v1.reshape(2, 2, 2, 2, 2)
+    E[..., 0] = v0.reshape(2, 2, 2, 2, 2, order="F")
+    E[..., 1] = v1.reshape(2, 2, 2, 2, 2, order="F")
 
     # Tensor axes: sender qubits first, then receiver logical qubits.
-    psi = logical.reshape((2,) * (n_sender_qubits + N))
+    # Fortran order ensures axis j = qubit j (little-endian).
+    psi = logical.reshape((2,) * (n_sender_qubits + N), order="F")
 
     # Encode receiver qubits left-to-right, preserving sender qubits exactly.
     for ell in range(N):
@@ -126,7 +129,7 @@ def _build_initial_statevector_qec_513(M: int, N: int, alpha: complex) -> np.nda
         perm = list(range(5, 5 + ax)) + list(range(0, 5)) + list(range(5 + ax, 5 + (R - 1)))
         psi = np.transpose(psi, perm)
 
-    encoded = psi.reshape(-1)
+    encoded = psi.reshape(-1, order="F")
     expected_encoded_dim = 2 ** (n_sender_qubits + 5 * N)
     if encoded.size != expected_encoded_dim:
         raise RuntimeError(
