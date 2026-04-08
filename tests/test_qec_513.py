@@ -3,9 +3,7 @@
 import numpy as np
 import pytest
 
-import sys
-sys.path.insert(0, "c:/Projects/Broadcasting")
-import dynamic_broadcast as db
+import broadcasting as db
 
 
 # ---------------------------------------------------------------------------
@@ -17,7 +15,7 @@ class TestLogicalBasis:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.v0, self.v1 = db._five_qubit_logical_basis()
+        self.v0, self.v1 = db.five_qubit_logical_basis()
 
     def test_normalized(self):
         assert abs(np.linalg.norm(self.v0) - 1.0) < 1e-12
@@ -61,9 +59,9 @@ class TestDecodeGate:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        gate = db._five_qubit_decode_gate()
+        gate = db.five_qubit_decode_gate()
         self.U = gate.to_matrix()
-        self.v0, self.v1 = db._five_qubit_logical_basis()
+        self.v0, self.v1 = db.five_qubit_logical_basis()
 
     def test_unitary(self):
         product = self.U @ self.U.conj().T
@@ -109,7 +107,7 @@ class TestSyndromeCorrections:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.corrections = db._five_qubit_syndrome_corrections()
+        self.corrections = db.five_qubit_syndrome_corrections()
 
     def test_completeness(self):
         """Should have 16 entries (syndromes 0–15)."""
@@ -133,7 +131,7 @@ class TestSyndromeCorrections:
         Z = np.array([[1, 0], [0, -1]], dtype=complex)
         pauli_map = {"I": I2, "X": X, "Y": Y, "Z": Z}
 
-        v0, v1 = db._five_qubit_logical_basis()
+        v0, v1 = db.five_qubit_logical_basis()
 
         def kron_all(mats):
             out = mats[0]

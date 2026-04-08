@@ -4,9 +4,7 @@ import numpy as np
 import pytest
 from math import ceil, log2
 
-import sys
-sys.path.insert(0, "c:/Projects/Broadcasting")
-import dynamic_broadcast as db
+import broadcasting as db
 
 
 # ---------------------------------------------------------------------------
@@ -18,14 +16,14 @@ class TestBareStatevector:
 
     @pytest.mark.parametrize("M,N", [(1, 1), (1, 2), (2, 2), (2, 3)])
     def test_normalization(self, M, N, alpha):
-        sv = db._build_initial_statevector(M, N, alpha)
+        sv = db.build_initial_statevector(M, N, alpha)
         assert abs(np.linalg.norm(sv) - 1.0) < 1e-12
 
     @pytest.mark.parametrize("M,N", [(1, 1), (1, 2), (2, 2), (2, 3)])
     def test_dimension(self, M, N, alpha):
         nq = int(ceil(log2(N + 1)))
         expected_dim = 2 ** (M * nq + N)
-        sv = db._build_initial_statevector(M, N, alpha)
+        sv = db.build_initial_statevector(M, N, alpha)
         assert sv.size == expected_dim
 
     def test_known_values_M1_N1(self, alpha):
@@ -37,7 +35,7 @@ class TestBareStatevector:
         - |0>_s|1>_r = |10> in big-endian = index: r*2 + s = 1*2 + 0 = 2
         - |1>_s|0>_r = |01> in big-endian = index: r*2 + s = 0*2 + 1 = 1
         """
-        sv = db._build_initial_statevector(1, 1, alpha)
+        sv = db.build_initial_statevector(1, 1, alpha)
         beta = np.sqrt(1 - abs(alpha) ** 2)
         # Normalize: the full state has coefficients alpha*C(1,k) and beta*C(1,1-k)
         norm = np.linalg.norm(sv)
@@ -56,14 +54,14 @@ class TestQECStatevector:
 
     @pytest.mark.parametrize("M,N", [(1, 1), (1, 2)])
     def test_normalization(self, M, N, alpha):
-        sv = db._build_initial_statevector_qec_513(M, N, alpha)
+        sv = db.build_initial_statevector_qec_513(M, N, alpha)
         assert abs(np.linalg.norm(sv) - 1.0) < 1e-12
 
     @pytest.mark.parametrize("M,N", [(1, 1), (1, 2)])
     def test_dimension(self, M, N, alpha):
         nq = int(ceil(log2(N + 1)))
         expected_dim = 2 ** (M * nq + 5 * N)
-        sv = db._build_initial_statevector_qec_513(M, N, alpha)
+        sv = db.build_initial_statevector_qec_513(M, N, alpha)
         assert sv.size == expected_dim
 
     def test_qec_state_in_code_space_M1_N1(self, alpha, stabilizer_matrices):
@@ -72,7 +70,7 @@ class TestQECStatevector:
         This means tracing out the sender qubit and checking that each
         stabilizer has expectation value +1 on the receiver subsystem.
         """
-        sv = db._build_initial_statevector_qec_513(1, 1, alpha)
+        sv = db.build_initial_statevector_qec_513(1, 1, alpha)
         # M=1, N=1: 1 sender qubit + 5 receiver qubits = 6 qubits total
         assert sv.size == 64
 
@@ -104,7 +102,7 @@ class TestQECStatevector:
         This documents that the order='F' fix in commit 139aad5 is necessary.
         The palindrome symmetry of the logical basis does NOT save us here.
         """
-        logical = db._build_initial_statevector(1, 2, alpha)
+        logical = db.build_initial_statevector(1, 2, alpha)
         nq = int(ceil(log2(3)))  # N=2 -> nq=2
         n_sender_qubits = 1 * nq  # M=1
         total_bare_qubits = n_sender_qubits + 2

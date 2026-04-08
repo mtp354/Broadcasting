@@ -4,9 +4,7 @@ import numpy as np
 import pytest
 from math import ceil, log2
 
-import sys
-sys.path.insert(0, "c:/Projects/Broadcasting")
-import dynamic_broadcast as db
+import broadcasting as db
 
 # Try importing Aer; skip these tests if unavailable.
 aer = pytest.importorskip("qiskit_aer")
@@ -49,7 +47,7 @@ def _run_fidelity_statevector(M, N, thetas, use_qec=False):
 class TestSenderPhaseGate:
     def test_diagonal_and_unitary(self):
         N, nq = 2, 2
-        gate = db._sender_phase_gate(theta=0.5, N=N, nq=nq)
+        gate = db.sender_phase_gate(theta=0.5, N=N, nq=nq)
         U = gate.to_matrix()
         # Should be diagonal
         assert np.allclose(U, np.diag(np.diag(U)))
@@ -60,14 +58,14 @@ class TestSenderPhaseGate:
 class TestFourierRotation:
     def test_unitary(self):
         N, nq = 2, 2
-        gate = db._fourier_measurement_rotation(N=N, nq=nq)
+        gate = db.fourier_measurement_rotation(N=N, nq=nq)
         U = gate.to_matrix()
         assert np.allclose(U @ U.conj().T, np.eye(2**nq), atol=1e-12)
 
     def test_top_left_block_is_fourier_dagger(self):
         N = 2
         nq = int(ceil(log2(N + 1)))
-        gate = db._fourier_measurement_rotation(N=N, nq=nq)
+        gate = db.fourier_measurement_rotation(N=N, nq=nq)
         U = gate.to_matrix()
         d = N + 1
         omega = np.exp(2j * np.pi / d)
