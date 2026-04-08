@@ -28,18 +28,7 @@ def five_qubit_logical_basis() -> tuple[np.ndarray, np.ndarray]:
     """Return |0_L>, |1_L> for the [[5,1,3]] code (computational basis order)."""
     v0 = np.zeros(32, dtype=complex)
     plus_terms = ["00000", "10010", "01001", "10100", "01010", "00101"]
-    minus_terms = [
-        "11011",
-        "00110",
-        "11000",
-        "11101",
-        "00011",
-        "11110",
-        "01111",
-        "10001",
-        "01100",
-        "10111",
-    ]
+    minus_terms = ["11011","00110","11000","11101","00011","11110","01111","10001","01100","10111"]
 
     def bits_to_index(bitstr: str) -> int:
         idx = 0
