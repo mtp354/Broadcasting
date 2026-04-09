@@ -1,0 +1,504 @@
+%\begin{region}
+%% ****** Start of file apstemplate.tex ****** %
+%%
+%%
+%%   This file is part of the APS files in the REVTeX 4.2 distribution.%%
+%%   Copyright (c) 2024 The American Physical Society.
+%%
+%%   See the REVTeX 4 README file for restrictions and more information.
+%%
+%
+% This is a template for producing manuscripts for use with REVTEX 4.2
+% Copy this file to another name and then work on that file.
+% That way, you always have this original template file to use.
+%
+% Group addresses by affiliation; use superscriptaddress for long
+% author lists, or if there are many overlapping affiliations.
+%  N.B. The groupedaddress option will reorder the author list based
+%  on the order in which affiliations appear. Please be sure to check the author 
+%  order. You can also use the unsortedaddress(?) option instead to prevent that
+%  behavior.
+% For Phys. Rev. appearance, change preprint to twocolumn.
+% Choose physrev, prl, or rmp for journal
+%  N.B. physrev is appropriate for all APS journals except prl and rmp
+%  Add 'draft' option to mark overfull boxes with black boxes
+%  Add 'showkeys' option to make keywords appear
+\documentclass[aps,physrev,twocolumn,groupedaddress]{revtex4-2}
+%\documentclass[aps,physrev,preprint,superscriptaddress]{revtex4-2}
+%\documentclass[aps,prl,preprint,superscriptaddress]{revtex4-2}
+%\documentclass[aps,prl,reprint,groupedaddress]{revtex4-2}
+%\documentclass[aps,rmp,preprint,superscriptaddress]{revtex4-2}
+%\documentclass[aps,rmp,reprint,groupedaddress]{revtex4-2}
+
+% You should use BibTeX and apsrev.bst for references
+% Choosing a journal automatically selects the correct APS
+% BibTeX style file (bst file), so only uncomment the line
+% below if necessary.
+%\bibliographystyle{apsrev4-2}
+%\end{region}
+
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{braket}
+\usepackage{quantikz}
+
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\Enc}{Enc}
+\DeclareMathOperator{\Dec}{Dec}
+
+
+\begin{document}
+%\begin{region}
+% Use the \preprint command to place your local institutional report
+% number in the upper righthand corner of the title page in preprint mode.
+% Multiple \preprint commands are allowed.
+% Use the 'preprintnumbers' class option to override journal defaults
+% to display numbers if necessary
+%\preprint{}
+
+%Title of paper
+\title{Noisy Restricted Broadcasting}
+
+% repeat the \author .. \affiliation  etc. as needed
+% \email, \thanks, \homepage, \altaffiliation all apply to the current
+% author. Explanatory text should go in the []'s, actual e-mail
+% address or url should go in the {}'s for \email and \homepage.
+% Please use the appropriate macro foreach each type of information
+
+% \affiliation command applies to all authors since the last
+% \affiliation command. The \affiliation command should follow the
+% other information
+% \affiliation can be followed by \email, \homepage, \thanks as well.
+\author{}
+%\email[]{Your e-mail address}
+%\homepage[]{Your web page}
+%\thanks{}
+%\altaffiliation{}
+\affiliation{}
+
+%Collaboration name if desired (requires use of superscriptaddress
+%option in \documentclass). \noaffiliation is required (may also be
+%used with the \author command).
+%\collaboration can be followed by \email, \homepage, \thanks as well.
+%\collaboration{}
+%\noaffiliation
+
+\date{\today}
+
+\begin{abstract}
+insert abstract here
+\end{abstract}
+
+% insert suggested keywords - APS authors don't need to do this
+%\keywords{}
+
+%\maketitle must follow title, authors, abstract, and keywords
+\maketitle
+%\end{region}
+
+\section{Introduction \label{Introduction}}
+%\begin{region}
+Pioneering work in quantum information produced famous impossibility results such as the no-cloning theorem \cite{wootters2009no} and the no-broadcasting theorem \cite{barnum2007generalized}. These results have been fundamental in shaping our understanding of quantum information and have had profound implications for quantum communication and cryptography \cite{vsupic2020self}. However, recent research has shown that these impossibility results can be circumvented under certain, more restrictive, conditions, leading to new possibilities for quantum information processing \cite{larasati2025towards,zhang2025efficient,sukeno2025quantum,andronikos2023one}. In this paper, we explore the concept of restricted broadcasting, where a quantum state can be broadcast to multiple receivers under specific constraints \cite{PhysRevA.105.042611}.
+\\
+We begin with the M-sender N-receiver broadcasting protocol introduced in \cite{sukeno2023broadcasting}, where parties share an initial entangled state from which single qubits are distributed to the receivers. The senders then apply local unitaries to their systems, which imprint a global phase on the receivers' qubits. By measuring in a Fourier basis and broadcasting the classical outcomes, the receivers can apply byproduct corrections to recover the desired state without revealing the sender's choice of phase. This protocol demonstrates that, under certain conditions, it is possible to achieve a form of broadcasting that is not prohibited by the no-broadcasting theorem.
+\\
+In this work, we extend the M-sender N-receiver broadcasting protocol to account for noisy distribution channels to each receiver. We analyze the impact of noise on the protocol's performance and explore how quantum error correction can be integrated to mitigate the effects of noise \cite{knill1997theory}. By encoding the receivers' qubits using a quantum error-correcting code, we can protect the transmitted information from errors introduced by the noisy channels, thereby enhancing the robustness of the broadcasting protocol.
+%\end{region}
+
+
+
+\section{Generalized Restricted Broadcasting Protocol}
+%\begin{region}
+We first review the M-sender N-receiver broadcasting protocol from \cite{sukeno2023broadcasting} in the ideal, noiseless case. The protocol involves a resource state shared between the senders and receivers, local unitaries applied by the senders to imprint phases, and measurements in a Fourier basis to enable byproduct corrections at the receivers.
+\\
+The initial resource state is a superposition of symmetric states, where each sender's system is in a state corresponding to the number of receivers in the $\ket{0}$ or $\ket{1}$ state. This is given by
+\begin{align}
+\ket{\Psi^{(M,N)}}
+&:= \sum_{k=0}^{N}\alpha^k\beta^{N-k}\binom{N}{k}^{1/2}
+\left(\prod_{j=1}^{M}\ket{k}_{a_j}\right)\ket{k;N-k},
+\end{align}
+where $\ket{k;N-k}$ is the symmetric state of $N$ qubits with $k$ in the $\ket{0}$ state and $N-k$ in the $\ket{1}$ state.
+\\
+Each sender applies a local unitary $U_{a_j}(\theta_j)$ that imprints a phase depending on the number of $\ket{0}$ and $\ket{1}$ states in the receivers' systems. This is defined as
+\begin{align}
+U_{a_j}(\theta_j)\ket{k}_{a_j}
+&:= e^{i(2k-N)\theta_j}\ket{k}_{a_j},
+\qquad \theta_j\in\mathbb{R}.
+\end{align}
+After the senders apply their unitaries, they measure their systems in the Fourier basis $\{\ket{u_n}\}_{n=0}^N$, where
+\begin{align}
+\ket{u_n}
+&:= \frac{1}{\sqrt{N+1}}\sum_{k=0}^{N} e^{2\pi i nk/(N+1)}\ket{k},
+\qquad n\in\{0,1,\dots,N\}.
+\end{align}
+The measurement outcomes $\bar n=(n_1,\dots,n_M)$ are then broadcast to the receivers, who apply byproduct corrections $U_{\bar n}$ to their qubits to recover the desired state. The byproduct correction is defined as
+\begin{align}
+U_{\bar n}\ket{0}
+&:= \exp\!\left(\frac{2\pi i}{N+1}\sum_{j=1}^{M}n_j\right)\ket{0},
+\\
+U_{\bar n}\ket{1}
+&:= \ket{1}.
+\end{align}
+In the ideal, noiseless case, this protocol allows the receivers to recover the state
+\begin{align}
+\ket{\psi_{\mathrm{out}}}
+&= \alpha\,e^{i\sum_{j=1}^{M}\theta_j}\ket{0} + \beta\,e^{-i\sum_{j=1}^{M}\theta_j}\ket{1}.
+\end{align}
+
+
+%\end{region}
+
+\section{Noisy Channels}
+%\begin{region}
+In a realistic scenario, the distribution of qubits to the receivers may be subject to noise. We model this noise using a depolarizing channel, which acts independently on each qubit sent to the receivers. The depolarizing channel with depolarizing probability $p$ is defined as
+\begin{align}
+\mathcal{D}_p(\rho)
+&:= (1-p)\rho + \frac{p}{3}\left(X\rho X + Y\rho Y + Z\rho Z\right), \\
+&\qquad 0\le p\le 1, \nonumber
+\end{align}
+where $X$, $Y$, and $Z$ are the Pauli operators. The presence of noise can degrade the fidelity of the output state at the receivers, making it crucial to analyze the performance of the protocol under these conditions and to explore methods for mitigating the effects of noise, such as quantum error correction.
+%\end{region}
+
+\section{Error correction}
+%\begin{region}
+There are many possible ways to incorporate error correction into the protocol. We choose to encode each receiver's qubit using the $[[5,1,3]]$ maximally efficient single-qubit error code \cite{laflamme1996perfect,knill1997theory}. This code is defined by its stabilizer generators and logical basis states \cite{gottesman1997stabilizer,calderbank1998quantum}, and it allows us to protect the transmitted information from errors introduced by the depolarizing channels \cite{devitt2013qec}. The encoding and decoding processes involve applying specific unitaries to map between the logical qubits and the physical qubits, as well as performing syndrome measurements to identify and correct errors. By integrating this error correction scheme into the broadcasting protocol, we can enhance the robustness of the communication and improve the fidelity of the output states at the receivers, even in the presence of noise.
+
+\paragraph{Protocol: $M$-sender $\to$ $N$-receiver broadcasting with $[[5,1,3]]$ quantum error correction over depolarizing channels.}
+
+\subparagraph{Parameters and notation.}
+Fix integers $M\ge 1$ and $N\ge 1$. Let $\alpha,\beta\in\mathbb{C}$ satisfy $|\alpha|^2+|\beta|^2=1$.
+For each sender $j\in\{1,\dots,M\}$, let $a_j$ be a $(N{+}1)$-dimensional Hilbert space with computational basis
+$\{\ket{k}_{a_j}\}_{k=0}^N$.
+For each receiver $\ell\in\{1,\dots,N\}$, let $q_\ell$ be a qubit Hilbert space with computational basis
+$\{\ket{0}_\ell,\ket{1}_\ell\}$.
+
+\begin{align}
+\ket{k;N-k}
+&:= \binom{N}{k}^{-1/2}\,
+\mathrm{Sym}\!\Big(
+\underbrace{\ket{0}\cdots\ket{0}}_{k}\,
+\underbrace{\ket{1}\cdots\ket{1}}_{N-k}
+\Big),
+\end{align}
+where $\mathrm{Sym}(\cdot)$ denotes uniform symmetrization over all permutations of the $N$ tensor factors.
+
+\subparagraph{Resource state, sender unitaries, and measurement basis.}
+\begin{align}
+\ket{\Psi^{(M,N)}}
+&:= \sum_{k=0}^{N}\alpha^k\beta^{N-k}\binom{N}{k}^{1/2}
+\left(\prod_{j=1}^{M}\ket{k}_{a_j}\right)\ket{k;N-k},
+\\
+U_{a_j}(\theta_j)\ket{k}_{a_j}
+&:= e^{i(2k-N)\theta_j}\ket{k}_{a_j},
+\qquad \theta_j\in\mathbb{R},
+\\
+\ket{u_n}
+&:= \frac{1}{\sqrt{N+1}}\sum_{k=0}^{N} e^{2\pi i nk/(N+1)}\ket{k}, \\
+\qquad n &\in\{0,1,\dots,N\}.
+\end{align}
+
+\subparagraph{Receiver byproduct correction from sender outcomes.}
+For outcomes $\bar n=(n_1,\dots,n_M)\in\{0,\dots,N\}^M$, define $U_{\bar n}$ on each receiver qubit by
+\begin{align}
+U_{\bar n}\ket{0}
+&:= \exp\!\left(\frac{2\pi i}{N+1}\sum_{j=1}^{M}n_j\right)\ket{0},
+\\
+U_{\bar n}\ket{1}
+&:= \ket{1}.
+\end{align}
+
+\subparagraph{$[[5,1,3]]$ code (stabilizer, logical basis, encoder/decoder).}
+Let $X,Y,Z$ be the single-qubit Pauli operators and $I$ the identity.
+On each 5-qubit block, define stabilizer generators
+\begin{align}
+g_1 &:= XZZXI, g_2 := IXZZX, \nonumber \\
+g_3 &:= XIXZZ, g_4 := ZXIXZ.
+\end{align}
+Define the codespace
+\begin{align}
+\mathcal{C}
+&:= \left\{\ket{\varphi}\in(\mathbb{C}^2)^{\otimes 5} ~:~ g_r\ket{\varphi}=\ket{\varphi}\ \ \forall r\in\{1,2,3,4\}\right\}.
+\end{align}
+A concrete logical basis spanning $\mathcal{C}$ is
+\begin{align}
+\ket{0_L} = \frac{1}{4}\big(&\ket{00000}+\ket{10010}+\ket{01001}+\ket{10100} \nonumber \\
++&\ket{01010} -\ket{11011}-\ket{00110}-\ket{11000} \nonumber \\
+-&\ket{11101}-\ket{00011}-\ket{11110}-\ket{01111} \nonumber \\
+-&\ket{10001} -\ket{01100}-\ket{10111}+\ket{00101}\big),
+\\
+\ket{1_L}
+&:= X^{\otimes 5}\ket{0_L}.
+\end{align}
+Define the encoding isometry $\Enc:\mathbb{C}^2\to(\mathbb{C}^2)^{\otimes 5}$ by linear extension of
+\begin{align}
+\Enc(\ket{0}) &:= \ket{0_L}, &
+\Enc(\ket{1}) &:= \ket{1_L}.
+\end{align}
+Fix any 5-qubit unitary $V_{\Enc}$ such that, for all $\ket{\psi}\in\mathbb{C}^2$,
+\begin{align}
+V_{\Enc}\big(\ket{\psi}\otimes\ket{0}^{\otimes 4}\big)
+&= \Enc(\ket{\psi}).
+\end{align}
+Define the decoding channel $\Dec:(\mathbb{C}^2)^{\otimes 5}\to\mathbb{C}^2$ by
+\begin{align}
+\Dec(\rho)
+&:= \operatorname{Tr}_{2,3,4,5}\!\left[V_{\Enc}^\dagger\,\rho\,V_{\Enc}\right],
+\end{align}
+where $\operatorname{Tr}_{2,3,4,5}$ traces out the last four qubits of the block.
+
+\subparagraph{Syndrome measurement and correction.}
+Given a 5-qubit block state $\rho$, measure each $g_r$ to obtain eigenvalues $\lambda_r\in\{+1,-1\}$ and define
+syndrome bits $s_r\in\{0,1\}$ by $\lambda_r=(-1)^{s_r}$, forming $s=(s_1,s_2,s_3,s_4)\in\{0,1\}^4$.
+Choose a syndrome-to-correction map $s\mapsto E_s$ into 5-qubit Pauli operators such that
+\begin{align}
+E_s g_r
+&= (-1)^{s_r}\, g_r E_s,
+\qquad r\in\{1,2,3,4\},
+\end{align}
+and (for single-qubit errors) $E_{s(P)}:=P$ for each weight-1 Pauli $P\in\{X_i,Y_i,Z_i\}_{i=1}^5$ with syndrome $s(P)$.
+Apply the correction $E_s^\dagger=E_s$.
+
+
+\subparagraph{Protocol steps.}
+\begin{enumerate}
+\item \textbf{Prepare resource.} Prepare $\ket{\Psi^{(M,N)}}$ on $(a_1,\dots,a_M,q_1,\dots,q_N)$.
+
+\item \textbf{Encode receivers.} For each $\ell\in\{1,\dots,N\}$, replace $q_\ell$ by a 5-qubit block
+$(b_{\ell,1},\dots,b_{\ell,5})$ by applying $\Enc$:
+\begin{align}
+\ket{\widetilde{\Psi}^{(M,N)}}
+&:= \left(I_{a_1\cdots a_M}\otimes \Enc^{\otimes N}\right)\ket{\Psi^{(M,N)}}.
+\end{align}
+
+\item \textbf{Transmit over noisy channels.} Send each $b_{\ell,t}$ through $\mathcal{D}_p$, independently for all $\ell$ and $t$.
+
+\item \textbf{Sender phase imprinting.} Each sender $j$ applies $U_{a_j}(\theta_j)$ to $a_j$.
+
+\item \textbf{Sender Fourier measurement.} Each sender $j$ measures $a_j$ in basis $\{\ket{u_n}\}_{n=0}^N$ to obtain $n_j$.
+Let $\bar n=(n_1,\dots,n_M)$ and broadcast $\bar n$.
+
+\item \textbf{Receiver QEC (per block).} For each receiver $\ell$:
+measure $(g_1,g_2,g_3,g_4)$ to obtain syndrome $s^{(\ell)}$, apply correction $E_{s^{(\ell)}}$ on the 5-qubit block.
+
+\item \textbf{Decode.} Each receiver $\ell$ applies $\Dec$ to map the corrected 5-qubit block to a single-qubit state $\rho^{(\ell)}$.
+
+\item \textbf{Byproduct correction.} Each receiver $\ell$ applies $U_{\bar n}$ to $\rho^{(\ell)}$.
+\end{enumerate}
+
+\subparagraph{Ideal output (noiseless case).}
+\begin{align}
+\ket{\psi_{\mathrm{out}}}
+&= \alpha\,e^{i\sum_{j=1}^{M}\theta_j}\ket{0} + \beta\,e^{-i\sum_{j=1}^{M}\theta_j}\ket{1}.
+\end{align}
+
+\subsection{Estimating QEC Threshold}
+\label{sec:qec_threshold}
+%\begin{region}
+The fidelity for a pure input state to the depolarizing channel with depolarizing probability $p$ is given by
+\begin{align}
+    F &= \sum_{P \in \{X,Y,Z\}} |\bra{\psi} P \ket{\psi} |^2 \\
+    &= 1 - \frac{2p}{3}.
+\end{align}
+For the $[5,1,3]$ correction code the failure probability is the probability of 2 or more physical errors given by the binomial expansion under independence assumptions
+\begin{align}
+    p_{f} = 1 - (1-p)^5 - 5p(1-p)^4 \approx 10p^2 + O(p^3).
+\end{align}
+If we treat this as roughly depolarizing then we can use this in the depolarizing formula
+\begin{align}
+    F \approx 1 - \frac{2}{3} 10 p_{f}^2.
+\end{align}
+If we set this equal to the Fidelity in the no error-correction code we get
+\begin{align}
+    1 - \frac{2}{3} 10 p_{f}^2 \approx 1 - \frac{2p}{3}.
+\end{align}
+This implies a crossover at $p \approx 1/10$. This is an underestimate of the crossover $p$ as not all two qubit errors will be miss-corrected, for example a double bitflip on the same qubit or two phase flip errors.
+%\end{region}
+
+%\end{region}
+
+\section{Qiskit Implementation \label{sec:qiskit}}
+
+We implement the broadcasting protocol as a dynamic quantum circuit using Qiskit \cite{javadi2024qiskit}. Dynamic circuits incorporate mid-circuit measurements and real-time classical feedforward, features that are essential for both the sender Fourier-basis measurement with byproduct correction and the QEC syndrome-extraction-and-correction cycle \cite{corcoles2021dynamic}.
+
+\subsection{Qubit Embedding of the Resource State}
+\label{sec:embedding}
+
+The senders' $(N{+}1)$-dimensional qudit Hilbert spaces do not map directly onto qubit hardware. We embed each sender qudit into
+\begin{align}
+n_q = \lceil \log_2(N+1) \rceil
+\end{align}
+qubits using a binary encoding: the computational basis state $\ket{k}_{a_j}$ ($0\le k\le N$) is stored as the $n_q$-bit binary representation of $k$. Basis states with index $k>N$ are unused and carry zero amplitude.
+
+The full register layout consists of $M\cdot n_q$ sender qubits followed by $N$ receiver qubits (or $5N$ when QEC is enabled), giving a total Hilbert-space dimension of $2^{M n_q + N}$ (or $2^{M n_q + 5N}$). The resource state $\ket{\Psi^{(M,N)}}$ is constructed as a classical state vector and loaded via Qiskit's \texttt{initialize} instruction. For each $k\in\{0,\dots,N\}$ and each $k$-element subset of receiver positions set to $\ket{0}$, we accumulate the amplitude $\alpha^k\beta^{N-k}$ at the corresponding computational-basis index:
+\begin{align}
+\text{index} = \underbrace{k \mid k \ll n_q \mid \cdots}_{M \text{ copies}} ~\big|~ \bigl(\text{receiver bits}\bigr) \ll M n_q,
+\end{align}
+where the receiver bits encode the symmetric state $\ket{k;N{-}k}$ via all permutations of $k$ zeros among $N$ positions.
+
+When QEC is enabled, each receiver qubit is replaced by a five-qubit $[[5,1,3]]$ block using the encoding tensor
+$E_{b_1 b_2 b_3 b_4 b_5, q}$, defined by
+$E[\ldots,0] = \ket{0_L}$ and $E[\ldots,1] = \ket{1_L}$,
+applied via tensor contraction over each logical receiver axis. All reshapes use Fortran (column-major) order to match Qiskit's little-endian convention, in which qubit~0 corresponds to the least-significant bit of the state-vector index \cite{javadi2024qiskit}.
+
+\subsection{Circuit Construction}
+\label{sec:circuit}
+
+A schematic of the Qiskit circuit for the $M{=}1$, $N{=}2$ protocol without QEC is shown in Fig.~\ref{fig:circuit}. The circuit is built in six stages:
+
+\begin{enumerate}
+\item \textbf{State preparation.} The resource state $\ket{\Psi^{(M,N)}}$ (or its QEC-encoded variant) is loaded onto the sender register $\mathbf{a}$ ($M\cdot n_q$ qubits) and receiver register $\mathbf{r}$ ($N$ or $5N$ qubits).
+
+\item \textbf{Delay.} A parametric delay $\tau$ is inserted on every receiver qubit. By sweeping $\tau$ we probe the effect of idle decoherence on the hardware.
+
+\item \textbf{QEC recovery} (if enabled). Syndrome extraction and decoding are applied to each $[[5,1,3]]$ block (see Sec.~\ref{sec:qec_circuit}), reducing $5N$ physical qubits to $N$ decoded logical qubits.
+
+\item \textbf{Sender phase gates.} Each sender~$j$ receives the diagonal unitary
+\begin{align}
+U_{a_j}(\theta_j) = \mathrm{diag}\!\left(e^{i(2k-N)\theta_j}\right)_{k=0}^{2^{n_q}-1},
+\end{align}
+which acts as a $2^{n_q}\times 2^{n_q}$ matrix with the phases $e^{i(2k-N)\theta_j}$ on the first $N{+}1$ diagonal entries and ones elsewhere.
+
+\item \textbf{Fourier measurement.} Each sender's $n_q$-qubit register is rotated by $F_d^\dagger$, the inverse DFT on $d = N{+}1$ levels, embedded in a $2^{n_q}$-dimensional unitary:
+\begin{align}
+F_d[n,k] = \frac{\omega^{nk}}{\sqrt{d}},\qquad \omega = e^{2\pi i/d},
+\end{align}
+followed by a computational-basis measurement. This is equivalent to measuring in the Fourier basis $\{\ket{u_n}\}$.
+
+\item \textbf{Classical feedforward.} For each possible $M$-tuple of sender outcomes $\bar{n}\in\{0,\dots,N\}^M$, the circuit conditionally applies a phase gate $P(-\phi)$ to every receiver qubit, where
+\begin{align}
+\phi = \frac{2\pi}{N+1}\!\left(\sum_{j=1}^{M} n_j \bmod (N{+}1)\right).
+\end{align}
+Qiskit's \texttt{if\_test} primitive branches on the packed little-endian integer value of the sender measurement register, enabling all $(N{+}1)^M$ correction branches within a single circuit execution \cite{corcoles2021dynamic}.
+\end{enumerate}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.95\linewidth]{m1n2qec0_circ.png}
+    \caption{Qiskit circuit for the $M{=}1$, $N{=}2$ broadcasting protocol without QEC encoding. The sender qudit ($a_0, a_1$; two qubits encoding a qutrit) is initialized together with two receiver qubits ($r_0, r_1$) in the resource state $\ket{\Psi^{(1,2)}}$. After a parametric delay $\tau$, the sender phase gate $U_a(\theta)$ and inverse-DFT rotation $F_d^\dagger$ are applied, followed by a computational-basis measurement. Three conditional blocks (one per measurement outcome $n\in\{0,1,2\}$) each apply the corresponding phase correction $P(-2\pi n/3)$ to both receivers. Finally, $R_z(-\phi)$ and Hadamard gates rotate each receiver into the fidelity-measurement basis, and the outcomes are recorded in the \texttt{fid} register.}
+    \label{fig:circuit}
+\end{figure*}
+
+\subsection{QEC Syndrome Extraction and Decoding}
+\label{sec:qec_circuit}
+
+The $[[5,1,3]]$ error correction is implemented in the circuit using four shared ancilla qubits and Qiskit's dynamic-circuit primitives. For each five-qubit block the circuit appends three stages, illustrated schematically in Fig.~\ref{fig:qec_circuit}.
+
+\begin{figure}
+\centering
+\begin{quantikz}[row sep={0.55cm,between origins}, column sep=0.35cm]
+\lstick{$\ket{\psi}_L$} & \gate[5]{V_{\Enc}} & \gate[5]{\mathcal{D}_p} & \qw & \qw & \qw & \qw & \ctrl{5} & \qw & \qw & \qw & \qw & \gate[5]{E_s} & \gate[5]{V_{\Enc}^\dagger} & \qw & \rstick{$\ket{\psi}$} \qw \\
+\lstick{$\ket{0}$} & \qw & \qw & \qw & \qw & \ctrl{4} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
+\lstick{$\ket{0}$} & \qw & \qw & \qw & \qw & \qw & \ctrl{3} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
+\lstick{$\ket{0}$} & \qw & \qw & \ctrl{2} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
+\lstick{$\ket{0}$} & \qw & \qw & \qw & \ctrl{1} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
+\lstick{$\ket{0}_{\mathrm{anc}_1}$}\setwiretype{q} & \qw & \qw & \targ{} & \targ{} & \targ{} & \qw & \targ{} & \meter{s_1} & \cwbend{-2} & \qw & \qw & \qw & \qw & \qw & \\
+\lstick{$\ket{0}_{\mathrm{anc}_2}$}\setwiretype{q} & \qw & \qw & \qw & \qw & \qw & \targ{} & \qw & \qw & \qw & \meter{s_2} & \cwbend{-3} & \qw & \qw & \qw & \\
+\lstick{$\vdots$}\setwiretype{n} & & & & & & & & & \push{\scriptstyle s_3, s_4} & & & & & &
+\end{quantikz}
+\caption{Schematic circuit for a single logical qubit encoded in the $[[5,1,3]]$ code. The logical state $\ket{\psi}_L$ is encoded into five physical qubits via $V_{\Enc}$. After passing through the depolarizing channel $\mathcal{D}_p$, four ancilla qubits (two shown; $s_3$, $s_4$ analogous) extract the syndrome by measuring the stabilizer generators $g_1,\dots,g_4$. A conditional Pauli correction $E_s$ is applied based on the four-bit syndrome $s$, followed by the decoding unitary $V_{\Enc}^\dagger$, which maps the corrected logical qubit back to the first physical qubit. The remaining four qubits are traced out.}
+\label{fig:qec_circuit}
+\end{figure}
+
+\subsubsection{Syndrome extraction}
+Each of the four stabilizer generators $g_r\in\{XZZXI, IXZZX, XIXZZ, ZXIXZ\}$ is measured using one ancilla qubit. For each Pauli factor $P_i$ in the generator acting on block qubit~$i$:
+\begin{itemize}
+\item If $P_i = X$: apply $H$ to qubit~$i$, then $\mathrm{CX}(i,\mathrm{anc})$, then $H$ again.
+\item If $P_i = Y$: apply $S^\dagger$ and $H$ to qubit~$i$, then $\mathrm{CX}(i,\mathrm{anc})$, then $H$ and $S$.
+\item If $P_i = Z$: apply $\mathrm{CX}(i,\mathrm{anc})$ directly.
+\item If $P_i = I$: no gate.
+\end{itemize}
+The ancilla is then measured, yielding syndrome bit $s_r$. Ancilla qubits are reset before each stabilizer measurement and reused across blocks.
+
+\subsubsection{Conditional correction}
+The four syndrome bits $s = (s_1, s_2, s_3, s_4)$ form a 4-bit integer (little-endian). A precomputed lookup table maps each of the 16 possible syndrome values to the corresponding single-qubit Pauli correction (or identity for $s=0$). Using Qiskit's \texttt{if\_test} on the syndrome register, the appropriate Pauli gate ($X$, $Y$, or $Z$) is conditionally applied to the identified qubit. All 15 single-qubit Pauli errors on the five physical qubits produce distinct nonzero syndromes, guaranteeing correction of any weight-1 error \cite{laflamme1996perfect,gottesman1997stabilizer}.
+
+\subsubsection{Decode unitary}
+The decoding unitary $V_{\Enc}^\dagger$ is constructed as a $32\times 32$ matrix via Gram--Schmidt orthogonalization \cite{nielsen2010quantum}. The first two columns of the encoding matrix $W$ are the normalized logical basis vectors $\ket{0_L}$ and $\ket{1_L}$; the remaining 30 columns are filled from the standard basis to complete an orthonormal set. Then $V_{\Enc}^\dagger = W^\dagger$ maps
+\begin{align}
+V_{\Enc}^\dagger \ket{0_L} &= \ket{00000}, &
+V_{\Enc}^\dagger \ket{1_L} &= \ket{00001},
+\end{align}
+so the decoded logical qubit resides on the first physical qubit of each block (qubit~0 in Qiskit's little-endian ordering). The gate is applied as a single five-qubit \texttt{UnitaryGate} in Qiskit.
+
+\subsection{Fidelity Estimation}
+\label{sec:fidelity}
+
+The target output state for each receiver in the broadcasting protocol with $\alpha=\beta=1/\sqrt{2}$ lies on the equator of the Bloch sphere (the $XY$ plane):
+\begin{align}
+\ket{\psi_{\mathrm{target}}} = \frac{1}{\sqrt{2}}\!\left(e^{i\Phi}\ket{0} + e^{-i\Phi}\ket{1}\right),
+\end{align}
+where $\Phi = \sum_{j=1}^{M}\theta_j$ is the total sender angle.
+
+Rather than performing full quantum state tomography, which would require measurements in three Pauli bases, we estimate the fidelity $F = \bra{\psi_{\mathrm{target}}}\rho_{\mathrm{out}}\ket{\psi_{\mathrm{target}}}$ using a single measurement basis per receiver qubit. The procedure appends two gates to each receiver qubit:
+\begin{enumerate}
+\item An $R_z(-\phi)$ rotation with $\phi = -2\Phi \bmod 2\pi$, which aligns the target state with $\ket{+}$:
+\begin{align}
+R_z(-\phi)\ket{\psi_{\mathrm{target}}} = \frac{1}{\sqrt{2}}\!\left(\ket{0} + \ket{1}\right) = \ket{+}.
+\end{align}
+\item A Hadamard gate $H$, which maps $\ket{+}\to\ket{0}$:
+\begin{align}
+H\,R_z(-\phi)\ket{\psi_{\mathrm{target}}} = \ket{0}.
+\end{align}
+\end{enumerate}
+A computational-basis measurement is then performed. The probability of obtaining outcome~$0$ equals the fidelity:
+\begin{align}
+P(\text{outcome}=0) &= \bra{0}H\,R_z(-\phi)\,\rho_{\mathrm{out}}\,R_z(-\phi)^\dagger H^\dagger\ket{0} \nonumber \\
+&= \bra{\psi_{\mathrm{target}}}\rho_{\mathrm{out}}\ket{\psi_{\mathrm{target}}} = F.
+\end{align}
+The fidelity measurements are stored in a separate classical register from the sender measurement outcomes, allowing both to be extracted from a single circuit execution. This approach requires only a single shot-statistics estimate per receiver qubit, making it efficient for hardware experiments where measurement overhead is a primary cost.
+
+\section{Results}
+%\begin{region}
+\subsection{Simulated Results}
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\linewidth]{qec fidelities 2.png}
+    \caption{Three-dimensional scatter plot of the fidelity between the two receiver output states as a function of the per-receiver target fidelity for the $M{=}1$, $N{=}2$ broadcasting protocol. Each point corresponds to a different pair of depolarizing probabilities $(p_1, p_2)$ applied independently to the two receiver channels. As either receiver's fidelity to the target state decreases due to increased depolarizing noise, the inter-receiver fidelity also degrades, demonstrating the correlated impact of channel noise on the protocol output.}
+    \label{fig:qec_fidelities_3d}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\linewidth]{qec vs no qec.png}
+    \caption{Average receiver fidelity as a function of depolarizing probability $p$ for the $M{=}1$, $N{=}2$ broadcasting protocol, comparing the bare (no~QEC) protocol with the $[[5,1,3]]$ QEC-encoded protocol. At low noise ($p\lesssim 0.15$) the QEC-encoded protocol maintains higher fidelity; at intermediate noise the two curves cross, and at high noise both approach the random-guess baseline of $F=0.5$. The dashed line marks this baseline.}
+    \label{fig:qec_vs_no_qec}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.95\linewidth]{qec vs no qec crossover.png}
+    \caption{Zoomed view of the crossover region from Fig.~\ref{fig:qec_vs_no_qec}, showing the range $p\in[0,0.2]$. The QEC-encoded protocol (orange) and bare protocol (blue) curves intersect near $p\approx 0.15$, consistent with the analytic estimate of $p\approx 1/10$ derived in Sec.~\ref{sec:qec_threshold}. Below this threshold the $[[5,1,3]]$ code provides a net fidelity advantage; above it the overhead of encoding five physical qubits per logical qubit introduces more uncorrectable multi-qubit errors than it prevents.}
+    \label{fig:qec_crossover}
+\end{figure}
+
+\subsection{Hardware Results}
+
+\begin{figure*}
+    \centering
+    \includegraphics[width=0.95\linewidth]{m1n2qec0.png}
+    \caption{Fidelity versus delay time $\tau$ (in units of the backend clock cycle, dt) for the $M{=}1$, $N{=}2$ bare protocol executed on the IBM \texttt{ibm\_fez} backend with 8192 shots per point. Two random sender-angle samples are shown (blue and orange), with separate curves for each receiver. At $\tau=0$ the fidelity exceeds 0.9 for all receivers, and it decays toward the random baseline $F=0.5$ (dotted line) as idle decoherence accumulates. Error bars represent shot-noise uncertainty ($1\sigma$).}
+    \label{fig:hardware_fidelity}
+\end{figure*}
+
+%\end{region}
+
+\section{Conclusion}
+%\begin{region}
+
+%\end{region}
+
+
+%\begin{acknowledgments}
+% put your acknowledgments here.
+%\end{acknowledgments}
+\section{Acknowledgements}
+This research was supported, in part, by a grant of computer time from the City University of New York High Performance Computing Center under NSF Grants CNS-0855217, CNS-0958379 and ACI-1126113.
+
+% Create the reference section using BibTeX:
+\bibliography{apssamp}
+
+\end{document}
+%
+% ****** End of file apstemplate.tex ******
+
