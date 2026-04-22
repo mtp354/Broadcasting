@@ -21,8 +21,18 @@
 
 set -euo pipefail
 
-cd /scratch/prest-hc-13/Broadcasting
-mkdir -p slurm_logs
+SCRATCH_DIR=/scratch/prest-hc-13/Broadcasting
+GLOBAL_DIR=/global/u/prest-hc-13/Broadcasting
+
+mkdir -p "${SCRATCH_DIR}"
+mkdir -p "${SCRATCH_DIR}/slurm_logs"
+
+# Sync latest code from global storage to scratch (excludes venv and caches)
+rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
+      --exclude='results' \
+      "${GLOBAL_DIR}/" "${SCRATCH_DIR}/"
+
+cd "${SCRATCH_DIR}"
 
 # Load modules
 module purge
@@ -33,9 +43,9 @@ if [ -f ".venv/bin/activate" ]; then
     source .venv/bin/activate
 else
     echo "ERROR: .venv not found. Create it first:"
-    echo "  module load python/3.13.7"
-    echo "  python3 -m venv .venv && source .venv/bin/activate"
-    echo "  pip install -r requirements.txt"
+    echo "  module load Compilers/Python/3.12.13"
+    echo "  python3 -m venv /scratch/prest-hc-13/Broadcasting/.venv && source .venv/bin/activate"
+    echo "  python3 -m pip install -r requirements.txt"
     exit 1
 fi
 

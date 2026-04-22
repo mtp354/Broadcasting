@@ -17,8 +17,6 @@ When ``SLURM_ARRAY_TASK_ID`` is set the script selects one noise value
 from the sweep controlled by ``--p-min``, ``--p-max``, ``--p-steps``.
 """
 
-from __future__ import annotations
-
 import argparse
 import json
 import os

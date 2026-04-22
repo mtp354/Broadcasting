@@ -1,10 +1,8 @@
 """Data model for the broadcasting protocol configuration and results."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 
@@ -47,7 +45,7 @@ class ProtocolConfig:
     use_qec: bool = False
     outcomes_list: list[int] | None = None
     tau: float | None = None
-    n_samples: int = 200
+    n_samples: Optional[int] = 200
     seed: int | None = None
 
 

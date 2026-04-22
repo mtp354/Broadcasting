@@ -4,8 +4,6 @@ Every plot includes a metadata annotation box that shows the simulation
 mode (Exact / Sampling / Hardware) alongside protocol parameters.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 import matplotlib.pyplot as plt

@@ -6,8 +6,6 @@ operate on native qudit dimensions (dim = N+1 per sender) — no binary
 qubit encoding is needed.
 """
 
-from __future__ import annotations
-
 import itertools
 from math import comb
 from typing import Any

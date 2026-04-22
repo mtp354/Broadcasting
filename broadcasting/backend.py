@@ -7,8 +7,6 @@ Three execution backends:
 * **HardwareBackend** — transpile and submit to IBM Quantum hardware.
 """
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any

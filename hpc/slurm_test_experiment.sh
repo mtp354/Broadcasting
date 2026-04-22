@@ -25,8 +25,19 @@
 
 set -euo pipefail
 
-cd /scratch/prest-hc-13/Broadcasting
-mkdir -p slurm_logs results
+SCRATCH_DIR=/scratch/prest-hc-13/Broadcasting
+GLOBAL_DIR=/global/u/prest-hc-13/Broadcasting
+
+mkdir -p "${SCRATCH_DIR}"
+mkdir -p "${SCRATCH_DIR}/slurm_logs"
+mkdir -p "${SCRATCH_DIR}/results"
+
+# Sync latest code from global storage to scratch (excludes venv and caches)
+rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
+      --exclude='results' \
+      "${GLOBAL_DIR}/" "${SCRATCH_DIR}/"
+
+cd "${SCRATCH_DIR}"
 
 # Load modules
 module purge
@@ -74,5 +85,8 @@ else
     echo "ERROR: No result JSON found in results/"
     exit 1
 fi
+
+# Archive results back to persistent global storage
+rsync -a "${SCRATCH_DIR}/results/" "${GLOBAL_DIR}/results/"
 
 echo "Done."

@@ -25,15 +25,23 @@
 
 set -euo pipefail
 
+SCRATCH_DIR=/scratch/prest-hc-13/Broadcasting
+GLOBAL_DIR=/global/u/prest-hc-13/Broadcasting
+
 # Create log directory if needed
-mkdir -p slurm_logs
+mkdir -p "${SCRATCH_DIR}/slurm_logs"
+
+# Sync latest code from global storage to scratch (excludes venv and caches)
+rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
+      --exclude='results' \
+      "${GLOBAL_DIR}/" "${SCRATCH_DIR}/"
 
 # Load modules
 module purge
 module load Compilers/Python/3.12.13
 
 # Move to project directory on scratch
-cd /scratch/prest-hc-13/Broadcasting
+cd "${SCRATCH_DIR}"
 
 # Activate virtual environment if present
 if [ -f ".venv/bin/activate" ]; then
@@ -67,5 +75,8 @@ python3 -m hpc.run_experiment \
     --p-steps "${P_STEPS}" \
     ${QEC_FLAG} \
     --output-dir results
+
+# Archive results back to persistent global storage
+rsync -a "${SCRATCH_DIR}/results/" "${GLOBAL_DIR}/results/"
 
 echo "Done."
