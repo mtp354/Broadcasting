@@ -1,0 +1,64 @@
+#!/bin/bash
+#SBATCH --job-name=hello_arrow
+#SBATCH --partition=partnsf
+#SBATCH --qos=qosnsf
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=1G
+#SBATCH --time=00:01:00
+#SBATCH --output=slurm_logs/%j.out
+#SBATCH --error=slurm_logs/%j.err
+# --------------------------------------------------------------------------
+# Hello-world smoke test — CUNY HPC (Arrow cluster)
+#
+# Validates: module loading, venv activation, Python version, Qiskit import.
+#
+# Usage:
+#   cd /scratch/prest-hc-13/Broadcasting
+#   sbatch hpc/slurm_hello.sh
+# --------------------------------------------------------------------------
+
+set -euo pipefail
+
+cd /scratch/prest-hc-13/Broadcasting
+mkdir -p slurm_logs
+
+# Load modules
+module purge
+module load Compilers/Python/3.12.13
+
+# Activate virtual environment
+if [ -f ".venv/bin/activate" ]; then
+    source .venv/bin/activate
+else
+    echo "ERROR: .venv not found. Create it first:"
+    echo "  module load python/3.13.7"
+    echo "  python3 -m venv .venv && source .venv/bin/activate"
+    echo "  pip install -r requirements.txt"
+    exit 1
+fi
+
+echo "=========================================="
+echo "Job ID:   ${SLURM_JOB_ID}"
+echo "Node:     $(hostname)"
+echo "Python:   $(which python3)"
+echo "Version:  $(python3 --version)"
+echo "=========================================="
+
+python3 -c "
+import sys
+print(f'Python executable: {sys.executable}')
+print(f'Python version:    {sys.version}')
+
+import numpy as np
+print(f'NumPy version:     {np.__version__}')
+
+import qiskit
+print(f'Qiskit version:    {qiskit.__version__}')
+
+print()
+print('Hello from Arrow! All imports successful.')
+"
+
+echo "Done."

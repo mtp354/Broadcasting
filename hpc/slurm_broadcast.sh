@@ -30,10 +30,10 @@ mkdir -p slurm_logs
 
 # Load modules
 module purge
-module load python
+module load Compilers/Python/3.12.13
 
-# Move to submission directory (project root)
-cd "${SLURM_SUBMIT_DIR}"
+# Move to project directory on scratch
+cd /scratch/prest-hc-13/Broadcasting
 
 # Activate virtual environment if present
 if [ -f ".venv/bin/activate" ]; then
@@ -45,7 +45,7 @@ echo "Job ID:        ${SLURM_JOB_ID}"
 echo "Array Task ID: ${SLURM_ARRAY_TASK_ID:-N/A}"
 echo "Node:          $(hostname)"
 echo "Working dir:   $(pwd)"
-echo "Python:        $(which python)"
+echo "Python:        $(which python3)"
 echo "=========================================="
 
 # --- Configure experiment parameters here ---
@@ -60,7 +60,7 @@ if [ -n "${USE_QEC}" ]; then
     QEC_FLAG="--use-qec"
 fi
 
-python -m hpc.run_experiment \
+python3 -m hpc.run_experiment \
     --mode "${MODE}" \
     --M "${M}" \
     --N "${N}" \
