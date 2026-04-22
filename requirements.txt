@@ -1,6 +1,6 @@
-numpy>=1.24
-qiskit>=1.0
-qiskit-aer>=0.13
-qiskit-ibm-runtime>=0.20
-matplotlib>=3.7
-pytest>=7.0
+numpy
+qiskit
+qiskit-aer
+qiskit-ibm-runtime
+matplotlib
+pytest
