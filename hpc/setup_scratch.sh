@@ -47,22 +47,22 @@ echo ""
 echo "[3/4] Loading Python module and creating venv..."
 module purge
 module load Compilers/Python/3.12.13
-echo "      Python: $(which python3) ($(python3 --version))"
+echo "      Python: $(which python) ($(python --version))"
 
 if [ -d "${VENV_DIR}" ]; then
     echo "      Venv already exists at ${VENV_DIR} — skipping creation."
     echo "      (Delete ${VENV_DIR} and re-run to recreate from scratch.)"
 else
-    python3 -m venv "${VENV_DIR}"
+    python -m venv "${VENV_DIR}"
     echo "      Venv created at ${VENV_DIR}"
 fi
 
 # 4. Install dependencies
 echo ""
-echo "[4/4] Installing dependencies into venv..."
+echo "[4/4] Installing dependencies..."
 source "${VENV_DIR}/bin/activate"
-python3 -m pip install --upgrade pip
-python3 -m pip install -r "${SCRATCH_DIR}/requirements.txt"
+python -m pip install --upgrade pip
+python -m pip install -r "${SCRATCH_DIR}/requirements.txt"
 echo "      Done."
 
 echo ""
@@ -76,4 +76,6 @@ echo ""
 echo "Results are saved to:"
 echo "  ${SCRATCH_DIR}/results/   (scratch, may be purged)"
 echo "  ${GLOBAL_DIR}/results/    (global, persistent)"
+echo ""
+echo "Venv location: ${VENV_DIR}"
 echo "=========================================="

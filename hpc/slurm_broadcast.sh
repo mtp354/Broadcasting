@@ -44,16 +44,18 @@ module load Compilers/Python/3.12.13
 cd "${SCRATCH_DIR}"
 
 # Activate virtual environment if present
-if [ -f ".venv/bin/activate" ]; then
-    source .venv/bin/activate
+if [ -f "${SCRATCH_DIR}/.venv/bin/activate" ]; then
+    source "${SCRATCH_DIR}/.venv/bin/activate"
 fi
+
+echo "Python:        $(which python)"
 
 echo "=========================================="
 echo "Job ID:        ${SLURM_JOB_ID}"
 echo "Array Task ID: ${SLURM_ARRAY_TASK_ID:-N/A}"
 echo "Node:          $(hostname)"
 echo "Working dir:   $(pwd)"
-echo "Python:        $(which python3)"
+echo "Python:        $(which python)"
 echo "=========================================="
 
 # --- Configure experiment parameters here ---
@@ -68,7 +70,7 @@ if [ -n "${USE_QEC}" ]; then
     QEC_FLAG="--use-qec"
 fi
 
-python3 -m hpc.run_experiment \
+python -m hpc.run_experiment \
     --mode "${MODE}" \
     --M "${M}" \
     --N "${N}" \

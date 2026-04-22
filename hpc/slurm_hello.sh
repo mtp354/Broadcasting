@@ -39,24 +39,22 @@ module purge
 module load Compilers/Python/3.12.13
 
 # Activate virtual environment
-if [ -f ".venv/bin/activate" ]; then
-    source .venv/bin/activate
+if [ -f "${SCRATCH_DIR}/.venv/bin/activate" ]; then
+    source "${SCRATCH_DIR}/.venv/bin/activate"
 else
-    echo "ERROR: .venv not found. Create it first:"
-    echo "  module load Compilers/Python/3.12.13"
-    echo "  python3 -m venv /scratch/prest-hc-13/Broadcasting/.venv && source .venv/bin/activate"
-    echo "  python3 -m pip install -r requirements.txt"
+    echo "ERROR: .venv not found. Run setup first:"
+    echo "  bash /global/u/prest-hc-13/Broadcasting/hpc/setup_scratch.sh"
     exit 1
 fi
 
 echo "=========================================="
 echo "Job ID:   ${SLURM_JOB_ID}"
 echo "Node:     $(hostname)"
-echo "Python:   $(which python3)"
-echo "Version:  $(python3 --version)"
+echo "Python:   $(which python)"
+echo "Version:  $(python --version)"
 echo "=========================================="
 
-python3 -c "
+python -c "
 import sys
 print(f'Python executable: {sys.executable}')
 print(f'Python version:    {sys.version}')

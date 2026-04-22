@@ -44,10 +44,11 @@ module purge
 module load Compilers/Python/3.12.13
 
 # Activate virtual environment
-if [ -f ".venv/bin/activate" ]; then
-    source .venv/bin/activate
+if [ -f "${SCRATCH_DIR}/.venv/bin/activate" ]; then
+    source "${SCRATCH_DIR}/.venv/bin/activate"
 else
-    echo "ERROR: .venv not found. Run the hello-world test first."
+    echo "ERROR: .venv not found. Run setup first:"
+    echo "  bash /global/u/prest-hc-13/Broadcasting/hpc/setup_scratch.sh"
     exit 1
 fi
 
@@ -55,7 +56,7 @@ echo "=========================================="
 echo "Job ID:      ${SLURM_JOB_ID}"
 echo "Node:        $(hostname)"
 echo "Working dir: $(pwd)"
-echo "Python:      $(which python3)"
+echo "Python:      $(which python)"
 echo "=========================================="
 
 echo ""
@@ -63,7 +64,7 @@ echo "--- Running minimal exact experiment ---"
 echo "    M=1, N=2, p_steps=5, no QEC"
 echo ""
 
-python3 -m hpc.run_experiment \
+python -m hpc.run_experiment \
     --mode exact \
     --M 1 \
     --N 2 \
