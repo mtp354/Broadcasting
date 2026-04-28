@@ -8,6 +8,12 @@
 #   3. Create a Python 3.12 virtual environment in /scratch
 #   4. Install all dependencies
 #
+#   Run this locally to sync code to global/u
+#   rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='*.pyc' \
+#   -e "ssh -J prest-hc-13@chizen.csi.cuny.edu" \
+#   ~/Projects/Qiskit\ Projects/Broadcasting/ \
+#   prest-hc-13@arrow:/global/u/prest-hc-13/Broadcasting/
+#
 # After this, use sbatch to submit jobs. The SLURM scripts will
 # automatically rsync the latest code from /global before each run.
 #
