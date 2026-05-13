@@ -1,76 +1,67 @@
 {
   "timestamp": "2026-05-13T14:17:04.298172",
-  "job_id": "d82btog0bvlc73d240pg",
+  "experiment_type": "hardware",
   "backend": "ibm_marrakesh",
+  "optimization_level": 3,
+  "job_id": "d82btog0bvlc73d240pg",
   "shots": 8192,
   "seed": 64,
+  "n_samples": null,
   "protocol": {
     "M": 1,
     "N": 2,
+    "alpha": null,
     "use_qec": false,
-    "nt": 1,
     "theta_samples": [
       [
         5.92814419967864
       ]
-    ],
-    "tau_values": [
+    ]
+  },
+  "sweep": {
+    "axis": "tau",
+    "values": [
       0,
       3000,
       6000
     ]
   },
-  "results": {
-    "theta_0_tau_0": {
-      "theta_idx": 0,
-      "thetas": [
-        5.92814419967864
-      ],
-      "tau": 0,
-      "fidelities": [
-        0.8990478515625,
-        0.8695068359375
-      ],
-      "counts": {
+  "fidelities": [
+    [
+      0.8990478515625,
+      0.8695068359375
+    ],
+    [
+      0.7620849609375,
+      0.5924072265625
+    ],
+    [
+      0.52197265625,
+      0.476318359375
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": [
+    [
+      {
         "10": 739,
         "00": 6626,
         "01": 497,
         "11": 330
-      }
-    },
-    "theta_0_tau_3000": {
-      "theta_idx": 0,
-      "thetas": [
-        5.92814419967864
-      ],
-      "tau": 3000,
-      "fidelities": [
-        0.7620849609375,
-        0.5924072265625
-      ],
-      "counts": {
+      },
+      {
         "00": 3829,
         "01": 1024,
         "10": 2414,
         "11": 925
-      }
-    },
-    "theta_0_tau_6000": {
-      "theta_idx": 0,
-      "thetas": [
-        5.92814419967864
-      ],
-      "tau": 6000,
-      "fidelities": [
-        0.52197265625,
-        0.476318359375
-      ],
-      "counts": {
+      },
+      {
         "01": 1567,
         "00": 2335,
         "10": 1941,
         "11": 2349
       }
-    }
-  }
+    ]
+  ],
+  "metadata": {}
 }

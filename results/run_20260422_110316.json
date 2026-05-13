@@ -1,22 +1,32 @@
 {
   "timestamp": "2026-04-22T11:03:16.685651",
+  "experiment_type": "simulation",
+  "backend": "aer_exact",
+  "optimization_level": null,
+  "job_id": null,
+  "shots": null,
+  "seed": 42,
+  "n_samples": null,
   "protocol": {
     "M": 1,
     "N": 2,
     "alpha": 0.5773502691896258,
-    "thetas": [
-      0.7853981633974483
-    ],
-    "p_list": [
+    "use_qec": false,
+    "theta_samples": [
+      [
+        0.7853981633974483
+      ]
+    ]
+  },
+  "sweep": {
+    "axis": "p",
+    "values": [
       0.0,
       0.25,
       0.5,
       0.75,
       1.0
-    ],
-    "use_qec": false,
-    "n_samples": null,
-    "seed": 42
+    ]
   },
   "fidelities": [
     [
@@ -40,22 +50,7 @@
       0.333333340896457
     ]
   ],
-  "metadata": {
-    "mode": "exact",
-    "M": 1,
-    "N": 2,
-    "use_qec": false,
-    "thetas": [
-      0.7853981633974483
-    ],
-    "p_list": [
-      0.0,
-      0.25,
-      0.5,
-      0.75,
-      1.0
-    ],
-    "alpha": 0.5773502691896258,
-    "timestamp": "2026-04-22T11:03:16.685651"
-  }
+  "per_theta_fidelities": null,
+  "counts": null,
+  "metadata": {}
 }
