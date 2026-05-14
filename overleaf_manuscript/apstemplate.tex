@@ -339,7 +339,7 @@ where the receiver bits encode the symmetric state $\ket{k;N{-}k}$ via all permu
 When QEC is enabled, each receiver qubit is replaced by a five-qubit $[[5,1,3]]$ block using the encoding tensor
 $E_{b_1 b_2 b_3 b_4 b_5, q}$, defined by
 $E[\ldots,0] = \ket{0_L}$ and $E[\ldots,1] = \ket{1_L}$,
-applied via tensor contraction over each logical receiver axis. All reshapes use Fortran (column-major) order to match Qiskit's little-endian convention, in which qubit~0 corresponds to the least-significant bit of the state-vector index \cite{javadi2024qiskit}.
+applied via tensor contraction over each logical receiver axis \cite{javadi2024qiskit}.
 
 \subsection{Circuit Construction}
 \label{sec:circuit}
@@ -474,12 +474,21 @@ The fidelity measurements are stored in a separate classical register from the s
 
 \subsection{Hardware Results}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/noiselessqec.png}
+    \caption{Caption}
+    \label{fig:placeholder}
+\end{figure}
+
 \begin{figure*}
     \centering
-    \includegraphics[width=0.95\linewidth]{m1n2qec0.png}
+    \includegraphics[width=\linewidth]{m1n2qec0.png}
     \caption{Fidelity versus delay time $\tau$ (in units of the backend clock cycle, dt) for the $M{=}1$, $N{=}2$ bare protocol executed on the IBM \texttt{ibm\_fez} backend with 8192 shots per point. Two random sender-angle samples are shown (blue and orange), with separate curves for each receiver. At $\tau=0$ the fidelity exceeds 0.9 for all receivers, and it decays toward the random baseline $F=0.5$ (dotted line) as idle decoherence accumulates. Error bars represent shot-noise uncertainty ($1\sigma$).}
     \label{fig:hardware_fidelity}
 \end{figure*}
+
+
 
 %\end{region}
 
