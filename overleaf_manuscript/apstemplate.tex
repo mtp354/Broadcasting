@@ -99,6 +99,21 @@ insert abstract here
 
 \section{Introduction \label{Introduction}}
 %\begin{region}
+General history, no-cloning and broadcasting theorems
+Previous Hillery protocol results
+Motivations for applications, why is it useful
+Why multi-sender multi-receiver matters
+Why noise matters in distributed protocols
+Current hardware/NISQ mention of QEC
+Main contributions
+Noisy analysis of the M-sender N-receiver protocol,
+QEC-enhanced receiver encoding
+exact-vs-sampling comparison
+heterogeneous-channel study
+hardware validation
+
+
+
 Pioneering work in quantum information produced famous impossibility results such as the no-cloning theorem \cite{wootters2009no} and the no-broadcasting theorem \cite{barnum2007generalized}. These results have been fundamental in shaping our understanding of quantum information and have had profound implications for quantum communication and cryptography \cite{vsupic2020self}. However, recent research has shown that these impossibility results can be circumvented under certain, more restrictive, conditions, leading to new possibilities for quantum information processing \cite{larasati2025towards,zhang2025efficient,sukeno2025quantum,andronikos2023one}. In this paper, we explore the concept of restricted broadcasting, where a quantum state can be broadcast to multiple receivers under specific constraints \cite{PhysRevA.105.042611}.
 \\
 We begin with the M-sender N-receiver broadcasting protocol introduced in \cite{sukeno2023broadcasting}, where parties share an initial entangled state from which single qubits are distributed to the receivers. The senders then apply local unitaries to their systems, which imprint a global phase on the receivers' qubits. By measuring in a Fourier basis and broadcasting the classical outcomes, the receivers can apply byproduct corrections to recover the desired state without revealing the sender's choice of phase. This protocol demonstrates that, under certain conditions, it is possible to achieve a form of broadcasting that is not prohibited by the no-broadcasting theorem.
@@ -108,11 +123,11 @@ In this work, we extend the M-sender N-receiver broadcasting protocol to account
 
 
 
-\section{Generalized Restricted Broadcasting Protocol}
+\section{Broadcasting Protocol}
 %\begin{region}
-We first review the M-sender N-receiver broadcasting protocol from \cite{sukeno2023broadcasting} in the ideal, noiseless case. The protocol involves a resource state shared between the senders and receivers, local unitaries applied by the senders to imprint phases, and measurements in a Fourier basis to enable byproduct corrections at the receivers.
+We first review the M-sender N-receiver broadcasting protocol from \cite{sukeno2023broadcasting} in the ideal, noiseless case. The protocol involves a resource state shared between the senders and receivers, local private unitaries applied by the senders to add phases, and measurements in a Fourier basis to enable byproduct corrections at the receivers.
 \\
-The initial resource state is a superposition of symmetric states, where each sender's system is in a state corresponding to the number of receivers in the $\ket{0}$ or $\ket{1}$ state. This is given by
+The initial resource state is an entangled superposition of symmetric states, where each sender's system is in a state corresponding to the number of receivers in the $\ket{0}$ or $\ket{1}$ state. This is given by
 \begin{align}
 \ket{\Psi^{(M,N)}}
 &:= \sum_{k=0}^{N}\alpha^k\beta^{N-k}\binom{N}{k}^{1/2}
@@ -120,11 +135,11 @@ The initial resource state is a superposition of symmetric states, where each se
 \end{align}
 where $\ket{k;N-k}$ is the symmetric state of $N$ qubits with $k$ in the $\ket{0}$ state and $N-k$ in the $\ket{1}$ state.
 \\
-Each sender applies a local unitary $U_{a_j}(\theta_j)$ that imprints a phase depending on the number of $\ket{0}$ and $\ket{1}$ states in the receivers' systems. This is defined as
+Each sender $j$ applies a local unitary $U_{a_j}(\theta_j)$ that adds a phase $\theta_j$ depending on the number of $\ket{0}$ and $\ket{1}$ states in the receivers' systems. This is defined as
 \begin{align}
 U_{a_j}(\theta_j)\ket{k}_{a_j}
 &:= e^{i(2k-N)\theta_j}\ket{k}_{a_j},
-\qquad \theta_j\in\mathbb{R}.
+\qquad \theta_j\in[0, 2\pi].
 \end{align}
 After the senders apply their unitaries, they measure their systems in the Fourier basis $\{\ket{u_n}\}_{n=0}^N$, where
 \begin{align}
@@ -132,83 +147,67 @@ After the senders apply their unitaries, they measure their systems in the Fouri
 &:= \frac{1}{\sqrt{N+1}}\sum_{k=0}^{N} e^{2\pi i nk/(N+1)}\ket{k},
 \qquad n\in\{0,1,\dots,N\}.
 \end{align}
-The measurement outcomes $\bar n=(n_1,\dots,n_M)$ are then broadcast to the receivers, who apply byproduct corrections $U_{\bar n}$ to their qubits to recover the desired state. The byproduct correction is defined as
+The measurement outcomes $\Vec{n}=(n_1,\dots,n_M)$ are then broadcast to the receivers, who apply byproduct corrections $U_{\Vec{n}}$ to their qubits to recover the desired state. The byproduct correction is defined as
 \begin{align}
-U_{\bar n}\ket{0}
+U_{\Vec{n}}\ket{0}
 &:= \exp\!\left(\frac{2\pi i}{N+1}\sum_{j=1}^{M}n_j\right)\ket{0},
 \\
-U_{\bar n}\ket{1}
+U_{\Vec{n}}\ket{1}
 &:= \ket{1}.
 \end{align}
 In the ideal, noiseless case, this protocol allows the receivers to recover the state
 \begin{align}
-\ket{\psi_{\mathrm{out}}}
+\ket{\psi_{\mathrm{target}}}
 &= \alpha\,e^{i\sum_{j=1}^{M}\theta_j}\ket{0} + \beta\,e^{-i\sum_{j=1}^{M}\theta_j}\ket{1}.
 \end{align}
+\\
+%
+To measure the success of an instance of the protocol we compute the fidelity of the output state with respect to the target state which in general is defined as
+\begin{align}
+    F(\rho_1, \rho_2) = \big(\Tr\sqrt{\sqrt{\rho_1}\rho_2\sqrt{\rho_1}} \big)^2.
+\end{align}
+Where $\rho_1, \rho_2$ are the density matrices of the output and target state. For pure states this reduces to 
+\begin{align}
+    F(\ket{\psi_{\mathrm{out}}}, \ket{\psi_{\mathrm{target}}}) = \mid 
+    \braket{\psi_{\mathrm{out}} \mid \psi_{\mathrm{target}}}\mid^2,
+\end{align}
+and for a circuit with a fixed measurement basis, this can be estimated by appending an additional final unitary that maps the target state to an eigenstate of the measurement basis (e.g. $\ket{0}$), measuring and repeating. 
 
+The senders' $(N{+}1)$-dimensional qudit Hilbert spaces do not map directly onto qubit hardware. To solve this, we embed each sender qudit into
+\begin{align}
+n_q = \lceil \log_2(N+1) \rceil
+\end{align}
+qubits using a binary encoding: the computational basis state $\ket{k}_{a_j}$ ($0\le k\le N$) is stored as the $n_q$-bit binary representation of $k$. Basis states with index $k>N$ are unused and carry zero amplitude.
 
 %\end{region}
 
 \section{Noisy Channels}
 %\begin{region}
-In a realistic scenario, the distribution of qubits to the receivers may be subject to noise. We model this noise using a depolarizing channel, which acts independently on each qubit sent to the receivers. The depolarizing channel with depolarizing probability $p$ is defined as
+
+Analytic description of depolarizing noise in the broadcasting protocol
+
+In a realistic scenario, the distribution of qubits to the receivers may be subject to noise. We model this noise using a depolarizing channel, which acts independently on each qubit sent to the receivers. This is applied after the initial resource state is prepared but before each sender applies their local unitary. The depolarizing channel with depolarizing probability $p$ is defined as
 \begin{align}
 \mathcal{D}_p(\rho)
 &:= (1-p)\rho + \frac{p}{3}\left(X\rho X + Y\rho Y + Z\rho Z\right), \\
 &\qquad 0\le p\le 1, \nonumber
 \end{align}
 where $X$, $Y$, and $Z$ are the Pauli operators. The presence of noise can degrade the fidelity of the output state at the receivers, making it crucial to analyze the performance of the protocol under these conditions and to explore methods for mitigating the effects of noise, such as quantum error correction.
+%
+A depolarization channel applied to the reduced density matrix of a single receiver's initial qubit then becomes...
+
+After applying local phases, measurements and corrections, the final receiver state is then...
+
+Which has fidelity with the target state of...
+
+
 %\end{region}
 
-\section{Error correction}
+\section{QEC Enhanced Protocol}
 %\begin{region}
+
 There are many possible ways to incorporate error correction into the protocol. We choose to encode each receiver's qubit using the $[[5,1,3]]$ maximally efficient single-qubit error code \cite{laflamme1996perfect,knill1997theory}. This code is defined by its stabilizer generators and logical basis states \cite{gottesman1997stabilizer,calderbank1998quantum}, and it allows us to protect the transmitted information from errors introduced by the depolarizing channels \cite{devitt2013qec}. The encoding and decoding processes involve applying specific unitaries to map between the logical qubits and the physical qubits, as well as performing syndrome measurements to identify and correct errors. By integrating this error correction scheme into the broadcasting protocol, we can enhance the robustness of the communication and improve the fidelity of the output states at the receivers, even in the presence of noise.
 
-\paragraph{Protocol: $M$-sender $\to$ $N$-receiver broadcasting with $[[5,1,3]]$ quantum error correction over depolarizing channels.}
-
-\subparagraph{Parameters and notation.}
-Fix integers $M\ge 1$ and $N\ge 1$. Let $\alpha,\beta\in\mathbb{C}$ satisfy $|\alpha|^2+|\beta|^2=1$.
-For each sender $j\in\{1,\dots,M\}$, let $a_j$ be a $(N{+}1)$-dimensional Hilbert space with computational basis
-$\{\ket{k}_{a_j}\}_{k=0}^N$.
-For each receiver $\ell\in\{1,\dots,N\}$, let $q_\ell$ be a qubit Hilbert space with computational basis
-$\{\ket{0}_\ell,\ket{1}_\ell\}$.
-
-\begin{align}
-\ket{k;N-k}
-&:= \binom{N}{k}^{-1/2}\,
-\mathrm{Sym}\!\Big(
-\underbrace{\ket{0}\cdots\ket{0}}_{k}\,
-\underbrace{\ket{1}\cdots\ket{1}}_{N-k}
-\Big),
-\end{align}
-where $\mathrm{Sym}(\cdot)$ denotes uniform symmetrization over all permutations of the $N$ tensor factors.
-
-\subparagraph{Resource state, sender unitaries, and measurement basis.}
-\begin{align}
-\ket{\Psi^{(M,N)}}
-&:= \sum_{k=0}^{N}\alpha^k\beta^{N-k}\binom{N}{k}^{1/2}
-\left(\prod_{j=1}^{M}\ket{k}_{a_j}\right)\ket{k;N-k},
-\\
-U_{a_j}(\theta_j)\ket{k}_{a_j}
-&:= e^{i(2k-N)\theta_j}\ket{k}_{a_j},
-\qquad \theta_j\in\mathbb{R},
-\\
-\ket{u_n}
-&:= \frac{1}{\sqrt{N+1}}\sum_{k=0}^{N} e^{2\pi i nk/(N+1)}\ket{k}, \\
-\qquad n &\in\{0,1,\dots,N\}.
-\end{align}
-
-\subparagraph{Receiver byproduct correction from sender outcomes.}
-For outcomes $\bar n=(n_1,\dots,n_M)\in\{0,\dots,N\}^M$, define $U_{\bar n}$ on each receiver qubit by
-\begin{align}
-U_{\bar n}\ket{0}
-&:= \exp\!\left(\frac{2\pi i}{N+1}\sum_{j=1}^{M}n_j\right)\ket{0},
-\\
-U_{\bar n}\ket{1}
-&:= \ket{1}.
-\end{align}
-
-\subparagraph{$[[5,1,3]]$ code (stabilizer, logical basis, encoder/decoder).}
 Let $X,Y,Z$ be the single-qubit Pauli operators and $I$ the identity.
 On each 5-qubit block, define stabilizer generators
 \begin{align}
@@ -247,7 +246,7 @@ Define the decoding channel $\Dec:(\mathbb{C}^2)^{\otimes 5}\to\mathbb{C}^2$ by
 \end{align}
 where $\operatorname{Tr}_{2,3,4,5}$ traces out the last four qubits of the block.
 
-\subparagraph{Syndrome measurement and correction.}
+Syndrome measurement and correction.
 Given a 5-qubit block state $\rho$, measure each $g_r$ to obtain eigenvalues $\lambda_r\in\{+1,-1\}$ and define
 syndrome bits $s_r\in\{0,1\}$ by $\lambda_r=(-1)^{s_r}$, forming $s=(s_1,s_2,s_3,s_4)\in\{0,1\}^4$.
 Choose a syndrome-to-correction map $s\mapsto E_s$ into 5-qubit Pauli operators such that
@@ -260,7 +259,16 @@ and (for single-qubit errors) $E_{s(P)}:=P$ for each weight-1 Pauli $P\in\{X_i,Y
 Apply the correction $E_s^\dagger=E_s$.
 
 
-\subparagraph{Protocol steps.}
+
+
+Protocol: $M$-sender $\to$ $N$-receiver broadcasting with $[[5,1,3]]$ quantum error correction over depolarizing channels.
+
+Fix integers $M\ge 1$ and $N\ge 1$. Let $\alpha,\beta\in\mathbb{C}$ satisfy $|\alpha|^2+|\beta|^2=1$.
+For each sender $j\in\{1,\dots,M\}$, let $a_j$ be a $(N{+}1)$-dimensional Hilbert space with computational basis
+$\{\ket{k}_{a_j}\}_{k=0}^N$.
+For each receiver $\ell\in\{1,\dots,N\}$, let $q_\ell$ be a qubit Hilbert space with computational basis
+$\{\ket{0}_\ell,\ket{1}_\ell\}$.
+
 \begin{enumerate}
 \item \textbf{Prepare resource.} Prepare $\ket{\Psi^{(M,N)}}$ on $(a_1,\dots,a_M,q_1,\dots,q_N)$.
 
@@ -286,16 +294,13 @@ measure $(g_1,g_2,g_3,g_4)$ to obtain syndrome $s^{(\ell)}$, apply correction $E
 \item \textbf{Byproduct correction.} Each receiver $\ell$ applies $U_{\bar n}$ to $\rho^{(\ell)}$.
 \end{enumerate}
 
-\subparagraph{Ideal output (noiseless case).}
+Ideal output (noiseless case).
 \begin{align}
 \ket{\psi_{\mathrm{out}}}
 &= \alpha\,e^{i\sum_{j=1}^{M}\theta_j}\ket{0} + \beta\,e^{-i\sum_{j=1}^{M}\theta_j}\ket{1}.
 \end{align}
 
-\subsection{Estimating QEC Threshold}
-\label{sec:qec_threshold}
-%\begin{region}
-The fidelity for a pure input state to the depolarizing channel with depolarizing probability $p$ is given by
+QEC codes improve fidelity up to a certain level of noise. The fidelity for a pure input state to the depolarizing channel with depolarizing probability $p$ is given by
 \begin{align}
     F &= \sum_{P \in \{X,Y,Z\}} |\bra{\psi} P \ket{\psi} |^2 \\
     &= 1 - \frac{2p}{3}.
@@ -317,7 +322,15 @@ This implies a crossover at $p \approx 1/10$. This is an underestimate of the cr
 
 %\end{region}
 
-\section{Qiskit Implementation \label{sec:qiskit}}
+\section{Methods}
+Exact density matrix method + scaling complexity
+\\
+Monte Carlo trajectory sampling + implementation details
+\\
+Figure: Error scaling/convergence
+Qiskit
+Delay parameters, optimization levels
+Circuit diagram
 
 We implement the broadcasting protocol as a dynamic quantum circuit using Qiskit \cite{javadi2024qiskit}. Dynamic circuits incorporate mid-circuit measurements and real-time classical feedforward, features that are essential for both the sender Fourier-basis measurement with byproduct correction and the QEC syndrome-extraction-and-correction cycle \cite{corcoles2021dynamic}.
 
