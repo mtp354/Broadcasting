@@ -35,7 +35,7 @@
 % BibTeX style file (bst file), so only uncomment the line
 % below if necessary.
 %\bibliographystyle{apsrev4-2}
-%\end{region}
+
 
 \usepackage{algorithm}
 \usepackage{graphicx}
@@ -47,6 +47,7 @@
 \DeclareMathOperator{\Enc}{Enc}
 \DeclareMathOperator{\Dec}{Dec}
 
+%\end{region}
 
 \begin{document}
 %\begin{region}
@@ -121,8 +122,6 @@ We begin with the M-sender N-receiver broadcasting protocol introduced in \cite{
 In this work, we extend the M-sender N-receiver broadcasting protocol to account for noisy distribution channels to each receiver. We analyze the impact of noise on the protocol's performance and explore how quantum error correction can be integrated to mitigate the effects of noise \cite{knill1997theory}. By encoding the receivers' qubits using a quantum error-correcting code, we can protect the transmitted information from errors introduced by the noisy channels, thereby enhancing the robustness of the broadcasting protocol.
 %\end{region}
 
-
-
 \section{Broadcasting Protocol}
 %\begin{region}
 We first review the M-sender N-receiver broadcasting protocol from \cite{sukeno2023broadcasting} in the ideal, noiseless case. The protocol involves a resource state shared between the senders and receivers, local private unitaries applied by the senders to add phases, and measurements in a Fourier basis to enable byproduct corrections at the receivers.
@@ -184,7 +183,7 @@ qubits using a binary encoding: the computational basis state $\ket{k}_{a_j}$ ($
 \section{Noisy Channels}
 %\begin{region}
 
-Analytic description of depolarizing noise in the broadcasting protocol
+TODO: Analytic description of depolarizing noise in the broadcasting protocol. \\
 
 In a realistic scenario, the distribution of qubits to the receivers may be subject to noise. We model this noise using a depolarizing channel, which acts independently on each qubit sent to the receivers. This is applied after the initial resource state is prepared but before each sender applies their local unitary. The depolarizing channel with depolarizing probability $p$ is defined as
 \begin{align}
@@ -205,7 +204,6 @@ Which has fidelity with the target state of...
 
 \section{QEC Enhanced Protocol}
 %\begin{region}
-
 There are many possible ways to incorporate error correction into the protocol. We choose to encode each receiver's qubit using the $[[5,1,3]]$ maximally efficient single-qubit error code \cite{laflamme1996perfect,knill1997theory}. This code is defined by its stabilizer generators and logical basis states \cite{gottesman1997stabilizer,calderbank1998quantum}, and it allows us to protect the transmitted information from errors introduced by the depolarizing channels \cite{devitt2013qec}. The encoding and decoding processes involve applying specific unitaries to map between the logical qubits and the physical qubits, as well as performing syndrome measurements to identify and correct errors. By integrating this error correction scheme into the broadcasting protocol, we can enhance the robustness of the communication and improve the fidelity of the output states at the receivers, even in the presence of noise.
 
 Let $X,Y,Z$ be the single-qubit Pauli operators and $I$ the identity.
@@ -257,8 +255,6 @@ E_s g_r
 \end{align}
 and (for single-qubit errors) $E_{s(P)}:=P$ for each weight-1 Pauli $P\in\{X_i,Y_i,Z_i\}_{i=1}^5$ with syndrome $s(P)$.
 Apply the correction $E_s^\dagger=E_s$.
-
-
 
 
 Protocol: $M$-sender $\to$ $N$-receiver broadcasting with $[[5,1,3]]$ quantum error correction over depolarizing channels.
@@ -320,42 +316,40 @@ If we set this equal to the Fidelity in the no error-correction code we get
 This implies a crossover at $p \approx 1/10$. This is an underestimate of the crossover $p$ as not all two qubit errors will be miss-corrected, for example a double bitflip on the same qubit or two phase flip errors.
 %\end{region}
 
-%\end{region}
-
 \section{Methods}
+%\begin{region}
+
+\subsection{Exact Density Matrix}
 Exact density matrix method + scaling complexity
 \\
+
+\subsection{Monte Carlo Sampling}
 Monte Carlo trajectory sampling + implementation details
 \\
-Figure: Error scaling/convergence
-Qiskit
+\begin{figure}
+    \centering
+    \includegraphics[width=1.05\linewidth]{mc_sampling_convergence.png}
+    \caption{Error defined as the area between the fidelity curves for $p \in [0,1]$ of the MC trajectory sampling and the exact density matrix method for the $M{=}1$, $N{=}2$ protocol with depolarizing noise. As the number of samples increases, the Monte Carlo estimates converge to the exact values, demonstrating the validity of the sampling approach for estimating protocol performance under noise.}
+    \label{Sampling Error Convergence}
+\end{figure}
+
+\subsection{Qiskit}
 Delay parameters, optimization levels
-Circuit diagram
+\\
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{qec fidelity.png}
+    \caption{Implementation of the $[[5,1,3]]$ quantum error correction code for a single qubit subject to a delay time before decoding on IBM hardware. The fidelity of the output state with respect to the input state is plotted as a function of the delay time, demonstrating insufficient hardware performance to achieve a fidelity improvement over the unencoded case for any delay time.}
+    \label{QEC Fidelity}
+\end{figure}
+
 
 We implement the broadcasting protocol as a dynamic quantum circuit using Qiskit \cite{javadi2024qiskit}. Dynamic circuits incorporate mid-circuit measurements and real-time classical feedforward, features that are essential for both the sender Fourier-basis measurement with byproduct correction and the QEC syndrome-extraction-and-correction cycle \cite{corcoles2021dynamic}.
-
-\subsection{Qubit Embedding of the Resource State}
-\label{sec:embedding}
-
-The senders' $(N{+}1)$-dimensional qudit Hilbert spaces do not map directly onto qubit hardware. We embed each sender qudit into
-\begin{align}
-n_q = \lceil \log_2(N+1) \rceil
-\end{align}
-qubits using a binary encoding: the computational basis state $\ket{k}_{a_j}$ ($0\le k\le N$) is stored as the $n_q$-bit binary representation of $k$. Basis states with index $k>N$ are unused and carry zero amplitude.
-
-The full register layout consists of $M\cdot n_q$ sender qubits followed by $N$ receiver qubits (or $5N$ when QEC is enabled), giving a total Hilbert-space dimension of $2^{M n_q + N}$ (or $2^{M n_q + 5N}$). The resource state $\ket{\Psi^{(M,N)}}$ is constructed as a classical state vector and loaded via Qiskit's \texttt{initialize} instruction. For each $k\in\{0,\dots,N\}$ and each $k$-element subset of receiver positions set to $\ket{0}$, we accumulate the amplitude $\alpha^k\beta^{N-k}$ at the corresponding computational-basis index:
-\begin{align}
-\text{index} = \underbrace{k \mid k \ll n_q \mid \cdots}_{M \text{ copies}} ~\big|~ \bigl(\text{receiver bits}\bigr) \ll M n_q,
-\end{align}
-where the receiver bits encode the symmetric state $\ket{k;N{-}k}$ via all permutations of $k$ zeros among $N$ positions.
 
 When QEC is enabled, each receiver qubit is replaced by a five-qubit $[[5,1,3]]$ block using the encoding tensor
 $E_{b_1 b_2 b_3 b_4 b_5, q}$, defined by
 $E[\ldots,0] = \ket{0_L}$ and $E[\ldots,1] = \ket{1_L}$,
 applied via tensor contraction over each logical receiver axis \cite{javadi2024qiskit}.
-
-\subsection{Circuit Construction}
-\label{sec:circuit}
 
 A schematic of the Qiskit circuit for the $M{=}1$, $N{=}2$ protocol without QEC is shown in Fig.~\ref{fig:circuit}. The circuit is built in six stages:
 
@@ -392,28 +386,8 @@ Qiskit's \texttt{if\_test} primitive branches on the packed little-endian intege
     \label{fig:circuit}
 \end{figure*}
 
-\subsection{QEC Syndrome Extraction and Decoding}
-\label{sec:qec_circuit}
-
 The $[[5,1,3]]$ error correction is implemented in the circuit using four shared ancilla qubits and Qiskit's dynamic-circuit primitives. For each five-qubit block the circuit appends three stages, illustrated schematically in Fig.~\ref{fig:qec_circuit}.
 
-\begin{figure}
-\centering
-\begin{quantikz}[row sep={0.55cm,between origins}, column sep=0.35cm]
-\lstick{$\ket{\psi}_L$} & \gate[5]{V_{\Enc}} & \gate[5]{\mathcal{D}_p} & \qw & \qw & \qw & \qw & \ctrl{5} & \qw & \qw & \qw & \qw & \gate[5]{E_s} & \gate[5]{V_{\Enc}^\dagger} & \qw & \rstick{$\ket{\psi}$} \qw \\
-\lstick{$\ket{0}$} & \qw & \qw & \qw & \qw & \ctrl{4} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
-\lstick{$\ket{0}$} & \qw & \qw & \qw & \qw & \qw & \ctrl{3} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
-\lstick{$\ket{0}$} & \qw & \qw & \ctrl{2} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
-\lstick{$\ket{0}$} & \qw & \qw & \qw & \ctrl{1} & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \qw & \rstick{$\mathrm{tr}$} \qw \\
-\lstick{$\ket{0}_{\mathrm{anc}_1}$}\setwiretype{q} & \qw & \qw & \targ{} & \targ{} & \targ{} & \qw & \targ{} & \meter{s_1} & \cwbend{-2} & \qw & \qw & \qw & \qw & \qw & \\
-\lstick{$\ket{0}_{\mathrm{anc}_2}$}\setwiretype{q} & \qw & \qw & \qw & \qw & \qw & \targ{} & \qw & \qw & \qw & \meter{s_2} & \cwbend{-3} & \qw & \qw & \qw & \\
-\lstick{$\vdots$}\setwiretype{n} & & & & & & & & & \push{\scriptstyle s_3, s_4} & & & & & &
-\end{quantikz}
-\caption{Schematic circuit for a single logical qubit encoded in the $[[5,1,3]]$ code. The logical state $\ket{\psi}_L$ is encoded into five physical qubits via $V_{\Enc}$. After passing through the depolarizing channel $\mathcal{D}_p$, four ancilla qubits (two shown; $s_3$, $s_4$ analogous) extract the syndrome by measuring the stabilizer generators $g_1,\dots,g_4$. A conditional Pauli correction $E_s$ is applied based on the four-bit syndrome $s$, followed by the decoding unitary $V_{\Enc}^\dagger$, which maps the corrected logical qubit back to the first physical qubit. The remaining four qubits are traced out.}
-\label{fig:qec_circuit}
-\end{figure}
-
-\subsubsection{Syndrome extraction}
 Each of the four stabilizer generators $g_r\in\{XZZXI, IXZZX, XIXZZ, ZXIXZ\}$ is measured using one ancilla qubit. For each Pauli factor $P_i$ in the generator acting on block qubit~$i$:
 \begin{itemize}
 \item If $P_i = X$: apply $H$ to qubit~$i$, then $\mathrm{CX}(i,\mathrm{anc})$, then $H$ again.
@@ -423,19 +397,14 @@ Each of the four stabilizer generators $g_r\in\{XZZXI, IXZZX, XIXZZ, ZXIXZ\}$ is
 \end{itemize}
 The ancilla is then measured, yielding syndrome bit $s_r$. Ancilla qubits are reset before each stabilizer measurement and reused across blocks.
 
-\subsubsection{Conditional correction}
 The four syndrome bits $s = (s_1, s_2, s_3, s_4)$ form a 4-bit integer (little-endian). A precomputed lookup table maps each of the 16 possible syndrome values to the corresponding single-qubit Pauli correction (or identity for $s=0$). Using Qiskit's \texttt{if\_test} on the syndrome register, the appropriate Pauli gate ($X$, $Y$, or $Z$) is conditionally applied to the identified qubit. All 15 single-qubit Pauli errors on the five physical qubits produce distinct nonzero syndromes, guaranteeing correction of any weight-1 error \cite{laflamme1996perfect,gottesman1997stabilizer}.
 
-\subsubsection{Decode unitary}
 The decoding unitary $V_{\Enc}^\dagger$ is constructed as a $32\times 32$ matrix via Gram--Schmidt orthogonalization \cite{nielsen2010quantum}. The first two columns of the encoding matrix $W$ are the normalized logical basis vectors $\ket{0_L}$ and $\ket{1_L}$; the remaining 30 columns are filled from the standard basis to complete an orthonormal set. Then $V_{\Enc}^\dagger = W^\dagger$ maps
 \begin{align}
 V_{\Enc}^\dagger \ket{0_L} &= \ket{00000}, &
 V_{\Enc}^\dagger \ket{1_L} &= \ket{00001},
 \end{align}
 so the decoded logical qubit resides on the first physical qubit of each block (qubit~0 in Qiskit's little-endian ordering). The gate is applied as a single five-qubit \texttt{UnitaryGate} in Qiskit.
-
-\subsection{Fidelity Estimation}
-\label{sec:fidelity}
 
 The target output state for each receiver in the broadcasting protocol with $\alpha=\beta=1/\sqrt{2}$ lies on the equator of the Bloch sphere (the $XY$ plane):
 \begin{align}
@@ -460,48 +429,39 @@ P(\text{outcome}=0) &= \bra{0}H\,R_z(-\phi)\,\rho_{\mathrm{out}}\,R_z(-\phi)^\da
 &= \bra{\psi_{\mathrm{target}}}\rho_{\mathrm{out}}\ket{\psi_{\mathrm{target}}} = F.
 \end{align}
 The fidelity measurements are stored in a separate classical register from the sender measurement outcomes, allowing both to be extracted from a single circuit execution. This approach requires only a single shot-statistics estimate per receiver qubit, making it efficient for hardware experiments where measurement overhead is a primary cost.
+%\end{region}
 
 \section{Results}
 %\begin{region}
-\subsection{Simulated Results}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.95\linewidth]{qec fidelities 2.png}
-    \caption{Three-dimensional scatter plot of the fidelity between the two receiver output states as a function of the per-receiver target fidelity for the $M{=}1$, $N{=}2$ broadcasting protocol. Each point corresponds to a different pair of depolarizing probabilities $(p_1, p_2)$ applied independently to the two receiver channels. As either receiver's fidelity to the target state decreases due to increased depolarizing noise, the inter-receiver fidelity also degrades, demonstrating the correlated impact of channel noise on the protocol output.}
-    \label{fig:qec_fidelities_3d}
-\end{figure}
+
 
 \begin{figure}
     \centering
-    \includegraphics[width=0.95\linewidth]{qec vs no qec.png}
-    \caption{Average receiver fidelity as a function of depolarizing probability $p$ for the $M{=}1$, $N{=}2$ broadcasting protocol, comparing the bare (no~QEC) protocol with the $[[5,1,3]]$ QEC-encoded protocol. At low noise ($p\lesssim 0.15$) the QEC-encoded protocol maintains higher fidelity; at intermediate noise the two curves cross, and at high noise both approach the random-guess baseline of $F=0.5$. The dashed line marks this baseline.}
-    \label{fig:qec_vs_no_qec}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.95\linewidth]{qec vs no qec crossover.png}
-    \caption{Zoomed view of the crossover region from Fig.~\ref{fig:qec_vs_no_qec}, showing the range $p\in[0,0.2]$. The QEC-encoded protocol (orange) and bare protocol (blue) curves intersect near $p\approx 0.15$, consistent with the analytic estimate of $p\approx 1/10$ derived in Sec.~\ref{sec:qec_threshold}. Below this threshold the $[[5,1,3]]$ code provides a net fidelity advantage; above it the overhead of encoding five physical qubits per logical qubit introduces more uncorrectable multi-qubit errors than it prevents.}
-    \label{fig:qec_crossover}
-\end{figure}
-
-\subsection{Hardware Results}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/noiselessqec.png}
-    \caption{Caption}
-    \label{fig:placeholder}
+    \includegraphics[width=1.05\linewidth]{qec vs no qec vs sampling.png}
+    \caption{Average receiver fidelity as a function of depolarizing probability $p$ for the $M{=}1$, $N{=}2$ protocol with and without $[[5,1,3]]$ quantum error correction compared against Monte Carlo trajectory sampling estimates. A zoomed view of the crossover region is included showing the range $p\in[0130,0.145]$ where the $[[5,1,3]]$ protocol loses its advantage..}
+    \label{qec_crossover}
 \end{figure}
 
 \begin{figure*}
     \centering
-    \includegraphics[width=\linewidth]{m1n2qec0.png}
-    \caption{Fidelity versus delay time $\tau$ (in units of the backend clock cycle, dt) for the $M{=}1$, $N{=}2$ bare protocol executed on the IBM \texttt{ibm\_fez} backend with 8192 shots per point. Two random sender-angle samples are shown (blue and orange), with separate curves for each receiver. At $\tau=0$ the fidelity exceeds 0.9 for all receivers, and it decays toward the random baseline $F=0.5$ (dotted line) as idle decoherence accumulates. Error bars represent shot-noise uncertainty ($1\sigma$).}
-    \label{fig:hardware_fidelity}
+    \includegraphics[width=\linewidth]{fidelity between receivers.png}
+    \caption{Caption}
+    \label{fig:enter-label}
 \end{figure*}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{delay time vs fidelity 121 opt3.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=\linewidth]{fidelity scaling hardware.png}
+    \caption{Caption}
+    \label{fig:enter-label}
+\end{figure}
 
 %\end{region}
 
@@ -510,14 +470,11 @@ The fidelity measurements are stored in a separate classical register from the s
 
 %\end{region}
 
-
-%\begin{acknowledgments}
-% put your acknowledgments here.
-%\end{acknowledgments}
 \section{Acknowledgements}
+%\begin{region}
 This research was supported, in part, by a grant of computer time from the City University of New York High Performance Computing Center under NSF Grants CNS-0855217, CNS-0958379 and ACI-1126113.
+%\end{region}
 
-% Create the reference section using BibTeX:
 \bibliography{apssamp}
 
 \end{document}
