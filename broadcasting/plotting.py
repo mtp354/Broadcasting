@@ -1,13 +1,42 @@
-"""Plotting utilities for broadcasting protocol results.
+"""Plotting utilities for broadcasting protocol results."""
 
-Every plot includes a metadata annotation box that shows the simulation
-mode (Exact / Sampling / Hardware) alongside protocol parameters.
-"""
-
+from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+FIGURES_DIR = Path("figures")
+
+
+def clear_titles(fig: plt.Figure) -> None:
+    """Remove figure and axes titles before exporting a publication figure."""
+    suptitle = getattr(fig, "_suptitle", None)
+    if suptitle is not None:
+        suptitle.remove()
+        fig._suptitle = None
+
+    for ax in fig.axes:
+        for loc in ("left", "center", "right"):
+            ax.set_title("", loc=loc)
+
+
+def save_figure(
+    fig: plt.Figure,
+    path: str | Path,
+    *,
+    strip_titles: bool = True,
+    dpi: int = 150,
+    bbox_inches: str = "tight",
+    **savefig_kwargs: Any,
+) -> Path:
+    """Save *fig*, stripping plot titles by default."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if strip_titles:
+        clear_titles(fig)
+    fig.savefig(path, dpi=dpi, bbox_inches=bbox_inches, **savefig_kwargs)
+    return path
 
 
 def binomial_error(p: float, n: int) -> float:
@@ -82,6 +111,7 @@ def plot_fidelity_vs_delay(
     run: dict[str, Any],
     *,
     ax: plt.Axes | None = None,
+    show_title: bool = False,
     show: bool = True,
 ) -> plt.Figure:
     """Fidelity vs delay time with error bars (hardware results).
@@ -164,7 +194,8 @@ def plot_fidelity_vs_delay(
     ax.set_ylim(0, 1.05)
     ax.legend(loc="best", fontsize=9)
     _add_meta_box(ax, _meta_text(run))
-    ax.set_title(f"Fidelity vs Delay — {run.get('filename', '')}")
+    if show_title:
+        ax.set_title(f"Fidelity vs Delay - {run.get('filename', '')}")
 
     if show:
         plt.tight_layout()
@@ -184,6 +215,7 @@ def plot_fidelity_vs_noise(
     title: str = "Fidelity vs Depolarizing Probability",
     protocol_info: dict[str, Any] | None = None,
     ax: plt.Axes | None = None,
+    show_title: bool = False,
     show: bool = True,
 ) -> plt.Figure:
     """Plot receiver fidelities as a function of noise strength.
@@ -233,7 +265,8 @@ def plot_fidelity_vs_noise(
     ax.set_ylim(0, 1.05)
     ax.set_xlim(0, 1)
     ax.legend(loc="best", fontsize=9)
-    ax.set_title(title)
+    if show_title:
+        ax.set_title(title)
 
     if protocol_info is not None:
         meta = {
@@ -256,6 +289,7 @@ def plot_3d_fidelity(
     mode_label: str = "Exact Simulation",
     title: str = "Fidelity between Receiver States",
     protocol_info: dict[str, Any] | None = None,
+    show_title: bool = False,
     show: bool = True,
 ) -> plt.Figure:
     """3D scatter plot of pairwise receiver fidelities.
@@ -292,7 +326,76 @@ def plot_3d_fidelity(
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.set_zlim(0, 1)
-    ax.set_title(f"{title}\nMode: {mode_label}")
+    if show_title:
+        ax.set_title(f"{title}\nMode: {mode_label}")
+
+    if show:
+        plt.tight_layout()
+        plt.show()
+    return fig
+
+
+def plot_run_sweep(
+    run: dict[str, Any],
+    *,
+    ax: plt.Axes | None = None,
+    tau_scale: float | None = None,
+    tau_label: str = "Idle delay (dt)",
+    show_average: bool = True,
+    show: bool = True,
+) -> plt.Figure:
+    """Plot a loaded run over its saved sweep axis without adding a title."""
+    sweep = run.get("sweep", {}) or {}
+    axis = sweep.get("axis", "p")
+    x_values = np.asarray(sweep.get("values", []), dtype=float)
+    fids = np.asarray(run["fidelities"], dtype=float)
+    if fids.ndim == 1:
+        fids = fids.reshape(1, -1)
+
+    if axis == "p":
+        xlabel = "Depolarizing probability p"
+        xlim = (0.0, 1.0)
+    elif axis == "tau":
+        if tau_scale is not None:
+            x_values = tau_scale * x_values
+        xlabel = tau_label
+        xlim = (float(x_values.min()), float(x_values.max())) if x_values.size else None
+    else:
+        xlabel = axis
+        xlim = None
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(10, 6))
+    else:
+        fig = ax.figure
+
+    colors = plt.cm.tab10.colors
+    for i in range(fids.shape[1]):
+        ax.plot(
+            x_values,
+            fids[:, i],
+            "-",
+            color=colors[i % len(colors)],
+            linewidth=1.2,
+            label=f"Receiver {i}",
+        )
+
+    if show_average and fids.shape[1] > 1:
+        ax.plot(
+            x_values,
+            fids.mean(axis=1),
+            "k--",
+            linewidth=1.5,
+            label="Average",
+        )
+
+    ax.axhline(0.5, color="gray", linestyle=":", alpha=0.5, label="Random (0.5)")
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Fidelity")
+    ax.set_ylim(0, 1.05)
+    if xlim is not None:
+        ax.set_xlim(*xlim)
+    ax.legend(loc="best", fontsize=9)
 
     if show:
         plt.tight_layout()

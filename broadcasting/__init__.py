@@ -6,6 +6,7 @@ from .qec_513 import (
     five_qubit_decode_gate,
     five_qubit_syndrome_corrections,
     decode_qec_513,
+    qec_513_delay_benchmark_circuit,
 )
 from .state_preparation import (
     build_initial_statevector,
@@ -30,6 +31,7 @@ __all__ = [
     "five_qubit_decode_gate",
     "five_qubit_syndrome_corrections",
     "decode_qec_513",
+    "qec_513_delay_benchmark_circuit",
     # state preparation
     "build_initial_statevector",
     "build_initial_statevector_qec_513",

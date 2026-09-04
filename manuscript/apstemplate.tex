@@ -109,7 +109,7 @@ Quantum networks for the purposes of distributed computing and cryptography rely
 
 \section{Introduction \label{Introduction}}
 %\begin{region}
-Pioneering work in quantum information produced famous impossibility results such as the no-cloning theorem \cite{wootters2009no} and the no-broadcasting theorem \cite{barnum2007generalized}. These results have been fundamental in shaping our understanding of the limitations quantum information and have had profound implications for quantum communication and cryptography \cite{vsupic2020self}. However, recent research has shown that these impossibility results can be circumvented under certain, more restrictive, conditions, leading to new possibilities for quantum information processing \cite{larasati2025towards,zhang2025efficient,sukeno2025quantum,andronikos2023one}. In this paper, we explore the concept of restricted broadcasting, where a quantum state can be broadcast to multiple receivers under specific constraints using shared prior entanglement \cite{PhysRevA.105.042611}.
+Pioneering work in quantum information produced famous impossibility results such as the no-cloning theorem \cite{wootters2009no} and the no-broadcasting theorem \cite{barnum2007generalized}. These results have been fundamental in shaping our understanding of the limitations quantum information and have had profound implications for quantum communication and cryptography \cite{vsupic2020self}. However, recent research has shown that these impossibility results can be circumvented given shared prior entanglement leading to new possibilities for quantum information processing \cite{larasati2025towards,zhang2025efficient,sukeno2025quantum,andronikos2023one}. In this paper, we explore the concept of restricted broadcasting, where a quantum state can be broadcast to multiple receivers under specific constraints using shared prior entanglement \cite{PhysRevA.105.042611}.
 \\
 
 Broadcasting channels are a key resource in many classical networking protocols~\cite{chang1984reliable}. The inclusion of some form of broadcasting to quantum network protocols has the potential to facilitate new and more efficient functionality. Although current quantum hardware are typically remote quantum servers that are cloud accessible through classical information channels, there is growing interest and experimental realizations of quantum networks, capable of distributing entanglement over hundreds of kilometers~\cite{simon2017towards, pompili2021realization, neumann2022continuous}. Real world quantum networks must navigate the impact of channel noise on transmitted quantum states, this is commonly achieved through a variety of quantum error correction (QEC) schemes \cite{gottesman1997stabilizer}.
@@ -123,12 +123,12 @@ In this work, we extend the M-sender N-receiver broadcasting protocol to account
 
 \section{Broadcasting Protocol}
 %\begin{region}
-We first review the M-sender N-receiver broadcasting protocol from \cite{sukeno2023broadcasting} in the ideal, noiseless case. The protocol involves a resource state shared between the senders and receivers, local private unitaries applied by the senders to add phases, and measurements in a Fourier basis to enable byproduct corrections at the receivers. The protocol uses a classical broadcasting channel to send correction information from the senders to the receivers, but does not require any quantum communication after the initial resource state distribution. Additionally, correction steps do not require revealing the sender's choice of phase, which can be delayed until after the resource state is distributed, preserving a level of privacy in the communication.
+We first review the M-sender N-receiver broadcasting protocol from \cite{sukeno2023broadcasting} in the ideal, noiseless case. The protocol involves a resource state shared between the senders and receivers, local private unitaries applied by the senders to add phases, and measurements in a Fourier basis to enable byproduct corrections at each receiver. The protocol uses a classical broadcasting channel to send correction information from the senders to the receivers, but does not require any quantum communication after the initial resource state distribution. Additionally, correction steps do not require revealing the sender's choice of phase, which can be delayed until after the resource state is distributed, preserving a level of privacy in the communication.
 \\
 For this protocol, the $M$ senders (Alices) possess an $N+1$-dimensional qudit each, while the $N$ receivers possess a single qubit each. The initial resource state is an entangled superposition of symmetric states, where each sender's system is in a state corresponding to the number of receivers in the $\ket{0}$ or $\ket{1}$ state. This is given by
 \begin{align}
 \ket{\Psi^{(M,N)}}
-&:= \sum_{k=0}^{N}\alpha^k\beta^{N-k}\binom{N}{k}^{1/2}
+&= \sum_{k=0}^{N}\alpha^k\beta^{N-k}\binom{N}{k}^{1/2}
 \left(\prod_{j=1}^{M}\ket{k}_{a_j}\right)\ket{k;N-k},
 \end{align}
 where $\ket{k;N-k}$ is the symmetric state of $N$ qubits with $k$ in the $\ket{0}$ state and $N-k$ in the $\ket{1}$ state.
@@ -136,22 +136,22 @@ where $\ket{k;N-k}$ is the symmetric state of $N$ qubits with $k$ in the $\ket{0
 Each sender $j$ applies a local unitary $U_{a_j}(\theta_j)$ that adds a phase $\theta_j$ depending on the number of $\ket{0}$ and $\ket{1}$ states in the receivers' systems. This is defined as
 \begin{align}
 U_{a_j}(\theta_j)\ket{k}_{a_j}
-&:= e^{i(2k-N)\theta_j}\ket{k}_{a_j},
+&= e^{i(2k-N)\theta_j}\ket{k}_{a_j},
 \qquad \theta_j\in[0, 2\pi].
 \end{align}
 After the senders apply their unitaries, they measure their systems in the Fourier basis $\{\ket{u_n}\}_{n=0}^N$, where
 \begin{align}
 \ket{u_n}
-&:= \frac{1}{\sqrt{N+1}}\sum_{k=0}^{N} e^{2\pi i nk/(N+1)}\ket{k},
+&= \frac{1}{\sqrt{N+1}}\sum_{k=0}^{N} e^{2\pi i nk/(N+1)}\ket{k},
 \qquad n\in\{0,1,\dots,N\}.
 \end{align}
 The measurement outcomes of all senders $\Vec{n}=(n_1,\dots,n_M)$ are then broadcast to the receivers, who apply byproduct corrections $U_{\Vec{n}}$ to their qubits to recover the desired state. The byproduct correction is defined as
 \begin{align}
 U_{\Vec{n}}\ket{0}
-&:= \exp\!\left(\frac{2\pi i}{N+1}\sum_{j=1}^{M}n_j\right)\ket{0},
+&= \exp\!\left(\frac{2\pi i}{N+1}\sum_{j=1}^{M}n_j\right)\ket{0},
 \\
 U_{\Vec{n}}\ket{1}
-&:= \ket{1}.
+&= \ket{1}.
 \end{align}
 In the ideal, noiseless case, this protocol allows the receivers to recover the state
 \begin{align}
@@ -162,9 +162,9 @@ In the ideal, noiseless case, this protocol allows the receivers to recover the 
 %
 To measure the success of an instance of the protocol we compute the fidelity of the output state with respect to the target state which in general is defined as
 \begin{align}
-    F(\rho_1, \rho_2) = \big(\Tr\sqrt{\sqrt{\rho_1}\rho_2\sqrt{\rho_1}} \big)^2.
+    F(\rho_1, \rho_2) = \bigg(\Tr\sqrt{\rho_1^{1/2}\rho_2 \hspace{1mm} \rho_1^{1/2}} \hspace{1mm} \bigg)^2.
 \end{align}
-Where $\rho_1, \rho_2$ are the density matrices of the output and target state. For pure states this reduces to 
+Where $\rho_1, \rho_2$ are the density matrices of the output and target state respectively. For pure states this reduces to 
 \begin{align}
     F(\ket{\psi_{\mathrm{out}}}, \ket{\psi_{\mathrm{target}}}) = \mid 
     \braket{\psi_{\mathrm{out}} \mid \psi_{\mathrm{target}}}\mid^2,
@@ -182,10 +182,10 @@ qubits using a binary encoding: the computational basis state $\ket{k}_{a_j}$ ($
 \section{Noisy Channels}
 %\begin{region}
 
-In a realistic scenario, the distribution of qubits to the receivers may be subject to noise~\cite{schumacher1996sending, bergou2013introduction}. We model this noise using a depolarizing channel, which acts independently on each qubit sent to the receivers~\cite{dur2005standard}. This is applied after the initial resource state is prepared but before each sender applies their local unitary. The depolarizing channel with depolarizing probability $p$ is defined as
+In a realistic scenario, the distribution of qubits to the receivers may be subject to noise~\cite{schumacher1996sending, bergou2021quantum}. We model this noise using a depolarizing channel, which acts independently on each qubit sent to the receivers~\cite{dur2005standard}. This is applied after the initial resource state is prepared but before each sender applies their local unitary. The depolarizing channel with depolarizing probability $p$ is defined as
 \begin{align}
 \mathcal{D}_p(\rho)
-&:= (1-p)\rho + \frac{p}{3}\left(X\rho X + Y\rho Y + Z\rho Z\right), \\
+&= (1-p)\rho + \frac{p}{3}\left(X\rho X + Y\rho Y + Z\rho Z\right), \\
 &\qquad 0\le p\le 1, \nonumber
 \end{align}
 where $X$, $Y$, and $Z$ are the Pauli operators. The presence of noise can degrade the fidelity of the output state at the receivers, making it crucial to analyze the performance of the protocol under these conditions and to explore methods for improving the protocol's resilience such as QEC.
@@ -196,7 +196,7 @@ We illustrate the effects of depolarizing noise through an example with a single
 \end{align}
 Here, the labels $A,B$ indicate who is in possession of which qubit; these will be omitted going forward, but the structure remains the same. The target state at each receiver is the equatorial state 
 \begin{align}
-    \ket{\psi_{\mathrm{target}}} = \frac{1}{\sqrt{2}}\!\left(e^{i\theta}\ket{0} + e^{-i\theta}\ket{1}\right).
+    \ket{\psi_{\mathrm{target}}} = \frac{1}{\sqrt{2}}\!\left(e^{i\theta}\ket{0} + e^{-i\theta}\ket{1}\right) = \frac{1}{\sqrt{2}}\!\left(\ket{0} + e^{-2i\theta}\ket{1}\right).
 \end{align}
 
 We then take the resource-state density matrix $\rho_{\text{init}} = \ket{\Psi_{\text{init}}}\bra{\Psi_{\text{init}}}$ and apply independent depolarizing channels $\mathcal{D}_p$ with $p_1 = p_2 = p$ to each receiver qubit. On the Pauli basis the channel acts as $\mathcal{D}_p(I)=I$ and $\mathcal{D}_p(P)=\eta\,P$ for $P\in\{X,Y,Z\}$, where
@@ -240,7 +240,7 @@ where $\ket{\Psi_{\text{target}}} = \tfrac{1}{2}\big[e^{2i\theta}\ket{00} + (\ke
 i.e.\ the target single-qubit state with its Bloch vector contracted by $\eta=1-4p/3$.
 
 The fidelity with the target state is then
-\begin{align}
+\begin{align}\label{fidelity_eqn}
     F &= \bra{\psi_{\mathrm{target}}}\rho_{\text{post}}\ket{\psi_{\mathrm{target}}} \nonumber \\
     &= \tfrac{1}{2}(1 + \eta) = 1 - \tfrac{2p}{3},
 \end{align}
@@ -255,13 +255,13 @@ There are many possible ways to incorporate error correction into the protocol. 
 Let $X,Y,Z$ be the single-qubit Pauli operators and $I$ the identity.
 On each 5-qubit block, we define stabilizer generators
 \begin{align}
-g_1 &:= XZZXI, g_2 := IXZZX, \nonumber \\
-g_3 &:= XIXZZ, g_4 := ZXIXZ.
+g_1 &= XZZXI, g_2 = IXZZX, \nonumber \\
+g_3 &= XIXZZ, g_4 = ZXIXZ.
 \end{align}
 From this we define the codespace
 \begin{align}
 \mathcal{C}
-&:= \left\{\ket{\varphi}\in(\mathbb{C}^2)^{\otimes 5} ~:~ g_r\ket{\varphi}=\ket{\varphi}\ \ \forall r\in\{1,2,3,4\}\right\}.
+&= \left\{\ket{\varphi}\in(\mathbb{C}^2)^{\otimes 5} ~:~ g_r\ket{\varphi}=\ket{\varphi}\ \ \forall r\in\{1,2,3,4\}\right\}.
 \end{align}
 The concrete logical basis we then use that spans $\mathcal{C}$ is
 \begin{align}
@@ -271,25 +271,18 @@ The concrete logical basis we then use that spans $\mathcal{C}$ is
 -&\ket{10001} -\ket{01100}-\ket{10111}+\ket{00101}\big),
 \\
 \ket{1_L}
-&:= X^{\otimes 5}\ket{0_L}.
+&= X^{\otimes 5}\ket{0_L}.
 \end{align}
 We define the encoding isometry $\Enc:\mathbb{C}^2\to(\mathbb{C}^2)^{\otimes 5}$ by linear extension of
 \begin{align}
-\Enc(\ket{0}) &:= \ket{0_L}, &
-\Enc(\ket{1}) &:= \ket{1_L}.
+\Enc(\ket{0}) &= \ket{0_L}, &
+\Enc(\ket{1}) &= \ket{1_L}.
 \end{align}
 Then we fix any 5-qubit unitary $V_{\Enc}$ such that, for all $\ket{\psi}\in\mathbb{C}^2$,
 \begin{align}
 V_{\Enc}\big(\ket{\psi}\otimes\ket{0}^{\otimes 4}\big)
 &= \Enc(\ket{\psi}).
 \end{align}
-We next define the decoding channel $\Dec:(\mathbb{C}^2)^{\otimes 5}\to\mathbb{C}^2$ by
-\begin{align}
-\Dec(\rho)
-&:= \operatorname{Tr}_{2,3,4,5}\!\left[V_{\Enc}^\dagger\,\rho\,V_{\Enc}\right],
-\end{align}
-where $\operatorname{Tr}_{2,3,4,5}$ traces out the last four qubits of the block.
-
 Using our enlarged state space we can introduce syndrome measurements and correction operators. Given a 5-qubit block state $\rho$, first measure each $g_r$ to obtain eigenvalues $\lambda_r\in\{+1,-1\}$ and define
 syndrome bits $s_r\in\{0,1\}$ by $\lambda_r=(-1)^{s_r}$, forming $s=(s_1,s_2,s_3,s_4)\in\{0,1\}^4$. We choose a syndrome-to-correction map $s\mapsto E_s$ into 5-qubit Pauli operators such that
 \begin{align}
@@ -297,7 +290,17 @@ E_s g_r
 &= (-1)^{s_r}\, g_r E_s,
 \qquad r\in\{1,2,3,4\},
 \end{align}
-and (for single-qubit errors) $E_{s(P)}:=P$ for each weight-1 Pauli $P\in\{X_i,Y_i,Z_i\}_{i=1}^5$ with syndrome $s(P)$. Lastly we apply the correction $E_s^\dagger=E_s$ before decoding using the decoding channel.
+and (for single-qubit errors) $E_{s(P)}=P$ for each weight-1 Pauli $P\in\{X_i,Y_i,Z_i\}_{i=1}^5$ with syndrome $s(P)$. Lastly we apply the correction $E_s^\dagger=E_s$ before decoding using the decoding channel $\Dec:(\mathbb{C}^2)^{\otimes 5}\to\mathbb{C}^2$ by
+\begin{align}
+\Dec(\rho)
+&= \operatorname{Tr}_{2,3,4,5}\!\left[V_{\Enc}^\dagger\,\rho\,V_{\Enc}\right],
+\end{align}
+where $\operatorname{Tr}_{2,3,4,5}$ traces out the last four qubits of the block.
+
+
+
+
+
 
 \subsection{Protocol: $M$-sender $\to$ $N$-receiver broadcasting with $[[5,1,3]]$ quantum error correction over depolarizing channels.}
 
@@ -311,7 +314,7 @@ Fix integers $M\ge 1$ and $N\ge 1$. Let $\alpha,\beta\in\mathbb{C}$ satisfy $|\a
     $(b_{\ell,1},\dots,b_{\ell,5})$ by applying $\Enc$:
     \begin{align}
     \ket{\widetilde{\Psi}^{(M,N)}}
-    &:= \left(I_{a_1\cdots a_M}\otimes \Enc^{\otimes N}\right)\ket{\Psi^{(M,N)}}.
+    &= \left(I_{a_1\cdots a_M}\otimes \Enc^{\otimes N}\right)\ket{\Psi^{(M,N)}}.
     \end{align}
     
     \item \textbf{Transmit over noisy channels.} Send each $b_{\ell,t}$ through $\mathcal{D}_p$, independently for all $\ell$ and $t$.
@@ -336,10 +339,8 @@ Ideal output (noiseless case).
 &= \alpha\,e^{i\sum_{j=1}^{M}\theta_j}\ket{0} + \beta\,e^{-i\sum_{j=1}^{M}\theta_j}\ket{1}.
 \end{align}
 
-QEC codes improve fidelity up to a certain level of noise. The fidelity for a pure input state to the depolarizing channel with depolarizing probability $p$ is given by
-\begin{align}
-    F &= 1-p + \frac{p}{3}\sum_{P \in \{X,Y,Z\}} |\bra{\psi} P \ket{\psi} |^2 = 1 - \frac{2p}{3}.
-\end{align}
+QEC codes improve fidelity up to a certain level of noise. The fidelity for a pure input state to the depolarizing channel with depolarizing probability $p$ is given by Eq.~(\ref{fidelity_eqn}).
+
 For the $[5,1,3]$ correction code the failure probability can be estimated as the probability of 2 or more physical errors given by the binomial expansion under independence assumptions
 \begin{align}
     p_{f} = 1 - (1-p)^5 - 5p(1-p)^4 \approx 10p^2 + O(p^3).
@@ -400,12 +401,10 @@ For larger receiver counts the $4^{5N}$ scaling of the encoded density matrix be
 \end{enumerate}
 The remaining protocol stages (sender phase gates, Fourier measurement, byproduct correction, and partial trace) are then applied to $\hat\rho$ exactly as in the density-matrix path. This works because all of these operations act either on the sender register or as Pauli-covariant unitaries on the receivers, and therefore commute with the linear average over trajectories.
 
-Per-trajectory cost is dominated by the $O(D)$ Pauli applications and the per-block decoding, so the overall cost of the estimator is $O(n_s \cdot N \cdot D)$ in time and $O(D)$ in memory, an improvement over the $O(D^2)$ exact storage. Because trajectories are independent, the statistical fluctuation in each scalar observable (here the per-receiver fidelity) decays as $1/\sqrt{n_s}$, and we verify this scaling in Fig.~\ref{Sampling Error Convergence} by measuring the area between the sampled and exact fidelity curves $F(p)$ for the $M{=}1$, $N{=}2$ protocol with QEC. We use $n_s$ in the range $10^2$--$10^5$ and demonstrate rapid convergence to the complete density matrix method for large samples.
+Per-trajectory cost is dominated by the $O(D)$ Pauli applications and the per-block decoding, so the overall cost of the estimator is $O(n_s \cdot N \cdot D)$ in time and $O(D)$ in memory, an improvement over the $O(D^2)$ exact storage. Because trajectories are independent, the statistical fluctuation in each scalar observable (here the per-receiver fidelity) decays as $1/\sqrt{n_s}$, and we verify this scaling in Fig.~\ref{Sampling Error Convergence} by measuring the area between the sampled and exact fidelity curves $F(p)$ for the $M{=}1$, $N{=}2$ protocol with QEC. We use $n_s$ in the range $10^2$--$10^5$ and demonstrate rapid convergence to the complete density matrix method for large samples. We see also in Fig.~4 the close fit of the Monte Carlo sampling method fidelity to the exact density matrix case with error correction for $M=1, N=2$.
 \\
 
 \subsection{Qiskit}
-
-
 We implement the broadcasting protocol as a dynamic quantum circuit using Qiskit \cite{javadi2024qiskit}. Dynamic circuits incorporate mid-circuit measurements and real-time classical feedforward, features that are essential for both the sender Fourier-basis measurement with byproduct correction and the QEC syndrome-extraction-and-correction cycle \cite{corcoles2021dynamic}.
 
 While numerical simulations allow us to control the error probability directly through adjusting the depolarizing probability, real hardware is more constrained. There are two parameters that we use instead as a proxy for the channel noise, these are idle delay time $\tau$ and optimization level. Idle delay time is a continuous adjustable delay that we add to the circuit in place of channel noise where we use exposure to the idle hardware noise in place of depolarizing probability. Hardware noise profiles are more complex, heterogeneous and correlated than simple independent depolarizing noise and can be more detrimental to highly entangled states such as our initial resource state. In order to explore this we characterized a basic fidelity circuit, where a random state is initialized, then a delay is added, before the state is rotated by the same random initial angle to the $\ket{0}$ state and measured in the logical basis. This is repeated and the outcome distribution is used as the fidelity estimate. The other noise parameter used was the optimization level $\ell \in \{0,1,2,3\}$. When a circuit is transpiled into gate instructions for a particular quantum hardware there are a number of ways to optimize the circuit performance, such as through circuit layout arrangement, coupling map selection, entanglement routing and dynamical decoupling \cite{javadi2024qiskit}. The predefined levels range from no optimization to combinations of more intensive optimization techniques. In Fig.~\ref{QEC Fidelity} we compare the performance of our basic fidelity circuit across a range of parameters. We see that the noise-free case (plotted with QEC) has no dependence on idle delay time as expected, and more surprisingly we see the introduction of our QEC protocol destroys the fidelity even at short delay times and using optimization. This is a strong indicator of the limitations of current hardware to accurately implement encoding, mid-circuit syndrome measurements and conditional corrections. With and without optimization, the single qubit fidelity far exceeds the QEC implementation, with the optimization level providing a strong benefit for short delay times over the unoptimizated case.
@@ -413,7 +412,7 @@ While numerical simulations allow us to control the error probability directly t
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{qec513_delay_sweep_idle.png}
-    \caption{Implementation of the $[[5,1,3]]$ quantum error correction code for a single qubit subject to a delay time before decoding on IBM Kingston. The fidelity of the output state with respect to the input state is plotted as a function of the delay time, demonstrating insufficient hardware performance to achieve a fidelity improvement over the unencoded case for any delay time.}
+    \caption{Implementation of the $[[5,1,3]]$ quantum error correction code for a single qubit subject to a delay time before decoding on IBM Kingston. The fidelity of the output state with respect to the input state is plotted as a function of the delay time, demonstrating insufficient hardware performance to achieve a fidelity improvement over the unencoded case for any delay time. The noise-free case used the same circuit sent to a noiseless simulator backend.}
     \label{QEC Fidelity}
 \end{figure}
 
@@ -517,10 +516,10 @@ The fidelity measurements are stored in a separate classical register from the s
     \label{qiskit_delay}
 \end{figure}
 
-We first verify the correctness of the exact density matrix and Monte Carlo sampling implementations by comparing their fidelity estimates for the $M{=}1$, $N{=}2$ protocol with QEC across a range of depolarizing probabilities $p$. As shown in Fig.~\ref{qec_crossover}, the two methods produce consistent results, with the sampling estimates converging to the exact curve as the number of trajectories increases. The plot also includes a zoomed view of the crossover region where the QEC-enhanced protocol loses its advantage over the unencoded case, which occurs around $p \approx 0.13$--$0.15$. This crossover point is higher than the rough estimate of $p \approx 0.1$ derived from the failure probability of the $[[5,1,3]]$ code, indicating that the effective noise after correction is less severe than the naive binomial approximation suggests. The exact density matrix method is used as the ground truth for benchmarking the sampling estimator, and the agreement between the two validates the use of Monte Carlo sampling for estimating protocol performance under noise, especially for larger receiver counts where the exact method becomes computationally infeasible. \\
+We first verify the correctness of the exact density matrix and Monte Carlo sampling implementations by comparing their fidelity estimates for the $M{=}1$, $N{=}2$ protocol with QEC across a range of depolarizing probabilities $p$. As shown in Fig.~\ref{qec_crossover}, the two methods produce consistent results, with the sampling estimates converging to the exact curve as the number of trajectories increases. The plot also includes a zoomed view of the crossover region where the QEC-enhanced protocol loses its advantage over the unencoded case, which occurs at $p \approx 0.137$. This crossover point is higher than the rough estimate of $p \approx 0.1$ derived from the failure probability of the $[[5,1,3]]$ code, indicating that the effective noise after correction is less severe than the naive binomial approximation as expected. The exact density matrix method is used as the ground truth for benchmarking the sampling estimator, and the agreement between the two validates the use of Monte Carlo sampling for estimating protocol performance under noise, especially for larger receiver counts where the exact method becomes computationally infeasible. \\
 %
 
-We then implement the protocol on IBM quantum hardware using Qiskit, as described in the Methods section. Fig.~\ref{qiskit_delay} shows the fidelity of the output state with respect to the input state as a function of delay time $\tau$ for the $M{=}1$, $N{=}2$ protocol without QEC. The results indicate that the fidelity decreases with increasing delay time, which is expected due to decoherence effects on the hardware. However, even at short delay times, the fidelity is significantly below 1, suggesting that other sources of noise and imperfections in the hardware such as imperfect gate fidelity and readout error are also contributing to the degradation of the output state. This highlights the challenges of implementing quantum protocols on current noisy intermediate-scale quantum (NISQ) devices and underscores the importance of error mitigation and correction techniques for improving performance. Additionally, "spikes" of low fidelity are observed at certain delay times, which may be due to specific noise patterns or fluctuations in the hardware performance. Similar structures have been observed in other experiments and are referred to as "drop-outs" \cite{niu2024multi}. These quasi-periodic structures are suspected to arise due to the staggered dynamical decoupling regime implemented on idle qubits. Additionally, the protocol should be symmetric between receivers however in Fig.~\ref{qiskit_delay} we see clear and persistent differences in fidelity between Receiver 1 and Receiver 2. A possible cause of this could be the heterogeneity of coherence times between qubits, which for this particular device the T1 time ranges from $10.11-434.27\mathrm{\mu s}$\cite{javadi2024qiskit}.  \\
+We then implement the protocol on IBM quantum hardware using Qiskit, as described in the Methods section. Fig.~\ref{qiskit_delay} shows the fidelity of the output state with respect to the input state as a function of delay time $\tau$ for the $M{=}1$, $N{=}2$ protocol without QEC. The results indicate that the fidelity decreases with increasing delay time, which is expected due to decoherence effects on the hardware. However, even at short delay times, the fidelity is significantly below 1, suggesting that other sources of noise and imperfections in the hardware such as imperfect gate fidelity and readout error are also contributing to the degradation of the output state. This highlights the challenges of implementing quantum protocols on current noisy intermediate-scale quantum (NISQ) devices and underscores the importance of error mitigation and correction techniques for improving performance. Additionally, "spikes" of low fidelity are observed at certain delay times, which may be due to specific noise patterns or fluctuations in the hardware performance. Similar structures have been observed in other experiments and are referred to as "drop-outs" \cite{niu2024multi}. These quasi-periodic structures are suspected to arise due to the staggered dynamical decoupling regime implemented on idle qubits. Additionally, the protocol should be symmetric between receivers however in Fig.~\ref{qiskit_delay} we see clear and persistent differences in fidelity between Receiver 1 and Receiver 2. A possible cause of this could be the heterogeneity of coherence times between qubits which range significantly. For this particular device the T1 time ranges from $10.11-434.27\mathrm{\mu s}$\cite{javadi2024qiskit}.  \\
 %
 
 Lastly, we explore the feasibility of this protocol as the number of receivers scales. Our earlier analysis of independent depolarizing channels being the dominant source of decoherence breaks down as we increase the protocol size. This is demonstrated by the rapidly decreasing average receiver fidelity at $\tau=0$ for $M=1$. Independent channels should not be affected by the number of receivers, so the results we see in Fig.~\ref{protocol_scale} likely indicate correlated noise structures and the fragility of the shared entanglement resource state for larger protocol sizes. This is a significant challenge to the feasibility of this protocol for many practical use cases, indicating that hardware improvements and sophisticated QEC protocols are likely needed.
@@ -546,7 +545,7 @@ While broadcasting of quantum states using shared prior entanglement is a useful
 
 \section{Acknowledgements}
 %\begin{region}
-This research was supported, in part, by a grant of computer time from the City University of New York High Performance Computing Center under NSF Grants CNS-0855217, CNS-0958379 and ACI-1126113. The code developed for this work is available at \color{red}Zenodo XXXXXXX. \color{black}Additionally we are grateful for the feedback and advice of IBM's Dr. Olivia Lanes and Dr. Nick Bronn regarding our fidelity results.
+This research was supported by the National Science Foundation under the grant Collaborative Research: NeTS: Medium 2504622. Additionally it was supported in part, by a grant of computer time from the City University of New York High Performance Computing Center under NSF Grants CNS-0855217, CNS-0958379 and ACI-1126113. The code developed for this work is available at \color{red}Zenodo XXXXXXX. \color{black}Additionally we are grateful for the feedback and advice of IBM's Dr. Olivia Lanes and Dr. Nick Bronn regarding our hardware fidelity results.
 %\end{region}
 
 \bibliography{apssamp}

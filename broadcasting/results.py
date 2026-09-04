@@ -63,13 +63,18 @@ def save_run(
             if optimization_level is not None
             else int(meta.get("optimization_level", DEFAULT_OPTIMIZATION_LEVEL))
         )
-        sweep_axis = "tau"
-        sweep_values = [meta.get("tau")] if meta.get("tau") is not None else [0]
-        fidelities = [list(result.fidelities)]
-        counts_field = (
-            [[meta["counts"]]] if "counts" in meta else None
-        )
+        sweep_axis = meta.get("sweep_axis", "tau")
+        sweep_values = meta.get("sweep_values")
+        if sweep_values is None:
+            sweep_values = [meta.get("tau")] if meta.get("tau") is not None else [0]
+            fidelities = [list(result.fidelities)]
+            counts_field = [[meta["counts"]]] if "counts" in meta else None
+        else:
+            sweep_values = list(sweep_values)
+            fidelities = result.fidelities
+            counts_field = meta.get("counts")
         n_samples = None
+        theta_samples = meta.get("theta_samples", [list(config.thetas)])
     else:
         experiment_type = "simulation"
         if "sampl" in mode or config.n_samples:
@@ -83,6 +88,7 @@ def save_run(
         sweep_values = list(config.p_list)
         fidelities = result.fidelities
         counts_field = None
+        theta_samples = [list(config.thetas)]
 
     extra_meta = {
         k: v
@@ -103,6 +109,10 @@ def save_run(
             "job_id",
             "counts",
             "optimization_level",
+            "theta_samples",
+            "sweep_axis",
+            "sweep_values",
+            "per_theta_fidelities",
             "timestamp",
         }
         and _is_json_serializable(v)
@@ -122,11 +132,11 @@ def save_run(
             "N": config.N,
             "alpha": config.alpha,
             "use_qec": config.use_qec,
-            "theta_samples": [list(config.thetas)],
+            "theta_samples": theta_samples,
         },
         "sweep": {"axis": sweep_axis, "values": sweep_values},
         "fidelities": fidelities,
-        "per_theta_fidelities": None,
+        "per_theta_fidelities": meta.get("per_theta_fidelities"),
         "counts": counts_field,
         "metadata": extra_meta,
     }

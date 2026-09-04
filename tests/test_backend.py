@@ -71,6 +71,12 @@ class TestSamplingBackend:
 class TestHardwareBackend:
     def test_init_stores_parameters(self):
         # Just test construction (no actual IBM service needed)
-        hb = HardwareBackend(service=None, backend_name="fake_backend", shots=1024)
+        hb = HardwareBackend(
+            service=None,
+            backend_name="fake_backend",
+            shots=1024,
+            optimization_level=1,
+        )
         assert hb.backend_name == "fake_backend"
         assert hb.shots == 1024
+        assert hb.optimization_level == 1

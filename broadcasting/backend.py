@@ -166,10 +166,27 @@ class HardwareBackend(Backend):
         service: Any,
         backend_name: str | None = None,
         shots: int = 8192,
+        optimization_level: int = 3,
     ):
         self.service = service
         self.backend_name = backend_name
         self.shots = shots
+        self.optimization_level = optimization_level
+
+    def _backend(self) -> Any:
+        if self.backend_name:
+            return self.service.backend(self.backend_name)
+        return self.service.least_busy(simulator=False, operational=True)
+
+    @staticmethod
+    def _fidelities_from_counts(counts: dict[str, int], N: int) -> list[float]:
+        total = sum(counts.values())
+        if total == 0:
+            raise ValueError("Cannot compute fidelities from empty counts.")
+        return [
+            sum(v for bs, v in counts.items() if bs[N - 1 - i] == "0") / total
+            for i in range(N)
+        ]
 
     def run(self, config: ProtocolConfig) -> BroadcastResult:
         # Import here to avoid hard dependency when not using hardware
@@ -179,11 +196,7 @@ class HardwareBackend(Backend):
         from .circuit import generate_qiskit_circuit
         from .fidelity import add_fidelity
 
-        # Select backend
-        if self.backend_name:
-            backend = self.service.backend(self.backend_name)
-        else:
-            backend = self.service.least_busy(simulator=False, operational=True)
+        backend = self._backend()
 
         # Build circuit
         qc = generate_qiskit_circuit(
@@ -197,7 +210,10 @@ class HardwareBackend(Backend):
         qc, reg_name, phi = add_fidelity(qc, N=config.N, thetas=config.thetas)
 
         # Transpile
-        pm = generate_preset_pass_manager(backend=backend, optimization_level=3)
+        pm = generate_preset_pass_manager(
+            backend=backend,
+            optimization_level=self.optimization_level,
+        )
         isa_circuit = pm.run([qc])[0]
 
         # Submit
@@ -209,15 +225,7 @@ class HardwareBackend(Backend):
         pub_result = result[0]
         fid_data = getattr(pub_result.data, reg_name)
         counts = fid_data.get_counts()
-        total = sum(counts.values())
-
-        fidelities = []
-        for i in range(config.N):
-            p0 = sum(
-                v for bs, v in counts.items()
-                if bs[config.N - 1 - i] == "0"
-            ) / total
-            fidelities.append(p0)
+        fidelities = self._fidelities_from_counts(counts, config.N)
 
         return BroadcastResult(
             fidelities=fidelities,
@@ -235,7 +243,112 @@ class HardwareBackend(Backend):
                 "backend": backend.name,
                 "job_id": job.job_id(),
                 "counts": counts,
+                "optimization_level": self.optimization_level,
                 "tau": config.tau,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
+
+    def run_tau_sweep(
+        self,
+        config: ProtocolConfig,
+        tau_values: list[int] | np.ndarray,
+        *,
+        theta_samples: list[list[float]] | np.ndarray | None = None,
+    ) -> BroadcastResult:
+        """Run a hardware tau sweep for one or more theta samples."""
+        from qiskit.transpiler import generate_preset_pass_manager
+        from qiskit_ibm_runtime import SamplerV2 as Sampler
+
+        from .circuit import generate_qiskit_circuit
+        from .fidelity import add_fidelity
+
+        tau_values = [int(t) for t in tau_values]
+        if not tau_values:
+            raise ValueError("tau_values must contain at least one value.")
+
+        if theta_samples is None:
+            theta_samples = [list(config.thetas)]
+        else:
+            theta_samples = np.asarray(theta_samples, dtype=float).tolist()
+
+        for sample in theta_samples:
+            if len(sample) != config.M:
+                raise ValueError(
+                    f"Expected theta sample length {config.M}, got {len(sample)}."
+                )
+
+        backend = self._backend()
+        circuits = []
+        run_index: list[tuple[int, int]] = []
+        reg_name = "fid"
+
+        for ti, thetas in enumerate(theta_samples):
+            qc = generate_qiskit_circuit(
+                config.M,
+                config.N,
+                thetas,
+                alphas=config.alpha,
+                tau=None,
+                use_receiver_qec_513=config.use_qec,
+            )
+            qc, reg_name, _ = add_fidelity(qc, N=config.N, thetas=thetas)
+            tau_param = next(p for p in qc.parameters if p.name == "tau")
+
+            for tau in tau_values:
+                circuits.append(qc.assign_parameters({tau_param: tau}))
+                run_index.append((ti, tau))
+
+        pm = generate_preset_pass_manager(
+            backend=backend,
+            optimization_level=self.optimization_level,
+        )
+        isa_circuits = pm.run(circuits)
+        job = Sampler(mode=backend).run(
+            [(circuit,) for circuit in isa_circuits],
+            shots=self.shots,
+        )
+        results = job.result()
+
+        n_theta = len(theta_samples)
+        n_tau = len(tau_values)
+        tau_index = {tau: i for i, tau in enumerate(tau_values)}
+        fid_grid: list[list[list[float] | None]] = [
+            [None] * n_tau for _ in range(n_theta)
+        ]
+        counts_grid: list[list[dict[str, int] | None]] = [
+            [None] * n_tau for _ in range(n_theta)
+        ]
+
+        for (ti, tau), pub_result in zip(run_index, results):
+            counts = getattr(pub_result.data, reg_name).get_counts()
+            j = tau_index[tau]
+            fid_grid[ti][j] = self._fidelities_from_counts(counts, config.N)
+            counts_grid[ti][j] = dict(counts)
+
+        fidelities = np.mean(np.asarray(fid_grid, dtype=float), axis=0).tolist()
+
+        return BroadcastResult(
+            fidelities=fidelities,
+            target_state=None,
+            reduced_states=None,
+            metadata={
+                "mode": f"hardware ({backend.name})",
+                "M": config.M,
+                "N": config.N,
+                "use_qec": config.use_qec,
+                "thetas": list(config.thetas),
+                "theta_samples": theta_samples,
+                "p_list": config.p_list,
+                "alpha": config.alpha,
+                "shots": self.shots,
+                "backend": backend.name,
+                "job_id": job.job_id(),
+                "optimization_level": self.optimization_level,
+                "sweep_axis": "tau",
+                "sweep_values": tau_values,
+                "per_theta_fidelities": fid_grid if n_theta > 1 else None,
+                "counts": counts_grid,
                 "timestamp": datetime.now().isoformat(),
             },
         )

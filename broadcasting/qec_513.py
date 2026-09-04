@@ -21,6 +21,7 @@ endianness bugs.
 
 import numpy as np
 from qiskit import ClassicalRegister, QuantumRegister
+from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate
 
 
@@ -222,3 +223,52 @@ def decode_qec_513(qc, encoded_blocks, ancilla_qubits=None):
         output_qubits.append(qc.find_bit(block[0]).index)
 
     return output_qubits
+
+
+def qec_513_delay_benchmark_circuit(
+    theta: float,
+    phi: float,
+    *,
+    use_qec: bool = True,
+    delay_unit: str = "dt",
+):
+    """Build a parametric delay-fidelity benchmark circuit.
+
+    The circuit prepares ``Ry(theta) Rz(phi)|0>``, applies a symbolic
+    delay named ``tau``, reverses the state preparation, and measures
+    ``P(0)`` as the fidelity.  With ``use_qec=True`` the prepared qubit is
+    first encoded into the [[5,1,3]] block and decoded after the delay.
+    """
+    from qiskit import QuantumCircuit
+
+    tau = Parameter("tau")
+    fid = ClassicalRegister(1, "fid_qec")
+
+    if use_qec:
+        data = QuantumRegister(5, "data")
+        anc = QuantumRegister(4, "anc")
+        qc = QuantumCircuit(data, anc, fid)
+        decoded_source = data[0]
+    else:
+        data = QuantumRegister(1, "data")
+        qc = QuantumCircuit(data, fid)
+        decoded_source = data[0]
+
+    qc.ry(theta, data[0])
+    qc.rz(phi, data[0])
+
+    if use_qec:
+        qc.append(five_qubit_decode_gate().adjoint(), list(data))
+
+    for q in data:
+        qc.delay(tau, q, unit=delay_unit)
+
+    if use_qec:
+        decoded_source = qc.qubits[
+            decode_qec_513(qc, [list(data)], ancilla_qubits=list(anc))[0]
+        ]
+
+    qc.rz(-phi, decoded_source)
+    qc.ry(-theta, decoded_source)
+    qc.measure(decoded_source, fid[0])
+    return qc, tau, fid.name
