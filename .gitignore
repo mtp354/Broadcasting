@@ -1,2 +1,15 @@
 __pycache__/
 .pytest_cache/
+
+# LaTeX build output
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*Notes.bib
+*.out
+manuscript/*.pdf
+*.synctex.gz
+*.toc
