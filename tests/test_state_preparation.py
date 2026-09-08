@@ -122,14 +122,20 @@ class TestCrossRepresentationEquivalence:
 
     @pytest.mark.parametrize("M,N", [(1, 1), (1, 2), (2, 2)])
     @pytest.mark.parametrize("alpha_val", [0.3, 1 / np.sqrt(2), 0.85])
-    def test_native_qudit_to_binary_qubit_embedding(self, M, N, alpha_val):
-        from broadcasting.simulation import get_initial_state
+    @pytest.mark.parametrize("encoded", [False, True])
+    def test_native_qudit_to_binary_qubit_embedding(self, M, N, alpha_val, encoded):
+        from broadcasting.simulation import encode_initial_state, get_initial_state
 
-        psi_sim = get_initial_state(M, N, alpha_val).data
-        psi_circ = db.build_initial_statevector(M, N, alpha_val)
+        state_sim = get_initial_state(M, N, alpha_val)
+        if encoded:
+            state_sim = encode_initial_state(state_sim, M, N)
+            psi_circ = db.build_initial_statevector_qec_513(M, N, alpha_val)
+        else:
+            psi_circ = db.build_initial_statevector(M, N, alpha_val)
+        psi_sim = state_sim.data
         nq = int(ceil(log2(N + 1)))
 
-        dims_sim = [N + 1] * M + [2] * N
+        dims_sim = [N + 1] * M + [2] * (5 * N if encoded else N)
         sim_tensor = psi_sim.reshape(dims_sim)
         embedded = np.zeros_like(psi_circ)
 

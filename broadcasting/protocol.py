@@ -31,10 +31,11 @@ class ProtocolConfig:
         are sampled randomly.
     tau : float | None
         Delay time in backend dt units (used only by HardwareBackend).
-    n_samples : int
-        Number of Monte Carlo trajectories (used only by SamplingBackend).
+    n_samples : int | None
+        Number of Monte Carlo trajectories. An explicit value overrides the
+        SamplingBackend setting; None uses the backend default (200).
     seed : int | None
-        RNG seed for reproducibility.
+        RNG seed for reproducibility. An explicit value overrides the backend seed.
     linear_feedforward : bool
         HardwareBackend only. If True (default), use the M*ceil(log2(N+1))
         single-bit-conditioned byproduct correction instead of the
@@ -49,7 +50,7 @@ class ProtocolConfig:
     use_qec: bool = False
     outcomes_list: list[int] | None = None
     tau: float | None = None
-    n_samples: Optional[int] = 200
+    n_samples: Optional[int] = None
     seed: int | None = None
     linear_feedforward: bool = True
 
@@ -60,17 +61,19 @@ class BroadcastResult:
 
     Parameters
     ----------
-    fidelities : list[float]
-        Fidelity of each receiver's reduced state to the target state.
+    fidelities : list[float] | list[list[float]]
+        Per-receiver fidelity for a single hardware point, or a sweep-by-receiver
+        grid for simulation and hardware sweeps.
     target_state : np.ndarray | None
         Target single-qubit state vector (length 2).
     reduced_states : list[np.ndarray] | None
-        Reduced density matrices (2x2) for each receiver.
+        Reduced density matrices (2x2) for each receiver at the final simulation
+        sweep point. Hardware runs do not reconstruct density matrices.
     metadata : dict[str, Any]
         Run metadata including mode, backend, timestamp, etc.
     """
 
-    fidelities: list[float]
+    fidelities: list[float] | list[list[float]]
     target_state: np.ndarray | None = None
     reduced_states: list[Any] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)

@@ -137,11 +137,12 @@ class TestExactLogicalChannel:
         p_star = (3 - np.sqrt(6)) / 4
         assert logical_error_polynomial(p_star) == pytest.approx(p_star, abs=1e-9)
 
-    def test_full_depolarization_anti_contraction_values(self):
-        """At p=1 (complete depolarization), p_L(1) = 22/27 and F_QEC(1) = 37/81."""
+    def test_maximum_pauli_error_probability_values(self):
+        """At p=1 (beyond complete depolarization at 3/4), check inversion values."""
         assert logical_error_polynomial(1.0) == pytest.approx(22 / 27, abs=1e-9)
         assert 1 - (2 / 3) * logical_error_polynomial(1.0) == pytest.approx(37 / 81, abs=1e-9)
 
+    @pytest.mark.slow
     @pytest.mark.parametrize("p", [0.0, 0.05, 0.1376276, 0.3, 0.6])
     def test_matches_exact_density_matrix_fidelity(self, p):
         """F_QEC(p) = 1 - (2/3) p_L(p) must match the full encoded broadcasting
@@ -160,6 +161,7 @@ class TestExactLogicalChannel:
             assert f == pytest.approx(expected_fidelity, abs=1e-6)
 
 
+@pytest.mark.slow
 class TestNoiselessEncodedProtocol:
     """The noiseless encoded protocol must give fidelity 1 for arbitrary alpha, theta."""
 
@@ -193,8 +195,8 @@ class TestSampledRecoveryUsesPauliFrame:
         assert all(len(labels) == N for labels in result["pauli_labels"])
         assert all(len(label) == 5 for labels in result["pauli_labels"] for label in labels)
 
-    def test_argmax_fallback_warns(self):
-        """Stripping pauli_labels should fall back to argmax with a RuntimeWarning."""
+    def test_single_syndrome_fallback_warns(self):
+        """Unlabeled physical Pauli trajectories retain their exact recovery."""
         M, N = 1, 1
         psi = get_initial_state(M=M, N=N, alpha=1 / np.sqrt(2))
         encoded = encode_initial_state(psi, M=M, N=N)
@@ -205,6 +207,23 @@ class TestSampledRecoveryUsesPauliFrame:
         with pytest.warns(RuntimeWarning):
             qec_recover_and_decode(result, M=M, N=N)
 
+    @pytest.mark.parametrize("labeled", [False, True])
+    def test_coherent_syndrome_superposition_is_rejected(self, labeled):
+        """A dominant syndrome must not silently replace coherent recovery."""
+        encoded = encode_initial_state(get_initial_state(1, 1, 0.3), M=1, N=1)
+        x_first_receiver = np.kron(np.eye(2), _label_matrix("XIIII"))
+        psi = 0.8 * encoded.data + 0.6 * (x_first_receiver @ encoded.data)
+        result = {"mode": "sampling", "trajectories": [psi]}
+        if labeled:
+            result["pauli_labels"] = [["IIIII"]]
+            with pytest.raises(ValueError, match="tracked Pauli syndrome"):
+                qec_recover_and_decode(result, M=1, N=1)
+        else:
+            with pytest.warns(RuntimeWarning, match="single-syndrome"):
+                with pytest.raises(ValueError, match="multiple syndrome"):
+                    qec_recover_and_decode(result, M=1, N=1)
+
+    @pytest.mark.slow
     def test_sampled_matches_exact_at_moderate_noise(self):
         M, N = 1, 2
         alpha = 1 / np.sqrt(N + 1)

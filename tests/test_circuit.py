@@ -135,3 +135,25 @@ class TestCircuitMetadata:
         assert reg_name == "fid"
         fid_reg = next(r for r in qc.cregs if r.name == reg_name)
         assert fid_reg.size == 2
+
+
+@pytest.mark.parametrize("alpha", [-1.0, -0.6, 0.0, 0.4, 1 / np.sqrt(2), 1.0])
+def test_fidelity_readout_for_real_amplitudes(alpha):
+    from qiskit import QuantumCircuit
+    from qiskit.quantum_info import Statevector
+    from broadcasting.fidelity import add_fidelity
+    phase = 0.73
+    circuit = QuantumCircuit(1)
+    circuit.initialize([alpha * np.exp(1j * phase), np.sqrt(1 - alpha ** 2) * np.exp(-1j * phase)], 0)
+    circuit, _, _ = add_fidelity(circuit, 1, [phase], alpha=alpha)
+    circuit.remove_final_measurements()
+    assert Statevector.from_instruction(circuit).probabilities()[0] == pytest.approx(1.0)
+
+
+def test_complex_fidelity_amplitude_is_rejected_before_modifying_circuit():
+    from qiskit import QuantumCircuit
+    from broadcasting.fidelity import add_fidelity
+    circuit = QuantumCircuit(1)
+    with pytest.raises(ValueError, match="real"):
+        add_fidelity(circuit, 1, [0.3], alpha=0.5 + 0.5j)
+    assert not circuit.data

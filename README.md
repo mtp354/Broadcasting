@@ -1,136 +1,148 @@
 # Broadcasting
 
-Numerical simulation, dynamic-circuit implementation, and IBM-hardware experiments for the
-M-sender, N-receiver quantum broadcasting protocol with optional `[[5,1,3]]` error correction. See
-[manuscript/apstemplate.tex](manuscript/apstemplate.tex) for the write-up and
-[ACTION_PLAN.md](ACTION_PLAN.md) for the current status of open issues.
+Numerical simulation, dynamic circuits, and IBM-hardware experiments for the
+M-sender, N-receiver quantum broadcasting protocol with optional `[[5,1,3]]`
+error correction. See [the manuscript](manuscript/apstemplate.tex),
+[the current action plan](ACTION_PLAN.md), and [the correctness review](REVIEW_2026-09-08.md).
 
-## Repository structure
-
-```
-broadcasting/       Library: protocol config, backends, circuits, QEC, results I/O, plotting
-hpc/                 SLURM/CLI entry point for cluster runs (hpc/run_experiment.py, hpc/slurm_broadcast.sh)
-scripts/             Standalone utilities (migrate_results.py, merge_hpc_runs.py)
-tests/               pytest suite
-run_broadcast.ipynb  Main notebook: exact/sampling/hardware/hpc runs of the broadcasting protocol
-qec_testing.ipynb    Standalone [[5,1,3]] encoded-memory benchmark (not the broadcasting protocol --
-                     a single logical qubit stored in one code block, no senders/receivers/broadcast)
-visualizations.ipynb Loads saved runs from results/ and produces the manuscript figures
-results/             Saved run JSON (unified schema) -- hardware runs here cannot be regenerated
-manuscript/          LaTeX source and the exact image files embedded in the paper
-```
-
-**`run_broadcast.ipynb` vs. `qec_testing.ipynb`:** the former runs the actual M-sender/N-receiver
-broadcasting protocol (with or without QEC); the latter is a separate, simpler experiment that just
-stores one logical qubit in a single `[[5,1,3]]` block across a delay and checks recovery fidelity --
-it does not broadcast anything. Both save into `results/` (`qec_testing.ipynb` uses the dedicated
-`results/qec513/` subdirectory).
-
-## Setup
+## Setup and validation
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-Run the test suite:
-
-```bash
+pip install -r requirements-tested.txt
 pytest
 ```
 
-### IBM Quantum account (only needed for `MODE="hardware"` / `"hardware_tau_sweep"`)
+`requirements-tested.txt` records the dependency snapshot tested with CPython
+3.12.3 on Linux. `requirements.txt` is the unconstrained list of direct development
+dependencies. The snapshot does not establish compatibility with every hardware
+target. Use `pytest -m "not slow"` for quick mathematical/API checks and the full
+suite before changing the experiment pipeline.
 
-Save your account once (interactive Python shell or a one-off script):
+## Repository structure
+
+| Path | Purpose |
+|---|---|
+| `broadcasting/` | Configuration, numerical simulation, circuits/QEC, execution, results, analysis and plotting |
+| `tests/` | Local mathematical, execution and data-pipeline validation |
+| `hpc/` | CLI and SLURM execution; per-submission source snapshots |
+| `scripts/` | Figure generation, existing-data analysis and array merging |
+| `run_broadcast.ipynb` | Broadcasting simulation and hardware workflows |
+| `qec_testing.ipynb` | Standalone encoded/bare memory benchmark; no broadcasting or senders |
+| `visualizations.ipynb` | Saved-result exploration |
+| `results/` | Historical raw experiments, including `legacy/` and `qec513/` |
+| `analysis/hardware/` | Derived analysis of saved hardware records |
+| `figures/sources.json` | Explicit publication figure sources and historical provenance |
+| `manuscript/` | LaTeX and the images it actually embeds |
+
+## Reanalyze existing data without collecting experiments
+
+```bash
+python scripts/analyze_saved_hardware.py
+python scripts/generate_figures.py --formats png,pdf
+```
+
+The first command writes `analysis/hardware/report.md`, machine-readable summaries
+and derived figures. It preserves job/theta distinctions when estimating joint,
+worst-receiver, covariance and asymmetry statistics. The second reads the explicit
+figure manifest, checks sources and grids, and updates the selected PNG/PDF images
+in `figures/` and `manuscript/`. Neither command launches an experiment by default.
+
+Historic timing/encoding/circuit overrides are documented separately from raw
+records. Missing provenance is not silently filled from current backend settings.
+Heterogeneous hardware records do not form a controlled scaling experiment simply
+because they share M,N. Nonzero receiver-success covariance alone does not establish
+correlated physical noise.
+
+The former convergence figure repeated one effective seed while claiming independent
+repetitions. It is excluded from the current manuscript. The repaired future
+collection path is explicit:
+
+```bash
+# Collects NEW simulation data; outside the current pre-collection work phase.
+python scripts/generate_figures.py --collect-convergence
+```
+
+That path saves the measurements under `results/convergence/` before rendering a
+new convergence figure. `--quick` selects a smaller development collection; neither
+option is required to regenerate figures supported by existing records.
+
+## Configuration and execution
+
+`ProtocolConfig` defines M, N, real alpha, sender phases, noise sweep, QEC choice,
+fixed sender outcomes, delay, trajectory count/seed, and feedforward convention.
+Four backends consume it: `ExactBackend`, `SamplingBackend`, `HardwareBackend`, and
+`HPCBackend` (which returns a submission receipt rather than completed fidelities).
+
+An explicit `ProtocolConfig.n_samples` or `seed` overrides the corresponding
+`SamplingBackend` setting. If a field is `None`, its backend value is used
+(200 trajectories by default). The CLI supplies its own explicit 1,000-trajectory
+default. Results record effective settings. Set the config seed for each independent
+repetition rather than changing a backend seed shadowed by the config.
+
+At backend level, `p_list` lists sweep points, each applied uniformly to every
+receiver. In low-level numerical functions it means one probability per receiver.
+Backend fidelities describe the whole sweep; `reduced_states` describes only its
+last point. `load_run` exposes protocol fields such as `M` and `N` at the top level
+of its returned mapping.
+
+In `run_broadcast.ipynb`, choose `MODE` (`exact`, `sampling`, `hardware`,
+`hardware_tau_sweep`, or `hpc`) and set the Configuration cell before running the
+execution cell. `alpha` is real in [-1,1]; `1/sqrt(2)` is equatorial. Hardware delays
+are finite, nonnegative integer dt values respecting the selected backend's timing
+constraints; choose unique values in a sweep. Sender `outcomes_list=None` means
+random outcomes; provide a list to condition numerical runs on a specific branch.
+The default linear feedforward applies the additive phase formula even for invalid
+binary sender values greater than N; those events are diagnosed rather than discarded.
+
+Optional analysis/collection flags are disabled by default. Use `qec_testing.ipynb`
+for the separate memory benchmark; its hardware flag also defaults to false.
+The resource preparation and decoder use the retained generic synthesis.
+
+For future hardware execution, save an IBM Quantum account once:
 
 ```python
 from qiskit_ibm_runtime import QiskitRuntimeService
-QiskitRuntimeService.save_account(channel="ibm_quantum_platform", token="<your token>", name="<profile name>")
+QiskitRuntimeService.save_account(
+    channel="ibm_quantum_platform", token="<your token>", name="<profile name>"
+)
 ```
 
-Then set `IBM_PROFILE = "<profile name>"` in the notebook's Configuration cell. (The old
-`channel="ibm_quantum"` API has been removed by IBM -- use `"ibm_quantum_platform"` for new accounts.)
+Set the notebook's `IBM_PROFILE`, explicit `IBM_BACKEND`, `SHOTS`, and
+`OPTIMIZATION_LEVEL`. New records preserve effective configuration and available
+execution/circuit/calibration provenance. Plotting uses recorded backend dt;
+historical conversions come from explicit provenance overrides.
 
-## Core architecture
+## HPC
 
-Every execution path shares the same two pieces:
-
-- **`ProtocolConfig`** (`broadcasting/protocol.py`) -- one dataclass holding everything that defines a
-  run: `M`, `N`, `alpha`, `thetas`, `p_list` (noise sweep), `use_qec`, `outcomes_list`, `tau`,
-  `n_samples`, `seed`, `linear_feedforward`.
-- **`Backend`** (`broadcasting/backend.py`) -- an abstract base class with four interchangeable
-  implementations, all consuming the same `ProtocolConfig`:
-  - `ExactBackend` -- full density-matrix simulation (local).
-  - `SamplingBackend` -- Monte Carlo Pauli-trajectory simulation (local, QEC only).
-  - `HardwareBackend` -- transpiles and submits to real IBM Quantum hardware.
-  - `HPCBackend` -- builds (and optionally submits) the `sbatch` command for a SLURM cluster run.
-
-Every run ends with `broadcasting.results.save_run(result, config)`, which writes one JSON file under
-`results/` using a schema `load_run`/`list_runs` and the plotting helpers all understand.
-
-## Using `run_broadcast.ipynb`
-
-Everything is controlled from the **Configuration** cell:
-
-| Variable | Meaning |
-|---|---|
-| `MODE` | `"exact"`, `"sampling"`, `"hardware"`, `"hardware_tau_sweep"`, or `"hpc"` |
-| `M`, `N` | Number of senders / receivers |
-| `alpha` | Real amplitude parameter (`1/sqrt(2)` = equatorial target state, used throughout the manuscript) |
-| `use_qec` | Encode each receiver in a `[[5,1,3]]` block |
-| `thetas` / `theta_samples` | Sender phase angle(s); `nt` controls how many random samples are drawn |
-| `p_list` | Depolarizing-probability sweep (`exact`/`sampling`/`hpc` modes) |
-| `n_samples` | Monte Carlo trajectory count (`sampling`/`hpc` modes) |
-| `tau` / `tau_values` | Delay time(s) in backend `dt` units (`hardware`/`hardware_tau_sweep`) |
-| `IBM_PROFILE`, `IBM_BACKEND`, `SHOTS`, `OPTIMIZATION_LEVEL` | Hardware execution settings. `IBM_BACKEND = None` picks the least-busy operational backend. |
-| `HPC_MODE`, `HPC_SUBMIT`, `HPC_ARRAY`, `HPC_CONCURRENCY` | Only used when `MODE="hpc"` |
-
-Run the **Run** cell, then the **Save And Plot** cell (saves to `results/` and shows a plot). The three
-optional cells below (**Exact Vs Sampling Overlay**, **Sampling Convergence**, **Figure 5 Periodicity
-Analysis**) are gated behind their own `RUN_*` flags (default `False`).
-
-### Reproducing each manuscript figure
-
-| Figure | What it needs | How to get it |
-|---|---|---|
-| QEC crossover (exact vs. QEC vs. sampling) | `M=1,N=2` exact no-QEC, exact QEC, and sampled QEC `p`-sweeps | `MODE="exact"` with `use_qec=False`, then `use_qec=True`; `MODE="sampling"` with `use_qec=True`. Then run `visualizations.ipynb`'s "QEC Crossover" cell. |
-| Sampling convergence (`1/sqrt(n)` fit) | Nothing extra -- self-contained | Set `RUN_CONVERGENCE = True` in the **Optional Sampling Convergence** cell and run it. |
-| Delay-vs-fidelity (single backend, `M=1,N=2`) | One hardware tau sweep | `MODE="hardware_tau_sweep"`, `use_qec=False`. Uses `tau_values` and (optionally) multiple `theta_samples`. |
-| Delay-vs-fidelity periodicity | One hardware tau sweep on a single backend (`M=1,N=2`, no QEC) | Set `RUN_PERIODICITY_ANALYSIS = True` in the **Optional Figure 5 Periodicity Analysis** cell and run it. Produces an autocorrelation + periodogram analysis via `autocorrelation_from_run` and `periodogram_from_run`. |
-| `[[5,1,3]]` memory benchmark (Fig. 2) | A standalone encoded-qubit delay sweep on hardware | Use **`qec_testing.ipynb`**, not `run_broadcast.ipynb` -- set `RUN_HARDWARE = True` there. This is the standalone memory test, distinct in scope from the broadcasting circuits above. |
-| Hardware `(M,N)` scaling | One hardware point (`tau=0`) per `(M,N)` you want plotted, **on a single, consistent backend and shot count** (mixing backends/shots was a real bug fixed in Phase 3 -- see `ACTION_PLAN.md`) | For each `(M,N)`: `MODE="hardware"`, `tau=0`. Then run `visualizations.ipynb`'s "Hardware Fidelity At Tau Zero" cell, which now reports the backend/shots cohort explicitly and will warn you if points don't share a cohort. |
-| Large sweeps too slow to run locally/interactively | -- | Use `MODE="hpc"` (see below) instead of `"exact"`/`"sampling"`. |
-
-After collecting hardware data, `visualizations.ipynb` also has cells to compute joint (all-receiver)
-fidelity, worst-receiver fidelity, and pairwise receiver covariance directly from the saved joint
-readout bitstrings -- no new hardware time needed for those statistics.
-
-### Running on HPC (`MODE="hpc"`)
-
-`HPCBackend` builds the `sbatch` command for `hpc/slurm_broadcast.sh` from the same `ProtocolConfig`
-used everywhere else:
-
-```python
-MODE = "hpc"
-HPC_MODE = "exact"        # or "sampling"
-HPC_SUBMIT = False        # True actually calls sbatch -- only works from the HPC login node
-HPC_ARRAY = True          # one array task per p_list point instead of one task sweeping all of them
-HPC_CONCURRENCY = 10      # optional cap on concurrently-running array tasks
-```
-
-Running the **Run** cell with `HPC_SUBMIT = False` just prints the `sbatch` command so you can review
-it before actually submitting (`HPC_SUBMIT = True`, run from the cluster). If `HPC_ARRAY = True`, each
-array task writes one single-point result file; merge them afterward with:
+`HPCBackend(submit=False)` builds an argv list and a shell-quoted command without
+submitting. `array=True` assigns one task per probability point; `concurrency`
+limits simultaneous tasks. Actual submission requires `submit=True` on the cluster.
+Arbitrary ordered grids are preserved, including nonuniform ones. The CLI accepts:
 
 ```bash
-python scripts/merge_hpc_runs.py results/run_*.json --output-dir results
+# Example NEW simulation execution, not needed for existing-data reanalysis.
+python -m hpc.run_experiment --mode exact --M 1 --N 2 --p-values 0 0.1 1
 ```
 
-This only reads the source files and writes one new merged file -- it never modifies or deletes the
-per-task originals.
+The older `--p-min`, `--p-max`, and `--p-steps` flags still construct an evenly spaced
+grid. Each SLURM submission uses its own source snapshot and archives outputs under
+`results/submissions/JOB_ID/`. A later source sync cannot replace a running
+submission's source. Validate configured paths on scratch before operational use.
+Merge only the matching per-task files for one submission:
 
-## Building the manuscript
+```bash
+python scripts/merge_hpc_runs.py results/submissions/JOB_ID/run_*.json --output-dir derived/merged
+```
+
+New array records preserve the complete intended grid and submission identity.
+Merging validates matching configurations and grid completeness before writing.
+Historical per-task inputs require `--expected-p-values` followed by the actual
+intended grid. Do not pass complete sweeps or unrelated result files. Source records
+are never modified.
+
+## Manuscript
 
 ```bash
 cd manuscript
@@ -140,14 +152,15 @@ pdflatex -interaction=nonstopmode apstemplate.tex
 pdflatex -interaction=nonstopmode apstemplate.tex
 ```
 
-Figures embedded in the manuscript live directly in `manuscript/` under their exact caption-matching
-filenames (e.g. `manuscript/mc_sampling_convergence.png`). `run_broadcast.ipynb` and
-`visualizations.ipynb` write directly to those paths (in addition to `figures/`) when `SAVE_FIGURES =
-True`, so re-running the relevant cell updates the actual embedded figure.
+Regenerate supported figures from the manifest first. New convergence evidence,
+controlled hardware repeats/scaling, final authorship details and archive DOI remain
+separate data/release steps in `ACTION_PLAN.md`.
 
-## Data safety
+## Data preservation
 
-Files under `results/`, `results/legacy/`, and `results/qec513/` include hardware runs that **cannot
-be regenerated**. Never delete or hand-edit them. `save_run` always writes a new, uniquely-named file
-(never overwrites), so re-running any cell is safe -- it will not touch previous results. See
-[ACTION_PLAN.md](ACTION_PLAN.md)'s "HPC data-safety ground rules" for the full policy.
+Files in `results/`, including `legacy/` and `qec513/`, are source evidence and must
+not be deleted or hand-edited. `save_run` publishes complete JSON atomically and
+refuses to replace any existing path, including an explicit `filepath`. Default
+names use a fresh UUID even within the same SLURM task. Reanalysis outputs belong
+in `analysis/` or `derived/`, separate from raw experiments. See the current
+[action plan](ACTION_PLAN.md) for the collection stopping point and preservation rules.

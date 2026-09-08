@@ -215,3 +215,95 @@ class TestHPCBackend:
         assert result.metadata["submitted"] is True
         assert result.metadata["job_id"] == "12345"
         assert captured["cmd"][0] == "sbatch"
+
+
+@pytest.mark.parametrize("config_n,config_seed,backend_n,backend_seed,expected", [
+    (None, None, 7, 314, (7, 314)), (11, 8, 7, 314, (11, 8)),
+])
+def test_sampling_effective_configuration(monkeypatch, config_n, config_seed, backend_n, backend_seed, expected):
+    calls = []
+    def runner(**kwargs):
+        calls.append(kwargs)
+        return [1.0], np.array([1, 0]), None
+    monkeypatch.setattr("broadcasting.backend.run_broadcast_qec", runner)
+    result = SamplingBackend(backend_n, backend_seed).run(_base_config(
+        N=1, use_qec=True, n_samples=config_n, seed=config_seed))
+    assert {(call["n_samples"], call["seed"]) for call in calls} == {expected}
+    assert (result.metadata["n_samples"], result.metadata["seed"]) == expected
+
+
+@pytest.mark.parametrize("taus", [[], [0, 0], [-1], [1.1], [float("nan")], [float("inf")], [None], [True]])
+def test_invalid_hardware_delays_fail_before_backend_lookup(taus, monkeypatch):
+    backend = HardwareBackend(None)
+    monkeypatch.setattr(backend, "_backend", lambda: pytest.fail("Should not access hardware"))
+    with pytest.raises(ValueError, match="tau"):
+        backend.run_tau_sweep(_base_config(), taus)
+
+
+def test_sender_counts_and_aligned_registers_with_local_sampler(monkeypatch, tmp_path):
+    import base64
+    import io
+    from qiskit import qpy
+    from qiskit_aer import AerSimulator
+    from qiskit_aer.primitives import SamplerV2
+    from broadcasting.results import save_run, load_run
+
+    backend = HardwareBackend(None, shots=64, optimization_level=0)
+    sampler = SamplerV2(seed=4)
+    monkeypatch.setattr(backend, "_backend", lambda: AerSimulator())
+    monkeypatch.setattr(backend, "_sampler", lambda ignored: sampler)
+    config = _base_config(N=1, thetas=[0.3], p_list=[])
+    result = backend.run(config)
+    assert result.metadata["tau"] == 0
+    assert result.metadata["sender_counts"] is not None
+    assert result.metadata["invalid_sender_rate"] == 0
+    aligned = result.metadata["aligned_shots"]
+    assert aligned["num_shots"] == 64
+    assert set(aligned["registers"]) == {"m", "fid"}
+    assert set(aligned["registers"]["fid"]) == {"0"}
+    templates = result.metadata["compiled_templates"]
+    replay = qpy.load(io.BytesIO(base64.b64decode(templates[0]["qpy_base64"])))[0]
+    replay = replay.assign_parameters({next(iter(replay.parameters)): 0})
+    assert not replay.parameters
+    saved = load_run(save_run(result, config, results_dir=tmp_path))
+    assert saved["metadata"]["aligned_shots"] == aligned
+    assert saved["outcomes_list"] is None
+    assert saved["metadata"]["requested_outcomes_list"] == [0]
+
+
+def test_fake_brisbane_bound_delay_fallback(monkeypatch):
+    from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+    from qiskit.primitives.containers import BitArray, DataBin, SamplerPubResult
+    class Job:
+        def job_id(self): return "offline"
+        def result(self):
+            return [SamplerPubResult(DataBin(fid=BitArray.from_samples(["0"] * 4),
+                                              m=BitArray.from_samples(["0"] * 4))) for _ in range(2)]
+    class Sampler:
+        def run(self, pubs, shots):
+            assert all(not pub[0].parameters for pub in pubs)
+            return Job()
+    backend = HardwareBackend(None, shots=4, optimization_level=1)
+    monkeypatch.setattr(backend, "_backend", FakeBrisbane)
+    monkeypatch.setattr(backend, "_sampler", lambda _: Sampler())
+    result = backend.run_tau_sweep(_base_config(N=1), [0, 104])
+    assert result.metadata["compilation"][0]["mode"] == "bound per delay"
+    assert len(result.metadata["compiled_templates"]) == 2
+    assert result.metadata["calibration"]["dt_seconds"] > 0
+    with pytest.raises(ValueError, match="multiples of 8"):
+        backend.run_tau_sweep(_base_config(N=1), [100])
+
+
+def test_hpc_command_roundtrips_shell_and_preserves_nonuniform_points():
+    import shlex
+    config = _base_config(M=2, thetas=[0.1, 0.7], outcomes_list=[1, 0], p_list=[0, 0.1, 1])
+    result = HPCBackend().run(config)
+    assert shlex.split(result.metadata["command"]) == result.metadata["argv"]
+    assert "P_LIST=0 0.1 1," in result.metadata["argv"][1]
+
+
+@pytest.mark.parametrize("alpha", [0.5 + 0.5j, 1.01, -1.01, float("nan"), float("inf")])
+@pytest.mark.parametrize("backend", [ExactBackend(), SamplingBackend(), HPCBackend(), HardwareBackend(None)])
+def test_all_execution_backends_reject_invalid_real_amplitudes(alpha, backend):
+    with pytest.raises(ValueError, match="alpha must be real"):
+        backend.run(_base_config(alpha=alpha, use_qec=True))

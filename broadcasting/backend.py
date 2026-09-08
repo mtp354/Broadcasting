@@ -12,16 +12,60 @@ Four execution backends, all sharing the same `Backend.run(config)` interface:
 from abc import ABC, abstractmethod
 from datetime import datetime
 import subprocess
+import shlex
+import time
+import math
+import json
 from typing import Any
 
 import numpy as np
-from qiskit.quantum_info import Statevector
 
 from .protocol import BroadcastResult, ProtocolConfig
+from .provenance import software_provenance, circuit_provenance, calibration_provenance
 from .simulation import (
     run_broadcast_no_qec,
     run_broadcast_qec,
 )
+
+
+def _validate_config(config: ProtocolConfig, *, probabilities: bool = False) -> None:
+    for name in ("M", "N"):
+        value = getattr(config, name)
+        if isinstance(value, bool) or not isinstance(value, (int, np.integer)) or value < 1:
+            raise ValueError(f"{name} must be a positive integer.")
+    if np.iscomplexobj(config.alpha) or not np.isfinite(config.alpha) or not -1 <= config.alpha <= 1:
+        raise ValueError("alpha must be real and in [-1, 1].")
+    if len(config.thetas) != config.M or np.iscomplexobj(config.thetas) or not np.all(np.isfinite(config.thetas)):
+        raise ValueError(f"Expected {config.M} finite real theta values.")
+    if config.outcomes_list is not None:
+        if len(config.outcomes_list) != config.M or any(
+            isinstance(value, bool) or not isinstance(value, (int, np.integer)) or not 0 <= value <= config.N
+            for value in config.outcomes_list
+        ):
+            raise ValueError(f"outcomes_list must contain {config.M} integers in [0, {config.N}].")
+    if probabilities and (not len(config.p_list) or np.iscomplexobj(config.p_list) or any(
+        not np.isfinite(value) or not 0 <= value <= 1 for value in config.p_list
+    )):
+        raise ValueError("p_list must contain finite probabilities in [0, 1].")
+
+
+def _sampler_settings(sampler) -> dict:
+    """Only execution controls are recorded; exclude account/environment objects."""
+    from dataclasses import asdict, is_dataclass
+    options = getattr(sampler, "options", None)
+    def plain(value):
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+        if is_dataclass(value):
+            return plain(asdict(value))
+        if isinstance(value, dict):
+            return {str(key): plain(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [plain(item) for item in value]
+        return str(value)
+    return {name: plain(getattr(options, name)) for name in
+            ("default_shots", "max_execution_time", "dynamical_decoupling", "execution", "twirling")
+            if hasattr(options, name)}
 
 
 class Backend(ABC):
@@ -50,6 +94,8 @@ class ExactBackend(Backend):
     """
 
     def run(self, config: ProtocolConfig) -> BroadcastResult:
+        _validate_config(config, probabilities=True)
+        software = software_provenance()
         all_fidelities = []
         target = None
         last_reduced = None
@@ -76,12 +122,16 @@ class ExactBackend(Backend):
             reduced_states=last_reduced,
             metadata={
                 "mode": "exact",
+                "seed": config.seed,
                 "M": config.M,
                 "N": config.N,
                 "use_qec": config.use_qec,
                 "thetas": config.thetas,
                 "p_list": config.p_list,
                 "alpha": config.alpha,
+                "linear_feedforward": config.linear_feedforward,
+                "outcomes_list": config.outcomes_list,
+                "software": software,
                 "timestamp": datetime.now().isoformat(),
             },
         )
@@ -107,6 +157,8 @@ class SamplingBackend(Backend):
         self.seed = seed
 
     def run(self, config: ProtocolConfig) -> BroadcastResult:
+        _validate_config(config, probabilities=True)
+        software = software_provenance()
         if not config.use_qec:
             raise ValueError(
                 "SamplingBackend requires use_qec=True.  For non-QEC "
@@ -115,6 +167,9 @@ class SamplingBackend(Backend):
             )
 
         seed = self.seed if config.seed is None else config.seed
+        n_samples = self.n_samples if config.n_samples is None else config.n_samples
+        if isinstance(n_samples, bool) or not isinstance(n_samples, (int, np.integer)) or n_samples < 1:
+            raise ValueError("n_samples must be a positive integer.")
         all_fidelities = []
         target = None
         last_reduced = None
@@ -128,7 +183,7 @@ class SamplingBackend(Backend):
                 p_list=[p] * config.N,
                 outcomes_list=config.outcomes_list,
                 mode="sampling",
-                n_samples=self.n_samples,
+                n_samples=n_samples,
                 seed=seed,
             )
             all_fidelities.append(fids)
@@ -138,14 +193,18 @@ class SamplingBackend(Backend):
             target_state=np.asarray(target) if target is not None else None,
             reduced_states=last_reduced,
             metadata={
-                "mode": f"sampled ({self.n_samples} trajectories)",
+                "mode": f"sampled ({n_samples} trajectories)",
                 "M": config.M,
                 "N": config.N,
                 "use_qec": config.use_qec,
                 "thetas": config.thetas,
                 "p_list": config.p_list,
                 "alpha": config.alpha,
-                "n_samples": self.n_samples,
+                "linear_feedforward": config.linear_feedforward,
+                "outcomes_list": config.outcomes_list,
+                "software": software,
+                "n_samples": n_samples,
+                "seed": seed,
                 "timestamp": datetime.now().isoformat(),
             },
         )
@@ -202,15 +261,28 @@ class HPCBackend(Backend):
         self.submit = submit
 
     def _env(self, config: ProtocolConfig) -> dict[str, str]:
-        p_list = config.p_list or [0.0, 1.0]
+        _validate_config(config, probabilities=True)
+        if self.mode == "sampling" and not config.use_qec:
+            raise ValueError("HPC sampling requires use_qec=True.")
+        p_list = list(config.p_list)
+        if not p_list or any(not np.isfinite(p) or not 0 <= p <= 1 for p in p_list):
+            raise ValueError("p_list must contain finite probabilities in [0, 1].")
+        if len(set(p_list)) != len(p_list):
+            raise ValueError("p_list must not contain duplicates.")
         env = {
             "MODE": self.mode,
             "M": str(config.M),
             "N": str(config.N),
+            "P_LIST": " ".join(str(p) for p in p_list),
             "P_MIN": str(min(p_list)),
             "P_MAX": str(max(p_list)),
             "P_STEPS": str(len(p_list)),
-            "N_SAMPLES": str(config.n_samples or 1000),
+            "N_SAMPLES": str(200 if config.n_samples is None else config.n_samples),
+            "USE_QEC": "1" if config.use_qec else "0",
+            "LINEAR_FEEDFORWARD": "1" if config.linear_feedforward else "0",
+            "THETAS": " ".join(str(t) for t in config.thetas),
+            "OUTCOMES": " ".join(str(o) for o in config.outcomes_list) if config.outcomes_list is not None else "random",
+            "SEED": "" if config.seed is None else str(config.seed),
         }
         if config.use_qec:
             env["USE_QEC"] = "1"
@@ -249,7 +321,14 @@ class HPCBackend(Backend):
             fidelities=[],
             metadata={
                 "mode": f"hpc ({self.mode})",
-                "command": " ".join(cmd),
+                "command": shlex.join(cmd),
+                "argv": cmd,
+                "requested_sweep_values": list(config.p_list),
+                "n_samples": 200 if config.n_samples is None else config.n_samples,
+                "seed": config.seed,
+                "linear_feedforward": config.linear_feedforward,
+                "outcomes_list": config.outcomes_list,
+                "software": software_provenance(),
                 "submitted": self.submit,
                 "job_id": job_id,
                 "M": config.M,
@@ -340,79 +419,56 @@ class HardwareBackend(Backend):
 
         return invalid_shots / total_shots
 
+    @staticmethod
+    def _validate_taus(tau_values) -> list[int]:
+        values = list(tau_values)
+        if not values:
+            raise ValueError("tau_values must contain at least one value.")
+        taus = []
+        for tau in values:
+            if isinstance(tau, (bool, complex)) or not isinstance(tau, (int, float, np.integer, np.floating)):
+                raise ValueError("tau values must be finite nonnegative integer dt durations.")
+            if not np.isfinite(tau) or tau < 0 or tau != int(tau):
+                raise ValueError("tau values must be finite nonnegative integer dt durations.")
+            taus.append(int(tau))
+        if len(set(taus)) != len(taus):
+            raise ValueError("tau_values must not contain duplicate delays.")
+        return taus
+
+    @staticmethod
+    def _aligned_shots(data) -> dict:
+        """Preserve register columns in original shot order, including syndromes."""
+        items = data.items() if hasattr(data, "items") else vars(data).items()
+        registers = {name: value.get_bitstrings() for name, value in items
+                     if hasattr(value, "get_bitstrings")}
+        if registers and len({len(values) for values in registers.values()}) != 1:
+            raise ValueError("Classical registers have inconsistent shot counts.")
+        return {"ordering": "register bitstrings are MSB first; equal indices identify the same shot",
+                "registers": registers,
+                "num_shots": len(next(iter(registers.values()))) if registers else None,
+                "available": bool(registers)}
+
+    @staticmethod
+    def _validate_target(circuits, backend):
+        target = getattr(backend, "target", None)
+        if target is not None and hasattr(target, "instruction_supported"):
+            from qiskit_ibm_runtime.utils.validations import validate_isa_circuits
+            validate_isa_circuits(circuits, target)
+        if any(circuit.parameters for circuit in circuits):
+            raise ValueError("Cannot submit circuits containing unbound parameters.")
+
     def run(self, config: ProtocolConfig) -> BroadcastResult:
-        # Import here to avoid hard dependency when not using hardware
-        from qiskit.transpiler import generate_preset_pass_manager
-
-        from .circuit import generate_qiskit_circuit
-        from .fidelity import add_fidelity
-
-        backend = self._backend()
-
-        # Build circuit
-        qc = generate_qiskit_circuit(
-            config.M,
-            config.N,
-            config.thetas,
-            alphas=config.alpha,
-            tau=config.tau,
-            use_receiver_qec_513=config.use_qec,
-            linear_feedforward=config.linear_feedforward,
-        )
-        qc, reg_name, phi = add_fidelity(
-            qc, N=config.N, thetas=config.thetas, alpha=config.alpha
-        )
-
-        # Transpile
-        pm = generate_preset_pass_manager(
-            backend=backend,
-            optimization_level=self.optimization_level,
-        )
-        isa_circuit = pm.run([qc])[0]
-
-        # Submit
-        sampler = self._sampler(backend)
-        job = sampler.run([(isa_circuit,)], shots=self.shots)
-        result = job.result()
-
-        # Extract fidelities from measurement counts
-        pub_result = result[0]
-        fid_data = getattr(pub_result.data, reg_name)
-        counts = fid_data.get_counts()
-        fidelities = self._fidelities_from_counts(counts, config.N)
-
-        sender_counts = None
-        invalid_sender_rate = None
-        if hasattr(pub_result.data, "c_senders"):
-            sender_counts = dict(pub_result.data.c_senders.get_counts())
-            invalid_sender_rate = self._compute_invalid_sender_rate(
-                sender_counts, config.M, config.N
-            )
-
-        return BroadcastResult(
-            fidelities=fidelities,
-            target_state=None,
-            reduced_states=None,
-            metadata={
-                "mode": f"hardware ({backend.name})",
-                "M": config.M,
-                "N": config.N,
-                "use_qec": config.use_qec,
-                "thetas": config.thetas,
-                "p_list": config.p_list,
-                "alpha": config.alpha,
-                "shots": self.shots,
-                "backend": backend.name,
-                "job_id": job.job_id(),
-                "counts": counts,
-                "sender_counts": sender_counts,
-                "invalid_sender_rate": invalid_sender_rate,
-                "optimization_level": self.optimization_level,
-                "tau": config.tau,
-                "dt": getattr(getattr(backend, "target", None), "dt", None),
-                "timestamp": datetime.now().isoformat(),
-            },
-        )
+        """Run one delay point; the omitted delay is explicitly zero dt."""
+        tau = 0 if config.tau is None else config.tau
+        result = self.run_tau_sweep(config, [tau])
+        result.fidelities = result.fidelities[0]
+        meta = result.metadata
+        meta["tau"] = meta.pop("sweep_values")[0]
+        meta.pop("sweep_axis")
+        for name in ("counts", "sender_counts", "invalid_sender_rate", "aligned_shots"):
+            if meta.get(name) is not None:
+                meta[name] = meta[name][0][0]
+        return result
 
     def run_tau_sweep(
         self,
@@ -421,128 +477,120 @@ class HardwareBackend(Backend):
         *,
         theta_samples: list[list[float]] | np.ndarray | None = None,
     ) -> BroadcastResult:
-        """Run a hardware tau sweep for one or more theta samples."""
-        from qiskit.transpiler import generate_preset_pass_manager
+        """Compile and validate a delay sweep completely before submitting.
 
+        Symbolic-delay compilation is reused once per theta where supported.
+        Targets rejecting symbolic durations are compiled at each bound delay;
+        the chosen path and replayable compiled templates are archived.
+        """
+        from qiskit.transpiler import generate_preset_pass_manager, TranspilerError
+        from qiskit_ibm_runtime import RuntimeEncoder
         from .circuit import generate_qiskit_circuit
         from .fidelity import add_fidelity
 
-        tau_values = [int(t) for t in tau_values]
-        if not tau_values:
-            raise ValueError("tau_values must contain at least one value.")
-
-        if theta_samples is None:
-            theta_samples = [list(config.thetas)]
-        else:
-            theta_samples = np.asarray(theta_samples, dtype=float).tolist()
-
-        for sample in theta_samples:
-            if len(sample) != config.M:
-                raise ValueError(
-                    f"Expected theta sample length {config.M}, got {len(sample)}."
-                )
-
+        started = time.perf_counter()
+        _validate_config(config)
+        software = software_provenance()
+        tau_values = self._validate_taus(tau_values)
+        theta_samples = np.asarray([config.thetas] if theta_samples is None else theta_samples, dtype=float)
+        if theta_samples.ndim != 2 or theta_samples.shape[0] == 0 or theta_samples.shape[1] != config.M:
+            raise ValueError(f"theta_samples must contain samples of length {config.M}.")
+        if not np.all(np.isfinite(theta_samples)):
+            raise ValueError("theta samples must be finite.")
+        theta_samples = theta_samples.tolist()
+        if np.iscomplexobj(config.alpha) or not np.isfinite(config.alpha) or not -1 <= config.alpha <= 1:
+            raise ValueError("alpha must be real and in [-1, 1].")
         backend = self._backend()
-        pm = generate_preset_pass_manager(
-            backend=backend,
-            optimization_level=self.optimization_level,
-        )
-
-        pubs = []
-        run_index: list[tuple[int, int]] = []
+        target = getattr(backend, "target", None)
+        granularity = getattr(target, "granularity", 1) or 1
+        alignment = getattr(target, "pulse_alignment", 1) or 1
+        step = math.lcm(granularity, alignment)
+        if any(tau % step for tau in tau_values):
+            raise ValueError(f"tau values must be multiples of {step} dt for {backend.name}.")
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=self.optimization_level)
+        pubs, templates, compiled_pubs, compile_modes = [], [], [], []
         reg_name = "fid"
-
         for ti, thetas in enumerate(theta_samples):
-            qc = generate_qiskit_circuit(
-                config.M,
-                config.N,
-                thetas,
-                alphas=config.alpha,
-                tau=None,
-                use_receiver_qec_513=config.use_qec,
-                linear_feedforward=config.linear_feedforward,
-            )
-            qc, reg_name, _ = add_fidelity(
-                qc, N=config.N, thetas=thetas, alpha=config.alpha
-            )
-
-            # Transpile once per theta sample with tau left as a free Parameter,
-            # then bind it per tau value below -- binding a transpiled circuit
-            # is cheap, but transpiling one circuit per tau value (the previous
-            # behavior) does full layout/routing/optimization len(tau_values)
-            # times and can hang for a very long time before anything submits.
-            print(
-                f"Transpiling theta sample {ti + 1}/{len(theta_samples)} "
-                f"(optimization_level={self.optimization_level})..."
-            )
-            isa_circuit = pm.run(qc)
-            isa_tau_param = next(p for p in isa_circuit.parameters if p.name == "tau")
-
-            for tau in tau_values:
-                pubs.append((isa_circuit.assign_parameters({isa_tau_param: tau}),))
-                run_index.append((ti, tau))
-
+            qc = generate_qiskit_circuit(config.M, config.N, thetas, alphas=config.alpha,
+                                        tau=None, use_receiver_qec_513=config.use_qec,
+                                        linear_feedforward=config.linear_feedforward)
+            qc, reg_name, _ = add_fidelity(qc, N=config.N, thetas=thetas, alpha=config.alpha)
+            print(f"Transpiling theta sample {ti + 1}/{len(theta_samples)} "
+                  f"(optimization_level={self.optimization_level})...")
+            try:
+                isa_circuit = pm.run(qc)
+            except TranspilerError as exc:
+                # Only a symbolic-duration failure justifies a bound fallback.
+                message = str(exc).lower()
+                if not any(word in message for word in ("duration", "parameter", "delay")):
+                    raise
+                compile_modes.append({"theta_index": ti, "mode": "bound per delay", "reason": str(exc)})
+                tau_parameter = next(p for p in qc.parameters if p.name == "tau")
+                for j, tau in enumerate(tau_values):
+                    bound = pm.run(qc.assign_parameters({tau_parameter: tau}))
+                    template_index = len(templates)
+                    templates.append(circuit_provenance(bound, target))
+                    pubs.append((bound,))
+                    compiled_pubs.append({"theta_index": ti, "tau_index": j, "tau_dt": tau,
+                                          "template_index": template_index, "bindings": {}})
+            else:
+                tau_parameter = next((p for p in isa_circuit.parameters if p.name == "tau"), None)
+                if tau_parameter is None:
+                    raise ValueError("Transpilation removed the sweep's tau parameter.")
+                template_index = len(templates)
+                templates.append(circuit_provenance(isa_circuit, target))
+                compile_modes.append({"theta_index": ti, "mode": "symbolic once per theta"})
+                for j, tau in enumerate(tau_values):
+                    bound = isa_circuit.assign_parameters({tau_parameter: tau})
+                    pubs.append((bound,))
+                    compiled_pubs.append({"theta_index": ti, "tau_index": j, "tau_dt": tau,
+                                          "template_index": template_index, "bindings": {"tau": tau}})
+        self._validate_target([pub[0] for pub in pubs], backend)
+        calibration = calibration_provenance(backend, [pub[0] for pub in pubs])
+        compile_seconds = time.perf_counter() - started
+        submitted = datetime.now().isoformat()
         print(f"Submitting job with {len(pubs)} PUB(s)...")
-        job = self._sampler(backend).run(pubs, shots=self.shots)
+        sampler = self._sampler(backend)
+        sampler_settings = _sampler_settings(sampler)
+        job = sampler.run(pubs, shots=self.shots)
         print(f"Job ID: {job.job_id()}")
-        results = job.result()
-
-        n_theta = len(theta_samples)
-        n_tau = len(tau_values)
-        tau_index = {tau: i for i, tau in enumerate(tau_values)}
-        fid_grid: list[list[list[float] | None]] = [
-            [None] * n_tau for _ in range(n_theta)
-        ]
-        counts_grid: list[list[dict[str, int] | None]] = [
-            [None] * n_tau for _ in range(n_theta)
-        ]
-        sender_counts_grid: list[list[dict[str, int] | None]] = [
-            [None] * n_tau for _ in range(n_theta)
-        ]
-        invalid_rates_grid: list[list[float | None]] = [
-            [None] * n_tau for _ in range(n_theta)
-        ]
-
-        has_sender_data = False
-        for (ti, tau), pub_result in zip(run_index, results):
-            counts = getattr(pub_result.data, reg_name).get_counts()
-            j = tau_index[tau]
+        result_container = job.result()
+        results = list(result_container)
+        if len(results) != len(pubs):
+            raise ValueError(f"Expected {len(pubs)} PUB results, received {len(results)}.")
+        n_theta, n_tau = len(theta_samples), len(tau_values)
+        def grid():
+            return [[None] * n_tau for _ in range(n_theta)]
+        fid_grid, counts_grid, sender_grid, invalid_grid, aligned_grid = [grid() for _ in range(5)]
+        for index, pub_result in zip(compiled_pubs, results):
+            ti, j = index["theta_index"], index["tau_index"]
+            counts = dict(getattr(pub_result.data, reg_name).get_counts())
+            counts_grid[ti][j] = counts
             fid_grid[ti][j] = self._fidelities_from_counts(counts, config.N)
-            counts_grid[ti][j] = dict(counts)
-            if hasattr(pub_result.data, "c_senders"):
-                has_sender_data = True
-                s_counts = dict(pub_result.data.c_senders.get_counts())
-                sender_counts_grid[ti][j] = s_counts
-                invalid_rates_grid[ti][j] = self._compute_invalid_sender_rate(
-                    s_counts, config.M, config.N
-                )
-
-        fidelities = np.mean(np.asarray(fid_grid, dtype=float), axis=0).tolist()
-
+            aligned_grid[ti][j] = self._aligned_shots(pub_result.data)
+            if hasattr(pub_result.data, "m"):
+                sender_grid[ti][j] = dict(pub_result.data.m.get_counts())
+                invalid_grid[ti][j] = self._compute_invalid_sender_rate(sender_grid[ti][j], config.M, config.N)
         return BroadcastResult(
-            fidelities=fidelities,
-            target_state=None,
-            reduced_states=None,
-            metadata={
-                "mode": f"hardware ({backend.name})",
-                "M": config.M,
-                "N": config.N,
-                "use_qec": config.use_qec,
-                "thetas": list(config.thetas),
-                "theta_samples": theta_samples,
-                "p_list": config.p_list,
-                "alpha": config.alpha,
-                "shots": self.shots,
-                "backend": backend.name,
-                "job_id": job.job_id(),
-                "optimization_level": self.optimization_level,
-                "sweep_axis": "tau",
-                "sweep_values": tau_values,
-                "per_theta_fidelities": fid_grid if n_theta > 1 else None,
-                "counts": counts_grid,
-                "sender_counts": sender_counts_grid if has_sender_data else None,
-                "invalid_sender_rate": invalid_rates_grid if has_sender_data else None,
-                "dt": getattr(getattr(backend, "target", None), "dt", None),
-                "timestamp": datetime.now().isoformat(),
-            },
+            fidelities=np.mean(np.asarray(fid_grid, dtype=float), axis=0).tolist(),
+            metadata={"mode": f"hardware ({backend.name})", "M": config.M, "N": config.N,
+                      "use_qec": config.use_qec, "thetas": list(config.thetas),
+                      "theta_samples": theta_samples, "p_list": config.p_list, "alpha": config.alpha,
+                      "shots": self.shots, "backend": backend.name, "job_id": job.job_id(),
+                      "optimization_level": self.optimization_level, "sweep_axis": "tau",
+                      "sweep_values": tau_values, "per_theta_fidelities": fid_grid if n_theta > 1 else None,
+                      "counts": counts_grid, "sender_counts": sender_grid,
+                      "invalid_sender_rate": invalid_grid, "aligned_shots": aligned_grid,
+                      "linear_feedforward": config.linear_feedforward, "outcomes_list": None,
+                      "outcome_selection": "all hardware measurement branches; no postselection",
+                      "requested_outcomes_list": config.outcomes_list,
+                      "dt": getattr(target, "dt", None), "software": software,
+                      "compiled_templates": templates, "compiled_pubs": compiled_pubs,
+                      "compilation": compile_modes, "calibration": calibration,
+                      "execution": {"submission_time": submitted, "compile_seconds": compile_seconds,
+                                    "total_elapsed_seconds": time.perf_counter() - started,
+                                    "sampler_options": sampler_settings,
+                                    "sampler_result_metadata": json.loads(json.dumps(getattr(result_container, "metadata", None), cls=RuntimeEncoder)),
+                                    "pub_result_metadata": json.loads(json.dumps([getattr(result, "metadata", None) for result in results], cls=RuntimeEncoder))},
+                      "timestamp": datetime.now().isoformat()},
         )

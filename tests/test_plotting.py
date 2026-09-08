@@ -159,3 +159,37 @@ def test_save_run_preserves_hardware_tau_sweep(tmp_path):
     with open(out) as f:
         raw = json.load(f)
     assert raw["protocol"]["theta_samples"] == [[0.1]]
+
+
+def test_periodicity_scaled_frequency_and_density_preserve_integral():
+    tau = np.arange(0, 2000, 10)
+    trace = 0.8 + 0.1 * np.cos(2 * np.pi * tau / 200)
+    run = {"N": 1, "sweep": {"axis": "tau", "values": tau.tolist()},
+           "fidelities": trace[:, None].tolist()}
+    frequencies, density = periodogram_from_run(run)
+    fig = plot_periodicity_comparison([run], ["synthetic"], tau_scale=0.004,
+                                     tau_label="Idle delay (us)", show=False)
+    plotted_frequency, plotted_density = fig.axes[1].lines[0].get_data()
+    peak = int(np.argmax(plotted_density))
+    assert plotted_frequency[peak] == pytest.approx(1.25)
+    assert np.trapezoid(plotted_density, plotted_frequency) == pytest.approx(np.trapezoid(density, frequencies))
+    assert "fidelity² us" in fig.axes[1].get_ylabel()
+    assert fig.axes[0].get_xlabel() == "Lag (us)"
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("values", [[0, 0, 1], [0, 1, 3], [0, 1, float("nan")]])
+def test_periodicity_rejects_duplicate_irregular_or_nonfinite_grid(values):
+    run = {"N": 1, "sweep": {"axis": "tau", "values": values},
+           "fidelities": [[0.8], [0.7], [0.9]]}
+    with pytest.raises(ValueError):
+        periodogram_from_run(run)
+
+
+def test_plot_run_sweep_consumes_recorded_dt_without_hardcoded_device_value():
+    run = {"N": 1, "sweep": {"axis": "tau", "values": [0, 100]},
+           "fidelities": [[0.8], [0.7]], "metadata": {"dt": 2e-9}}
+    fig = plot_run_sweep(run, show=False)
+    assert fig.axes[0].lines[0].get_xdata().tolist() == pytest.approx([0, 0.2])
+    assert "us" in fig.axes[0].get_xlabel()
+    plt.close(fig)

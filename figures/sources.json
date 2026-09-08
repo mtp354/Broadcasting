@@ -1,0 +1,1781 @@
+{
+  "schema_version": 1,
+  "purpose": "Read-only figure source inventory; explicit historical overlays never mutate raw results. Source hashes prevent silent changes. Outputs are stems exported as PNG/PDF.",
+  "runs": {
+    "results/run_20260408_160814.json": {
+      "sha256": "5e30374895a32ffcc39989047161271573338f0c844cd68c4606b2f84d1703fa",
+      "job_id": "d7bba5jklj2c73ev1oe0",
+      "backend": "ibm_kingston",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          100,
+          200,
+          300,
+          400,
+          500,
+          600,
+          700,
+          800,
+          900,
+          1000,
+          1100,
+          1200,
+          1300,
+          1400,
+          1500,
+          1600,
+          1700,
+          1800,
+          1900,
+          2000,
+          2100,
+          2200,
+          2300,
+          2400,
+          2500,
+          2600,
+          2700,
+          2800,
+          2900,
+          3000,
+          3100,
+          3200,
+          3300,
+          3400,
+          3500,
+          3600,
+          3700,
+          3800,
+          3900,
+          4000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260408_161340.json": {
+      "sha256": "c05f38bd4ae05f9fc9802a36f6aaf8f9e2fce5b2dfb812e332d919a46d2b46db",
+      "job_id": "d7bbd4h5a5qc73dn9570",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 3,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260408_161902.json": {
+      "sha256": "5dbd94fd2a5d8c00149c8fa7b335d44a0056cc4e3e0acb80e935c97a2164f456",
+      "job_id": "d7bbfhb0g7hs73dpc7og",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 4,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260408_162212.json": {
+      "sha256": "8f585be9fa71d35b94dccd45af3dad949024b1f88e19ae1295692956762b4281",
+      "job_id": "d7bbh8p5a5qc73dn9a60",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 2,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599,
+            2.757554564287996
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260408_162440.json": {
+      "sha256": "f8988fe585651a4f5a1efdfe384d9fa61dac04fe7a5ce855c009c106413c9273",
+      "job_id": "d7bbibb0g7hs73dpcb6g",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 2,
+        "N": 3,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599,
+            2.757554564287996
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260408_162906.json": {
+      "sha256": "2f1117f61535061196415f073272a104ed1d1943a623ca98cf658a456c9dc284",
+      "job_id": "d7bbjsbklj2c73ev24jg",
+      "backend": "ibm_fez",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 2,
+        "N": 4,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599,
+            2.757554564287996
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260408_163129.json": {
+      "sha256": "bd0997d3ef1130cef4bda4c7478536276b7b7b424a411509abc424df594f3ba9",
+      "job_id": "d7bblg3klj2c73ev272g",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 3,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599,
+            2.757554564287996,
+            5.3947298351621535
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260408_170544.json": {
+      "sha256": "62d22dd4a8b6e49513abe21ea5bd248a91c96ead01609bf4718c571af3d72230",
+      "job_id": "d7bc3ab0g7hs73dpd27g",
+      "backend": "ibm_fez",
+      "shots": 8192,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ],
+          [
+            2.757554564287996
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260422_110316.json": {
+      "sha256": "3b96f58310938bd31046548f9a7c38a319f57917d1c41eaa59f822d64b587171",
+      "job_id": null,
+      "backend": "aer_exact",
+      "shots": null,
+      "optimization_level": null,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": 0.5773502691896258,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            0.7853981633974483
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "p",
+        "values": [
+          0.0,
+          0.25,
+          0.5,
+          0.75,
+          1.0
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260426_170827.json": {
+      "sha256": "fc651aa3ae71938d8a25c1bb75dbee61fcba84c91e99390430672889752fd11a",
+      "job_id": null,
+      "backend": "aer_exact",
+      "shots": null,
+      "optimization_level": null,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": 0.5773502691896258,
+        "use_qec": true,
+        "theta_samples": [
+          [
+            0.7853981633974483
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "p",
+        "values": [
+          0.0,
+          0.02040816326530612,
+          0.04081632653061224,
+          0.061224489795918366,
+          0.08163265306122448,
+          0.1020408163265306,
+          0.12244897959183673,
+          0.14285714285714285,
+          0.16326530612244897,
+          0.18367346938775508,
+          0.2040816326530612,
+          0.22448979591836732,
+          0.24489795918367346,
+          0.26530612244897955,
+          0.2857142857142857,
+          0.3061224489795918,
+          0.32653061224489793,
+          0.3469387755102041,
+          0.36734693877551017,
+          0.3877551020408163,
+          0.4081632653061224,
+          0.42857142857142855,
+          0.44897959183673464,
+          0.4693877551020408,
+          0.4897959183673469,
+          0.5102040816326531,
+          0.5306122448979591,
+          0.5510204081632653,
+          0.5714285714285714,
+          0.5918367346938775,
+          0.6122448979591836,
+          0.6326530612244897,
+          0.6530612244897959,
+          0.673469387755102,
+          0.6938775510204082,
+          0.7142857142857142,
+          0.7346938775510203,
+          0.7551020408163265,
+          0.7755102040816326,
+          0.7959183673469387,
+          0.8163265306122448,
+          0.836734693877551,
+          0.8571428571428571,
+          0.8775510204081632,
+          0.8979591836734693,
+          0.9183673469387754,
+          0.9387755102040816,
+          0.9591836734693877,
+          0.9795918367346939,
+          1.0
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260427_114317.json": {
+      "sha256": "08fd8eb7b7647e7681de3bb142202c0d4640879553ed02db0f64fda232f0da48",
+      "job_id": null,
+      "backend": "aer_sampling",
+      "shots": null,
+      "optimization_level": null,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": 0.5773502691896258,
+        "use_qec": true,
+        "theta_samples": [
+          [
+            0.7853981633974483
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "p",
+        "values": [
+          0.0,
+          0.02040816326530612,
+          0.04081632653061224,
+          0.061224489795918366,
+          0.08163265306122448,
+          0.1020408163265306,
+          0.12244897959183673,
+          0.14285714285714285,
+          0.16326530612244897,
+          0.18367346938775508,
+          0.2040816326530612,
+          0.22448979591836732,
+          0.24489795918367346,
+          0.26530612244897955,
+          0.2857142857142857,
+          0.3061224489795918,
+          0.32653061224489793,
+          0.3469387755102041,
+          0.36734693877551017,
+          0.3877551020408163,
+          0.4081632653061224,
+          0.42857142857142855,
+          0.44897959183673464,
+          0.4693877551020408,
+          0.4897959183673469,
+          0.5102040816326531,
+          0.5306122448979591,
+          0.5510204081632653,
+          0.5714285714285714,
+          0.5918367346938775,
+          0.6122448979591836,
+          0.6326530612244897,
+          0.6530612244897959,
+          0.673469387755102,
+          0.6938775510204082,
+          0.7142857142857142,
+          0.7346938775510203,
+          0.7551020408163265,
+          0.7755102040816326,
+          0.7959183673469387,
+          0.8163265306122448,
+          0.836734693877551,
+          0.8571428571428571,
+          0.8775510204081632,
+          0.8979591836734693,
+          0.9183673469387754,
+          0.9387755102040816,
+          0.9591836734693877,
+          0.9795918367346939,
+          1.0
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260513_141704.json": {
+      "sha256": "1baa8da9328886367544920a5f009aa689d07b583a948862073cd7d8b842d642",
+      "job_id": "d82btog0bvlc73d240pg",
+      "backend": "ibm_marrakesh",
+      "shots": 8192,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            5.92814419967864
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          3000,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260513_144130.json": {
+      "sha256": "e2844fd5aa70bb8dabfc165c05c9147af7696be553f04776608c3ce84d955369",
+      "job_id": "d82c0k6gbeec73aljrq0",
+      "backend": "ibm_marrakesh",
+      "shots": 8192,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260513_150433.json": {
+      "sha256": "32ef8e3eee4df830d58a263a8af82cd87e5a09a8ada8c8b5d4b39ca15b6d15b5",
+      "job_id": "d82ch8foha1c73bldjig",
+      "backend": "ibm_fez",
+      "shots": 8192,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.098517143286439
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          150,
+          300,
+          450,
+          600,
+          750,
+          900,
+          1050,
+          1200,
+          1350,
+          1500,
+          1650,
+          1800,
+          1950,
+          2100,
+          2250,
+          2400,
+          2550,
+          2700,
+          2850,
+          3000,
+          3150,
+          3300,
+          3450,
+          3600,
+          3750,
+          3900,
+          4050,
+          4200,
+          4350,
+          4500,
+          4650,
+          4800,
+          4950,
+          5100,
+          5250,
+          5400,
+          5550,
+          5700,
+          5850,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {},
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260518_120232.json": {
+      "sha256": "edc0d3e487ab5c792e9578631d4d8c422631c79cac2f9a49abc89a444b2eb1aa",
+      "job_id": "d85jcso0bvlc73d5mdf0",
+      "backend": "ibm_kingston",
+      "shots": 10000,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.098517143286439
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          50,
+          100,
+          150,
+          200,
+          250,
+          300,
+          350,
+          400,
+          450,
+          500,
+          550,
+          600,
+          650,
+          700,
+          750,
+          800,
+          850,
+          900,
+          950,
+          1000,
+          1050,
+          1100,
+          1150,
+          1200,
+          1250,
+          1300,
+          1350,
+          1400,
+          1450,
+          1500,
+          1550,
+          1600,
+          1650,
+          1700,
+          1750,
+          1800,
+          1850,
+          1900,
+          1950,
+          2000,
+          2050,
+          2100,
+          2150,
+          2200,
+          2250,
+          2300,
+          2350,
+          2400,
+          2450,
+          2500,
+          2550,
+          2600,
+          2650,
+          2700,
+          2750,
+          2800,
+          2850,
+          2900,
+          2950,
+          3000,
+          3050,
+          3100,
+          3150,
+          3200,
+          3250,
+          3300,
+          3350,
+          3400,
+          3450,
+          3500,
+          3550,
+          3600,
+          3650,
+          3700,
+          3750,
+          3800,
+          3850,
+          3900,
+          3950,
+          4000,
+          4050,
+          4100,
+          4150,
+          4200,
+          4250,
+          4300,
+          4350,
+          4400,
+          4450,
+          4500,
+          4550,
+          4600,
+          4650,
+          4700,
+          4750,
+          4800,
+          4850,
+          4900,
+          4950,
+          5000,
+          5050,
+          5100,
+          5150,
+          5200,
+          5250,
+          5300,
+          5350,
+          5400,
+          5450,
+          5500,
+          5550,
+          5600,
+          5650,
+          5700,
+          5750,
+          5800,
+          5850,
+          5900,
+          5950,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {
+        "dt": {
+          "value": 4e-09,
+          "evidence": "Inferred same-device/day value: 9e0adc7:qec_testing.ipynb cell 5 prints Kingston dt=4e-09 s for the May18 memory job. Original broadcasting jobs did not archive dt; conversion is explicitly historical, not job-specific verification."
+        }
+      },
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260518_122119.json": {
+      "sha256": "79e180f49e407457ab482c582c32b16673b0316131bb3dcb0527df52462ca36b",
+      "job_id": "d85jle80bvlc73d5mnig",
+      "backend": "ibm_kingston",
+      "shots": 10000,
+      "optimization_level": 0,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": null,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.098517143286439
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          50,
+          100,
+          150,
+          200,
+          250,
+          300,
+          350,
+          400,
+          450,
+          500,
+          550,
+          600,
+          650,
+          700,
+          750,
+          800,
+          850,
+          900,
+          950,
+          1000,
+          1050,
+          1100,
+          1150,
+          1200,
+          1250,
+          1300,
+          1350,
+          1400,
+          1450,
+          1500,
+          1550,
+          1600,
+          1650,
+          1700,
+          1750,
+          1800,
+          1850,
+          1900,
+          1950,
+          2000,
+          2050,
+          2100,
+          2150,
+          2200,
+          2250,
+          2300,
+          2350,
+          2400,
+          2450,
+          2500,
+          2550,
+          2600,
+          2650,
+          2700,
+          2750,
+          2800,
+          2850,
+          2900,
+          2950,
+          3000,
+          3050,
+          3100,
+          3150,
+          3200,
+          3250,
+          3300,
+          3350,
+          3400,
+          3450,
+          3500,
+          3550,
+          3600,
+          3650,
+          3700,
+          3750,
+          3800,
+          3850,
+          3900,
+          3950,
+          4000,
+          4050,
+          4100,
+          4150,
+          4200,
+          4250,
+          4300,
+          4350,
+          4400,
+          4450,
+          4500,
+          4550,
+          4600,
+          4650,
+          4700,
+          4750,
+          4800,
+          4850,
+          4900,
+          4950,
+          5000,
+          5050,
+          5100,
+          5150,
+          5200,
+          5250,
+          5300,
+          5350,
+          5400,
+          5450,
+          5500,
+          5550,
+          5600,
+          5650,
+          5700,
+          5750,
+          5800,
+          5850,
+          5900,
+          5950,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": null,
+      "historical_overrides": {
+        "dt": {
+          "value": 4e-09,
+          "evidence": "Inferred same-device/day value: 9e0adc7:qec_testing.ipynb cell 5 prints Kingston dt=4e-09 s for the May18 memory job. Original broadcasting jobs did not archive dt; conversion is explicitly historical, not job-specific verification."
+        }
+      },
+      "circuit_history": "Historical April/May circuit; compiled circuit and code revision not archived."
+    },
+    "results/run_20260908_132728_4fc6f552.json": {
+      "sha256": "8168876c8bfb224b5a8651b3b6fb49e17b63af4eac03a23e9fd00f8896e88396",
+      "job_id": "dag49mni3e6s738lteu0",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": 0.7071067811865475,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0
+        ]
+      },
+      "recorded_dt_seconds": 4e-09,
+      "historical_overrides": {},
+      "circuit_history": "September circuit revision not archived with run; same settings do not establish same compiled circuit."
+    },
+    "results/run_20260908_132738_ef85f542.json": {
+      "sha256": "12f0c9b38626ee0dffeca8d1ebc42200f2ceb123d942082fd508f9dc2c85b478",
+      "job_id": "dag4b0hhvn6c73cq3k80",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": 0.7071067811865475,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0
+        ]
+      },
+      "recorded_dt_seconds": 4e-09,
+      "historical_overrides": {},
+      "circuit_history": "September circuit revision not archived with run; same settings do not establish same compiled circuit."
+    },
+    "results/run_20260908_153150_79eab41b.json": {
+      "sha256": "a225306aa86f43bab1af8309c069d58c8c523c9fb6de92645ab5c56428a96866",
+      "job_id": "dag61romhr3c73e4n2rg",
+      "backend": "ibm_marrakesh",
+      "shots": 4096,
+      "optimization_level": 3,
+      "protocol": {
+        "M": 1,
+        "N": 2,
+        "alpha": 0.7071067811865475,
+        "use_qec": false,
+        "theta_samples": [
+          [
+            4.862909272689599
+          ]
+        ]
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          50,
+          100,
+          150,
+          200,
+          250,
+          300,
+          350,
+          400,
+          450,
+          500,
+          550,
+          600,
+          650,
+          700,
+          750,
+          800,
+          850,
+          900,
+          950,
+          1000,
+          1050,
+          1100,
+          1150,
+          1200,
+          1250,
+          1300,
+          1350,
+          1400,
+          1450,
+          1500,
+          1550,
+          1600,
+          1650,
+          1700,
+          1750,
+          1800,
+          1850,
+          1900,
+          1950,
+          2000,
+          2050,
+          2100,
+          2150,
+          2200,
+          2250,
+          2300,
+          2350,
+          2400,
+          2450,
+          2500,
+          2550,
+          2600,
+          2650,
+          2700,
+          2750,
+          2800,
+          2850,
+          2900,
+          2950,
+          3000,
+          3050,
+          3100,
+          3150,
+          3200,
+          3250,
+          3300,
+          3350,
+          3400,
+          3450,
+          3500,
+          3550,
+          3600,
+          3650,
+          3700,
+          3750,
+          3800,
+          3850,
+          3900,
+          3950,
+          4000,
+          4050,
+          4100,
+          4150,
+          4200,
+          4250,
+          4300,
+          4350,
+          4400,
+          4450,
+          4500,
+          4550,
+          4600,
+          4650,
+          4700,
+          4750,
+          4800,
+          4850,
+          4900,
+          4950,
+          5000,
+          5050,
+          5100,
+          5150,
+          5200,
+          5250,
+          5300,
+          5350,
+          5400,
+          5450,
+          5500,
+          5550,
+          5600,
+          5650,
+          5700,
+          5750,
+          5800,
+          5850,
+          5900,
+          5950,
+          6000
+        ]
+      },
+      "recorded_dt_seconds": 4e-09,
+      "historical_overrides": {},
+      "circuit_history": "September circuit revision not archived with run; same settings do not establish same compiled circuit."
+    },
+    "results/qec513/qec513_delay_sweep_20260507_084654.json": {
+      "sha256": "a105ab06c276c439796e407c4ed3e1c41ac069fce9ffc7cb548d6fa0e8754201",
+      "job_id": "d7u8husinasc738sht6g",
+      "backend": "ibm_fez",
+      "shots": 8192,
+      "optimization_level": 0,
+      "state_prep": {
+        "theta": 2.4314546363447995,
+        "phi": 2.757554564287996,
+        "description": "Ry(theta) Rz(phi) |0>"
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          300,
+          600,
+          900,
+          1200,
+          1500,
+          1800,
+          2100,
+          2400,
+          2700,
+          3000,
+          3300,
+          3600,
+          3900,
+          4200,
+          4500,
+          4800,
+          5100,
+          5400,
+          5700,
+          6000
+        ]
+      },
+      "historical_overrides": {
+        "use_qec": {
+          "value": true,
+          "evidence": "12a9d00:qec_testing.ipynb contains only the encoded benchmark definition and lists this saved run; historical inference, no compiled circuit archived.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        }
+      },
+      "circuit_history": "Historical standalone memory benchmark; compiled circuit/layout not archived."
+    },
+    "results/qec513/qec513_delay_sweep_20260513_123922.json": {
+      "sha256": "d6da6cf19710abb3adbe8b626aad947ab619f7fdf8544ff0f9369f9db61f1b63",
+      "job_id": "d82agbntjchs73bnra7g",
+      "backend": "ibm_kingston",
+      "shots": 8192,
+      "optimization_level": 3,
+      "state_prep": {
+        "theta": 2.4314546363447995,
+        "phi": 2.757554564287996,
+        "description": "Ry(theta) Rz(phi) |0>"
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          300,
+          600,
+          900,
+          1200,
+          1500,
+          1800,
+          2100,
+          2400,
+          2700,
+          3000,
+          3300,
+          3600,
+          3900,
+          4200,
+          4500,
+          4800,
+          5100,
+          5400,
+          5700,
+          6000
+        ]
+      },
+      "historical_overrides": {
+        "use_qec": {
+          "value": true,
+          "evidence": "9341748:qec_testing.ipynb cell 2 builds the encoded benchmark; cells 7-8 select both May13 Kingston records as QEC; this snapshot precedes introduction of the bare circuit in 9e0adc7.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        },
+        "dt": {
+          "value": 4e-09,
+          "evidence": "Inferred same-device/day value: 9341748:qec_testing.ipynb cell 4 prints Kingston dt=4e-09 s for the May13 opt0 job; this opt3 record has no job-specific dt archive."
+        }
+      },
+      "circuit_history": "Historical standalone memory benchmark; compiled circuit/layout not archived."
+    },
+    "results/qec513/qec513_delay_sweep_20260513_163257.json": {
+      "sha256": "cfe29222e0e20385398392e479a3281cedccad03b691ce6d25c1efb5b8d05ad9",
+      "job_id": "d82dopugbeec73allus0",
+      "backend": "ibm_kingston",
+      "shots": 8192,
+      "optimization_level": 0,
+      "state_prep": {
+        "theta": 2.4314546363447995,
+        "phi": 2.757554564287996,
+        "description": "Ry(theta) Rz(phi) |0>"
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          300,
+          600,
+          900,
+          1200,
+          1500,
+          1800,
+          2100,
+          2400,
+          2700,
+          3000,
+          3300,
+          3600,
+          3900,
+          4200,
+          4500,
+          4800,
+          5100,
+          5400,
+          5700,
+          6000
+        ]
+      },
+      "historical_overrides": {
+        "use_qec": {
+          "value": true,
+          "evidence": "9341748:qec_testing.ipynb cell 2 builds the encoded benchmark; cells 7-8 select both May13 Kingston records as QEC; this snapshot precedes introduction of the bare circuit in 9e0adc7.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        },
+        "dt": {
+          "value": 4e-09,
+          "evidence": "9341748:qec_testing.ipynb cell 4 output prints matching job d82dopugbeec73allus0 and Time units = 4e-09 s."
+        }
+      },
+      "circuit_history": "Historical standalone memory benchmark; compiled circuit/layout not archived."
+    },
+    "results/qec513/qec513_delay_sweep_20260513_163539.json": {
+      "sha256": "f36e1d80eea71f53cebeda7b18e6b00cc1aaad12629df6e22a9bb2629267bf8b",
+      "job_id": "d82dopugbeec73allus0",
+      "backend": "ibm_kingston",
+      "shots": 8192,
+      "optimization_level": 0,
+      "state_prep": {
+        "theta": 2.4314546363447995,
+        "phi": 2.757554564287996,
+        "description": "Ry(theta) Rz(phi) |0>"
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          300,
+          600,
+          900,
+          1200,
+          1500,
+          1800,
+          2100,
+          2400,
+          2700,
+          3000,
+          3300,
+          3600,
+          3900,
+          4200,
+          4500,
+          4800,
+          5100,
+          5400,
+          5700,
+          6000
+        ]
+      },
+      "historical_overrides": {
+        "use_qec": {
+          "value": true,
+          "evidence": "9341748:qec_testing.ipynb cell 2 builds the encoded benchmark; cells 7-8 select both May13 Kingston records as QEC; this snapshot precedes introduction of the bare circuit in 9e0adc7.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        },
+        "dt": {
+          "value": 4e-09,
+          "evidence": "9341748:qec_testing.ipynb cell 4 output prints matching job d82dopugbeec73allus0 and Time units = 4e-09 s."
+        }
+      },
+      "circuit_history": "Historical standalone memory benchmark; compiled circuit/layout not archived."
+    },
+    "results/qec513/qec513_delay_sweep_20260518_132249.json": {
+      "sha256": "e4a2ed3987775ddc5b4c81eacbf79b002153224af74f25ae098253a6dabf6148",
+      "job_id": "d85kl7mgbeec73ap8sag",
+      "backend": "ibm_kingston",
+      "shots": 8192,
+      "optimization_level": 3,
+      "state_prep": {
+        "theta": 2.4314546363447995,
+        "phi": 2.757554564287996,
+        "description": "Ry(theta) Rz(phi) |0>"
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          300,
+          600,
+          900,
+          1200,
+          1500,
+          1800,
+          2100,
+          2400,
+          2700,
+          3000,
+          3300,
+          3600,
+          3900,
+          4200,
+          4500,
+          4800,
+          5100,
+          5400,
+          5700,
+          6000
+        ]
+      },
+      "historical_overrides": {
+        "use_qec": {
+          "value": false,
+          "evidence": "9e0adc7:qec_testing.ipynb cell 3 builds one-qubit bare circuit; cell 5 prints matching job ID; cell 6 prints matching saved filename; comparison explicitly labels this run No QEC.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        },
+        "dt": {
+          "value": 4e-09,
+          "evidence": "9e0adc7:qec_testing.ipynb cell 5 output prints matching job d85kl7mgbeec73ap8sag and Time units = 4e-09 s."
+        }
+      },
+      "circuit_history": "Historical standalone memory benchmark; compiled circuit/layout not archived."
+    },
+    "results/qec513/qec513_delay_sweep_20260618_104151.json": {
+      "sha256": "25c68f3959025c1f53ffa0a9a6d0c14d2f33bf822cf7007b77d8819e2eb94489",
+      "job_id": "d8paek201fac73d1e3tg",
+      "backend": "ibm_kingston",
+      "shots": 8192,
+      "optimization_level": 0,
+      "state_prep": {
+        "theta": 2.4314546363447995,
+        "phi": 2.757554564287996,
+        "description": "Ry(theta) Rz(phi) |0>"
+      },
+      "sweep": {
+        "axis": "tau",
+        "values": [
+          0,
+          300,
+          600,
+          900,
+          1200,
+          1500,
+          1800,
+          2100,
+          2400,
+          2700,
+          3000,
+          3300,
+          3600,
+          3900,
+          4200,
+          4500,
+          4800,
+          5100,
+          5400,
+          5700,
+          6000
+        ]
+      },
+      "historical_overrides": {
+        "use_qec": {
+          "value": false,
+          "evidence": "222d468:qec_testing.ipynb cell 3 builds one-qubit bare circuit; cell 5 prints matching job ID; cell 6 prints matching saved filename; comparison explicitly labels this run No QEC.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        },
+        "dt": {
+          "value": 4e-09,
+          "evidence": "222d468:qec_testing.ipynb cell 5 output prints matching job d8paek201fac73d1e3tg and Time units = 4e-09 s."
+        }
+      },
+      "circuit_history": "Historical standalone memory benchmark; compiled circuit/layout not archived."
+    }
+  },
+  "figures": {
+    "convergence": {
+      "status": "withdrawn_pending_new_collection",
+      "manuscript_output": null,
+      "retired_outputs": [
+        "figures/sampling_convergence.png",
+        "figures/sampling_convergence.pdf",
+        "manuscript/mc_sampling_convergence.png"
+      ],
+      "reason": "Config seed=0 overrode changing backend seeds; stored image has unsupported multi-seed uncertainty. No independent convergence measurement archive exists. Regeneration requires explicit --collect-convergence, outside the present pre-data work.",
+      "withdrawn_assets": {
+        "figures/sampling_convergence.png": "figures/withdrawn/figures_sampling_convergence.png",
+        "figures/sampling_convergence.pdf": "figures/withdrawn/figures_sampling_convergence.pdf",
+        "manuscript/mc_sampling_convergence.png": "figures/withdrawn/manuscript_mc_sampling_convergence.png"
+      }
+    },
+    "qec_memory": {
+      "manuscript_output": "qec513_delay_sweep_idle",
+      "figure_output": "qec513_saved_sweeps",
+      "sources": [
+        "results/qec513/qec513_delay_sweep_20260513_123922.json",
+        "results/qec513/qec513_delay_sweep_20260513_163257.json",
+        "results/qec513/qec513_delay_sweep_20260518_132249.json",
+        "results/qec513/qec513_delay_sweep_20260618_104151.json"
+      ],
+      "scope": "Four Kingston standalone memory sweeps, all 8192 shots. Historical encoded/bare attributions and dt overrides shown per source. Different dates/layouts are not controlled paired QEC comparisons. Duplicate save of d82dopugbeec73allus0 excluded."
+    },
+    "qec_crossover": {
+      "manuscript_output": "qec vs no qec vs sampling",
+      "figure_output": "qec_crossover",
+      "sources": [
+        "results/run_20260422_110316.json",
+        "results/run_20260426_170827.json",
+        "results/run_20260427_114317.json"
+      ],
+      "scope": "M=1 N=2 alpha=1/sqrt(3) theta=pi/4. Plot each native grid: bare 5 points, encoded exact and sampled 50 points. Sampling count 1000 recorded; seed absent, so no independence claim. Inset resolves small-p crossover."
+    },
+    "delay_opt3": {
+      "manuscript_output": "delay time vs fidelity 121 opt3",
+      "figure_output": "delay_sweep_121_opt3",
+      "sources": [
+        "results/run_20260518_120232.json"
+      ],
+      "scope": "Historical bare broadcasting M=1 N=2 Kingston opt3, 10000 shots, one theta. dt is a same-device/day historical override, not job metadata."
+    },
+    "delay_opt0": {
+      "manuscript_output": "delay time vs fidelity 121 opt0",
+      "figure_output": "delay_sweep_121_opt0",
+      "sources": [
+        "results/run_20260518_122119.json"
+      ],
+      "scope": "Historical bare broadcasting M=1 N=2 Kingston opt0, 10000 shots, one theta. dt is a same-device/day historical override, not job metadata."
+    },
+    "hardware_tau0": {
+      "manuscript_output": "fidelity scaling hardware",
+      "figure_output": "hardware_tau0_scaling",
+      "sources": [
+        "results/run_20260408_160814.json",
+        "results/run_20260408_161340.json",
+        "results/run_20260408_161902.json",
+        "results/run_20260408_162212.json",
+        "results/run_20260408_162440.json",
+        "results/run_20260408_162906.json",
+        "results/run_20260408_163129.json",
+        "results/run_20260408_170544.json",
+        "results/run_20260513_141704.json",
+        "results/run_20260513_144130.json",
+        "results/run_20260513_150433.json",
+        "results/run_20260518_120232.json",
+        "results/run_20260518_122119.json",
+        "results/run_20260908_132728_4fc6f552.json",
+        "results/run_20260908_132738_ef85f542.json",
+        "results/run_20260908_153150_79eab41b.json"
+      ],
+      "scope": "All unique saved broadcasting hardware jobs; theta samples displayed separately. Per-record identities include backend, date/time, M,N, optimization and shots. Receiver mean and range, no controlled scaling inference or pooled trend."
+    },
+    "circuit": {
+      "manuscript_output": "m1n2qec0_circ",
+      "sources": [
+        "git:5498dc4:manuscript/m1n2qec0_circ.png"
+      ],
+      "scope": "Retained historical exhaustive-feedforward schematic; not a diagram of the present default bitwise circuit. No saved generation configuration."
+    }
+  }
+}

@@ -32,9 +32,8 @@ class TestModeLabeling:
     """Regression tests for the config.n_samples-truthiness mislabeling bug."""
 
     def test_exact_run_labeled_exact_even_with_default_n_samples(self, tmp_path):
-        # ProtocolConfig.n_samples defaults to 200 (truthy) -- this must not
-        # cause an "exact"-mode result to be mislabeled as "aer_sampling".
-        config = _make_config()
+        # Explicit sampling configuration must not relabel an exact result.
+        config = _make_config(n_samples=200)
         assert config.n_samples == 200
         result = _make_result("exact")
 
@@ -117,3 +116,37 @@ class TestHPCSubmissionRecord:
         assert loaded["fidelities"] == []
         assert loaded["metadata"]["submitted"] is False
         assert "sbatch" in loaded["metadata"]["command"]
+
+
+class TestExecutedSettings:
+    def test_metadata_wins_over_stale_config(self, tmp_path):
+        result = _make_result("sampled (7 trajectories)", n_samples=7, seed=314,
+                              linear_feedforward=False, outcomes_list=[1])
+        path = save_run(result, _make_config(n_samples=200, seed=0), results_dir=tmp_path)
+        loaded = load_run(path)
+        assert (loaded["n_samples"], loaded["seed"]) == (7, 314)
+        assert loaded["linear_feedforward"] is False
+        assert loaded["outcomes_list"] == [1]
+
+    def test_slurm_repeated_saves_remain_unique(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("SLURM_JOB_ID", "123")
+        monkeypatch.setenv("SLURM_ARRAY_TASK_ID", "4")
+        result, config = _make_result("exact"), _make_config()
+        first = save_run(result, config, results_dir=tmp_path)
+        second = save_run(result, config, results_dir=tmp_path)
+        assert first != second
+        assert "_123_4_" in first.name
+
+    def test_explicit_existing_path_is_never_overwritten(self, tmp_path):
+        path = tmp_path / "old.json"
+        path.write_text("original")
+        with pytest.raises(FileExistsError):
+            save_run(_make_result("exact"), _make_config(), filepath=path)
+        assert path.read_text() == "original"
+        assert list(tmp_path.iterdir()) == [path]
+
+    def test_failed_serialization_publishes_nothing(self, tmp_path):
+        from broadcasting.results import write_run_json
+        with pytest.raises(ValueError):
+            write_run_json({"bad": float("nan")}, tmp_path / "invalid.json")
+        assert list(tmp_path.iterdir()) == []

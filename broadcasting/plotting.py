@@ -6,6 +6,8 @@ from typing import Any
 import matplotlib.pyplot as plt
 import numpy as np
 
+from .analysis import delay_axis
+
 FIGURES_DIR = Path("figures")
 
 
@@ -138,6 +140,8 @@ def plot_fidelity_vs_delay(
         tau_data.setdefault(e["tau"], []).append(e["fidelities"])
 
     taus = sorted(tau_data.keys())
+    scale, unit = delay_axis(run)
+    plotted_taus = np.asarray(taus) * scale
     recv_means = np.zeros((N, len(taus)))
     recv_errs = np.zeros((N, len(taus)))
 
@@ -164,7 +168,7 @@ def plot_fidelity_vs_delay(
     colors = plt.cm.tab10.colors
     for i in range(N):
         ax.errorbar(
-            taus,
+            plotted_taus,
             recv_means[i],
             yerr=recv_errs[i],
             fmt="o-",
@@ -177,7 +181,7 @@ def plot_fidelity_vs_delay(
         )
 
     ax.errorbar(
-        taus,
+        plotted_taus,
         avg_means,
         yerr=avg_errs,
         fmt="s--",
@@ -189,7 +193,7 @@ def plot_fidelity_vs_delay(
     )
     ax.axhline(0.5, color="gray", linestyle=":", alpha=0.5, label="Random (0.5)")
 
-    ax.set_xlabel("Delay time (dt)")
+    ax.set_xlabel(f"Delay time ({unit})")
     ax.set_ylabel("Fidelity P(0)")
     ax.set_ylim(0, 1.05)
     ax.legend(loc="best", fontsize=9)
@@ -356,10 +360,15 @@ def plot_run_sweep(
         xlabel = "Depolarizing probability p"
         xlim = (0.0, 1.0)
     elif axis == "tau":
+        if tau_scale is None:
+            tau_scale, unit = delay_axis(run)
+            tau_label = f"Idle delay ({unit})"
+        if not np.isfinite(tau_scale) or tau_scale <= 0:
+            raise ValueError("tau_scale must be finite and positive.")
         if tau_scale is not None:
             x_values = tau_scale * x_values
         xlabel = tau_label
-        xlim = (float(x_values.min()), float(x_values.max())) if x_values.size else None
+        xlim = (float(x_values.min()), float(x_values.max())) if x_values.size > 1 else None
     else:
         xlabel = axis
         xlim = None
@@ -423,6 +432,13 @@ def _tau_fidelity_trace(
     if fids.ndim == 1:
         fids = fids.reshape(-1, 1)
 
+    if tau.ndim != 1 or fids.ndim != 2 or len(tau) != len(fids):
+        raise ValueError("Tau grid and fidelity array must have matching lengths.")
+    if not np.all(np.isfinite(tau)) or not np.all(np.isfinite(fids)):
+        raise ValueError("Tau grid and fidelities must be finite.")
+    if receiver is not None and not 0 <= receiver < fids.shape[1]:
+        raise ValueError("Receiver index is outside the fidelity array.")
+
     trace = fids[:, receiver] if receiver is not None else fids.mean(axis=1)
 
     order = np.argsort(tau)
@@ -431,7 +447,7 @@ def _tau_fidelity_trace(
     if tau.size < 2:
         raise ValueError("Need at least two tau points for periodicity analysis.")
     spacing = np.diff(tau)
-    if not np.allclose(spacing, spacing[0]):
+    if np.any(spacing <= 0) or not np.allclose(spacing, spacing[0]):
         raise ValueError("Periodicity analysis requires uniformly spaced tau values.")
 
     return tau, trace
@@ -488,6 +504,9 @@ def plot_periodicity_comparison(
     if len(runs) != len(labels):
         raise ValueError("runs and labels must be the same length.")
 
+    if tau_scale is not None and (not np.isfinite(tau_scale) or tau_scale <= 0):
+        raise ValueError("tau_scale must be finite and positive.")
+
     fig, (ax_ac, ax_psd) = plt.subplots(1, 2, figsize=(12, 5))
     colors = plt.cm.tab10.colors
 
@@ -496,18 +515,21 @@ def plot_periodicity_comparison(
         lags, ac = autocorrelation_from_run(run, receiver=receiver)
         freqs, power = periodogram_from_run(run, receiver=receiver)
 
-        lag_x = tau_scale * lags if tau_scale else lags
+        scale = tau_scale if tau_scale is not None else 1.0
+        lag_x = scale * lags
         ax_ac.plot(lag_x, ac, color=color, label=label)
-        ax_psd.plot(freqs, power, color=color, label=label)
+        # Changing t' = scale*t gives f' = f/scale and S' = scale*S,
+        # preserving the integrated spectral power (variance).
+        ax_psd.plot(freqs / scale, power * scale, color=color, label=label)
 
     ax_ac.axhline(0.0, color="gray", linestyle=":", alpha=0.5)
-    ax_ac.set_xlabel(f"Lag ({tau_label})")
+    unit = tau_label.split("(")[-1].rstrip(")") if "(" in tau_label else "tau"
+    ax_ac.set_xlabel(f"Lag ({unit})")
     ax_ac.set_ylabel("Autocorrelation")
     ax_ac.legend(loc="best", fontsize=9)
 
-    freq_unit = f"1/{tau_label.split('(')[-1].rstrip(')')}" if "(" in tau_label else "1/tau"
-    ax_psd.set_xlabel(f"Frequency ({freq_unit})")
-    ax_psd.set_ylabel("Power")
+    ax_psd.set_xlabel(f"Frequency (cycles/{unit})")
+    ax_psd.set_ylabel(f"Power spectral density (fidelity² {unit})")
     ax_psd.legend(loc="best", fontsize=9)
 
     if show:

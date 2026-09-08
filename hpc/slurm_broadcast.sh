@@ -25,108 +25,75 @@
 
 set -euo pipefail
 
-SCRATCH_DIR=/scratch/prest-hc-13/Broadcasting
-GLOBAL_DIR=/global/u/prest-hc-13/Broadcasting
+SCRATCH_DIR="${BROADCAST_SCRATCH_DIR:-/scratch/prest-hc-13/Broadcasting}"
+GLOBAL_DIR="${BROADCAST_GLOBAL_DIR:-/global/u/prest-hc-13/Broadcasting}"
+SUBMISSION_ID="${SLURM_ARRAY_JOB_ID:-${SLURM_JOB_ID:-manual_$(date +%s)_$$}}"
+SUBMISSION_DIR="${SCRATCH_DIR}/submissions/${SUBMISSION_ID}"
+CODE_DIR="${SUBMISSION_DIR}/source"
+RESULT_DIR="${SUBMISSION_DIR}/results"
+ARCHIVE_DIR="${GLOBAL_DIR}/results/submissions/${SUBMISSION_ID}"
+mkdir -p "${SUBMISSION_DIR}" "${RESULT_DIR}" "${SCRATCH_DIR}/slurm_logs"
 
-# Create log directory if needed
-mkdir -p "${SCRATCH_DIR}/slurm_logs"
-
-# Sync latest code from global storage to scratch (excludes venv and caches).
-# Guarded by a flock + "done" marker (both on the shared scratch filesystem, not
-# node-local /tmp) so that concurrently-starting SLURM array tasks perform the
-# sync exactly once instead of racing each other into the same destination.
-SYNC_ID="${SLURM_ARRAY_JOB_ID:-${SLURM_JOB_ID:-manual}}"
-SYNC_LOCK="${SCRATCH_DIR}/.sync.lock"
-SYNC_DONE="${SCRATCH_DIR}/.synced_${SYNC_ID}"
-
+# Each submission gets its own source tree. A later submission cannot replace
+# code being imported by running array tasks. Publish the snapshot only once
+# the copy is complete, and make it read-only before any task uses it.
 (
     flock -x 200
-    if [ ! -f "${SYNC_DONE}" ]; then
-        echo "Syncing code from ${GLOBAL_DIR} to ${SCRATCH_DIR}..."
-        rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
-              --exclude='results' \
-              "${GLOBAL_DIR}/" "${SCRATCH_DIR}/"
-        touch "${SYNC_DONE}"
-    else
-        echo "Code already synced for this submission (marker: ${SYNC_DONE})."
+    if [ ! -d "${CODE_DIR}" ]; then
+        STAGING_DIR="$(mktemp -d "${SUBMISSION_DIR}/.source.XXXXXX")"
+        trap 'rm -rf "${STAGING_DIR}"' EXIT
+        rsync -a --exclude='.git' --exclude='.venv' --exclude='__pycache__' \
+              --exclude='*.pyc' --exclude='results' --exclude='slurm_logs' \
+              --exclude='submissions' "${GLOBAL_DIR}/" "${STAGING_DIR}/"
+        REVISION="$(git -C "${GLOBAL_DIR}" rev-parse HEAD 2>/dev/null || true)"
+        printf '{"submission_id":"%s","code_revision":"%s"}\n' \
+               "${SUBMISSION_ID}" "${REVISION}" > "${STAGING_DIR}/source_snapshot.json"
+        chmod -R a-w "${STAGING_DIR}"
+        mv "${STAGING_DIR}" "${CODE_DIR}"
+        trap - EXIT
     fi
-) 200>"${SYNC_LOCK}"
+    mkdir -p "${ARCHIVE_DIR}"
+    if [ ! -d "${ARCHIVE_DIR}/source" ]; then
+        rsync -a "${CODE_DIR}/" "${ARCHIVE_DIR}/.source/"
+        mv "${ARCHIVE_DIR}/.source" "${ARCHIVE_DIR}/source"
+    fi
+) 200>"${SUBMISSION_DIR}/.snapshot.lock"
 
-# Load modules
 module purge
 module load Compilers/Python/3.12.13
-
-# Move to project directory on scratch
-cd "${SCRATCH_DIR}"
-
-# Activate virtual environment if present
+cd "${CODE_DIR}"
 if [ -f "${SCRATCH_DIR}/.venv/bin/activate" ]; then
     source "${SCRATCH_DIR}/.venv/bin/activate"
 fi
+export PYTHONDONTWRITEBYTECODE=1
 
-echo "Python:        $(which python)"
-
-echo "=========================================="
-echo "Job ID:        ${SLURM_JOB_ID}"
-echo "Array Task ID: ${SLURM_ARRAY_TASK_ID:-N/A}"
-echo "Node:          $(hostname)"
-echo "Working dir:   $(pwd)"
-echo "Python:        $(which python)"
-echo "=========================================="
-
-# --- Configure experiment parameters here ---
-# All of these can be set via `--export` (see broadcasting.backend.HPCBackend,
-# which builds this from a ProtocolConfig) or plain environment variables.
-MODE="${MODE:-exact}"
-M="${M:-1}"
-N="${N:-2}"
-P_MIN="${P_MIN:-0.0}"
-P_MAX="${P_MAX:-1.0}"
-P_STEPS="${P_STEPS:-50}"
-N_SAMPLES="${N_SAMPLES:-1000}"
-USE_QEC="${USE_QEC:-}"
-ALPHA="${ALPHA:-}"
-THETAS="${THETAS:-}"
-OUTCOMES="${OUTCOMES:-}"
-SEED="${SEED:-}"
-
-QEC_FLAG=""
-if [ -n "${USE_QEC}" ]; then
-    QEC_FLAG="--use-qec"
+# Bash arrays preserve each argument, including multi-sender lists. P_LIST is
+# space-delimited because commas delimit sbatch --export assignments.
+ARGS=(--mode "${MODE:-exact}" --M "${M:-1}" --N "${N:-2}"
+      --n-samples "${N_SAMPLES:-1000}" --output-dir "${RESULT_DIR}"
+      --experiment-id "${SUBMISSION_ID}"
+      --linear-feedforward "${LINEAR_FEEDFORWARD:-1}")
+if [ -n "${P_LIST:-}" ]; then
+    read -r -a PROBABILITIES <<< "${P_LIST}"
+    ARGS+=(--p-values "${PROBABILITIES[@]}")
+else
+    ARGS+=(--p-min "${P_MIN:-0.0}" --p-max "${P_MAX:-1.0}" --p-steps "${P_STEPS:-50}")
 fi
-
-ALPHA_FLAG=""
-if [ -n "${ALPHA}" ]; then
-    ALPHA_FLAG="--alpha ${ALPHA}"
+if [ "${USE_QEC:-0}" = "1" ]; then ARGS+=(--use-qec); fi
+if [ -n "${ALPHA:-}" ]; then ARGS+=(--alpha "${ALPHA}"); fi
+if [ -n "${THETAS:-}" ]; then
+    read -r -a PHASES <<< "${THETAS}"
+    ARGS+=(--thetas "${PHASES[@]}")
 fi
-
-THETAS_FLAG=""
-if [ -n "${THETAS}" ]; then
-    THETAS_FLAG="--thetas ${THETAS}"
+if [ -n "${OUTCOMES:-}" ] && [ "${OUTCOMES}" != "random" ]; then
+    read -r -a BRANCHES <<< "${OUTCOMES}"
+    ARGS+=(--outcomes "${BRANCHES[@]}")
+else
+    ARGS+=(--random-outcomes)
 fi
+if [ -n "${SEED:-}" ]; then ARGS+=(--seed "${SEED}"); fi
+python -m hpc.run_experiment "${ARGS[@]}"
 
-OUTCOMES_FLAG=""
-if [ -n "${OUTCOMES}" ]; then
-    OUTCOMES_FLAG="--outcomes ${OUTCOMES}"
-fi
-
-SEED_FLAG=""
-if [ -n "${SEED}" ]; then
-    SEED_FLAG="--seed ${SEED}"
-fi
-
-python -m hpc.run_experiment \
-    --mode "${MODE}" \
-    --M "${M}" \
-    --N "${N}" \
-    --p-min "${P_MIN}" \
-    --p-max "${P_MAX}" \
-    --p-steps "${P_STEPS}" \
-    --n-samples "${N_SAMPLES}" \
-    ${QEC_FLAG} ${ALPHA_FLAG} ${THETAS_FLAG} ${OUTCOMES_FLAG} ${SEED_FLAG} \
-    --output-dir results
-
-# Archive results back to persistent global storage
-rsync -a "${SCRATCH_DIR}/results/" "${GLOBAL_DIR}/results/"
-
-echo "Done."
+# Preserve submission identity in persistent storage as well as in each JSON.
+rsync -a --include='run_*.json' --exclude='*' "${RESULT_DIR}/" "${ARCHIVE_DIR}/"
+echo "Done: ${SUBMISSION_ID}"

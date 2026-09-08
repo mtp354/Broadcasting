@@ -25,6 +25,11 @@ from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate
 
 
+# Ordered generators shared by production circuit and numerical recovery code.
+# Independent validation deliberately defines its own generators in tests.
+QEC513_STABILIZERS = ("XZZXI", "IXZZX", "XIXZZ", "ZXIXZ")
+
+
 def five_qubit_logical_basis() -> tuple[np.ndarray, np.ndarray]:
     """Return |0_L>, |1_L> for the [[5,1,3]] code (computational basis order)."""
     v0 = np.zeros(32, dtype=complex)
@@ -88,7 +93,7 @@ def five_qubit_syndrome_corrections() -> dict[int, tuple[str, int] | None]:
     Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
     Z = np.array([[1, 0], [0, -1]], dtype=complex)
     pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
-    g_labels = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
+    g_labels = QEC513_STABILIZERS
 
     def kron_all(mats):
         out = mats[0]
@@ -181,7 +186,7 @@ def decode_qec_513(qc, encoded_blocks, ancilla_qubits=None):
 
     corrections = five_qubit_syndrome_corrections()
     decode_gate = five_qubit_decode_gate()
-    stabilizers = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
+    stabilizers = QEC513_STABILIZERS
 
     output_qubits: list[int] = []
 

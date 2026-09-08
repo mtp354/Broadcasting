@@ -1,23 +1,8 @@
-"""Merge single-point SLURM array outputs into one sweep record for plotting.
+"""Merge complete, same-experiment single-point SLURM outputs without overwrite.
 
-`hpc/run_experiment.py` writes one JSON file per array task when
-`SLURM_ARRAY_TASK_ID` is set (each task computes a single noise-probability
-point via `p_list=[float(p_full[idx])]`). Nothing else assembles these
-per-task files back into the multi-point sweep record that `broadcasting.plotting`
-expects. This script does that merge, read-only: it never modifies or deletes
-the source per-task files, and writes exactly one new merged JSON file.
-
-Usage
------
-    python scripts/merge_hpc_runs.py results/run_2026*.json --output-dir results
-
-Files are grouped by a config fingerprint (M, N, alpha, use_qec, backend,
-n_samples, seed) so a directory containing results from more than one
-experiment is handled safely -- one merged file is written per distinct group,
-and any group with only one file is skipped (nothing to merge, avoids
-generating a spurious "merged" copy of a single un-swept run).
+Usage: python scripts/merge_hpc_runs.py results/submissions/JOB/run_*.json
+Historical records lacking requested-sweep metadata require --expected-p-values.
 """
-
 from __future__ import annotations
 
 import argparse
@@ -30,93 +15,94 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from broadcasting.results import load_run
-
-
-def _fingerprint(run: dict[str, Any]) -> tuple:
-    return (
-        run["M"],
-        run["N"],
-        run.get("alpha"),
-        run.get("use_qec"),
-        run.get("backend"),
-        run.get("n_samples"),
-        run.get("seed"),
-    )
+from broadcasting.results import load_run, write_run_json
 
 
-def _merge_group(paths: list[Path]) -> dict[str, Any]:
-    """Merge one group of same-config, single-point runs into a sweep record."""
-    raws = []
-    for p in paths:
-        with open(p) as f:
-            raws.append(json.load(f))
+def _fingerprint(run: dict[str, Any]) -> str:
+    metadata = run.get("metadata") or {}
+    protocol = run.get("protocol") or {key: run.get(key) for key in
+        ("M", "N", "alpha", "use_qec", "theta_samples", "linear_feedforward", "outcomes_list")}
+    software = metadata.get("software") or {}
+    identity = {key: run.get(key) for key in
+                ("experiment_type", "backend", "n_samples", "seed", "optimization_level", "shots")}
+    identity.update(protocol=protocol, sweep_axis=run["sweep"]["axis"],
+                    experiment_id=metadata.get("experiment_id"),
+                    requested_sweep_values=metadata.get("requested_sweep_values"),
+                    code_revision=software.get("code_revision"),
+                    source_sha256=software.get("source_sha256"),
+                    dependencies=software.get("dependencies"))
+    return json.dumps(identity, sort_keys=True, separators=(",", ":"))
 
-    points = []
-    for raw, path in zip(raws, paths):
-        values = raw["sweep"]["values"]
-        fids = raw["fidelities"]
-        if len(values) != 1 or len(fids) != 1:
-            raise ValueError(
-                f"{path.name} is not a single-point sweep file "
-                f"(sweep has {len(values)} points) -- only merge per-task "
-                "SLURM array outputs, not already-merged sweeps."
-            )
-        points.append((values[0], fids[0], path.name))
 
-    points.sort(key=lambda t: t[0])
-    seen_values = [p[0] for p in points]
-    if len(set(seen_values)) != len(seen_values):
-        dupes = sorted({v for v in seen_values if seen_values.count(v) > 1})
-        raise ValueError(f"Duplicate sweep values found across files: {dupes}")
-
+def _merge_group(paths: list[Path], expected_values: list[float] | None = None) -> dict[str, Any]:
+    """Require equal experiment fingerprints and exactly the intended points."""
+    if not paths:
+        raise ValueError("No records to merge.")
+    raws = [json.loads(Path(path).read_text()) for path in paths]
+    if len({_fingerprint(raw) for raw in raws}) != 1:
+        raise ValueError("Cannot merge different experiment configurations or submissions.")
     base = raws[0]
+    if base["experiment_type"] != "simulation" or base["sweep"]["axis"] != "p":
+        raise ValueError("Only p-sweep simulation records can be merged.")
+    planned = (base.get("metadata") or {}).get("requested_sweep_values")
+    if expected_values is not None:
+        if planned is not None and list(expected_values) != planned:
+            raise ValueError("Expected grid disagrees with the recorded requested sweep.")
+        planned = list(expected_values)
+    if not planned or len(set(planned)) != len(planned):
+        raise ValueError("A nonempty unique intended sweep is required; supply --expected-p-values for historical records.")
+    points = {}
+    for raw, path in zip(raws, paths):
+        values, fids = raw["sweep"]["values"], raw["fidelities"]
+        if len(values) != 1 or len(fids) != 1:
+            raise ValueError(f"{path.name} is not a single-point sweep file.")
+        value = values[0]
+        if value in points:
+            raise ValueError(f"Duplicate sweep value {value}.")
+        if len(fids[0]) != base["protocol"]["N"]:
+            raise ValueError(f"{path.name} has an invalid receiver-fidelity shape.")
+        if value not in planned:
+            raise ValueError(f"Unexpected sweep value {value}.")
+        task_index = (raw.get("metadata") or {}).get("sweep_task_index")
+        if task_index is not None and (not 0 <= task_index < len(planned) or planned[task_index] != value):
+            raise ValueError(f"{path.name} has inconsistent array-task provenance.")
+        if raw.get("per_theta_fidelities") is not None or len(base["protocol"]["theta_samples"]) != 1:
+            raise ValueError("Per-task multi-theta records require an explicit merge implementation.")
+        points[value] = (fids[0], path.name, raw.get("metadata", {}))
+    missing = [value for value in planned if value not in points]
+    if missing:
+        raise ValueError(f"Incomplete sweep; missing requested values: {missing}")
     merged = dict(base)
-    merged["sweep"] = {"axis": base["sweep"]["axis"], "values": [p[0] for p in points]}
-    merged["fidelities"] = [p[1] for p in points]
-    merged["timestamp"] = datetime.now().isoformat()
-    merged.setdefault("metadata", {})
-    merged["metadata"] = dict(merged.get("metadata") or {})
-    merged["metadata"]["merged_from"] = [p[2] for p in points]
+    merged.update(sweep={"axis": "p", "values": planned},
+                  fidelities=[points[value][0] for value in planned],
+                  timestamp=datetime.now().isoformat())
+    merged["metadata"] = dict(base.get("metadata") or {})
+    merged["metadata"].pop("sweep_task_index", None)
+    merged["metadata"].pop("slurm_job_id", None)
+    merged["metadata"].update(merged_from=[points[value][1] for value in planned],
+                              requested_sweep_values=planned, sweep_complete=True,
+                              task_metadata=[points[value][2] for value in planned])
     return merged
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("files", nargs="+", help="Per-task result JSON files to merge (glob-expanded by your shell).")
-    parser.add_argument("--output-dir", type=str, default="results", help="Directory to write the merged file(s) into.")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("files", nargs="+")
+    parser.add_argument("--output-dir", default="results")
+    parser.add_argument("--expected-p-values", type=float, nargs="+")
     args = parser.parse_args(argv)
-
-    paths = sorted(Path(f) for f in args.files)
-    if not paths:
-        print("No input files given.")
-        return
-
-    groups: dict[tuple, list[Path]] = defaultdict(list)
-    for path in paths:
+    groups = defaultdict(list)
+    for path in sorted(Path(name) for name in args.files):
         run = load_run(path)
         if run["experiment_type"] != "simulation" or run["sweep"]["axis"] != "p":
-            print(f"Skipping {path.name}: not a p-sweep simulation run.")
-            continue
+            raise ValueError(f"{path}: expected a p-sweep simulation.")
         groups[_fingerprint(run)].append(path)
-
-    output_dir = Path(args.output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    for fingerprint, group_paths in groups.items():
-        if len(group_paths) < 2:
-            print(f"Skipping group {fingerprint}: only {len(group_paths)} file(s), nothing to merge.")
-            continue
-
-        merged = _merge_group(group_paths)
-        out_path = output_dir / f"run_merged_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.json"
-        with open(out_path, "w") as f:
-            json.dump(merged, f, indent=2)
-        print(
-            f"Merged {len(group_paths)} files ({fingerprint}) -> {out_path} "
-            f"({len(merged['sweep']['values'])} sweep points)"
-        )
+    # Validate all groups before publishing any outputs.
+    merged_groups = [_merge_group(paths, args.expected_p_values) for paths in groups.values()]
+    for merged in merged_groups:
+        output = Path(args.output_dir) / f"run_merged_{datetime.now():%Y%m%d_%H%M%S}_{uuid.uuid4().hex}.json"
+        write_run_json(merged, output)
+        print(f"Merged {len(merged['sweep']['values'])} complete sweep points -> {output}")
 
 
 if __name__ == "__main__":

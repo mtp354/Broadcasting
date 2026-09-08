@@ -76,6 +76,7 @@ class TestNoQECPipeline:
         assert min(fid_noisy) < min(fid_clean)
 
 
+@pytest.mark.slow
 class TestQECPipeline:
     """End-to-end QEC simulation."""
 

@@ -14,8 +14,7 @@ from typing import Any
 import numpy as np
 from qiskit.quantum_info import DensityMatrix, Pauli, Statevector, state_fidelity
 
-# [[5,1,3]] stabilizer generators, in the same qubit order used throughout this module.
-QEC513_STABILIZERS = ("XZZXI", "IXZZX", "XIXZZ", "ZXIXZ")
+from .qec_513 import QEC513_STABILIZERS
 
 
 # ---------------------------------------------------------------------------
@@ -635,11 +634,10 @@ def logical_error_polynomial(p: float) -> float:
         p_L(p) = 10p^2 - \frac{200}{9}p^3 + \frac{160}{9}p^4 - \frac{128}{27}p^5,
 
     with corresponding fidelity :math:`F_{\mathrm{QEC}}(p) = 1 - \tfrac{2}{3}p_L(p)`
-    and break-even point :math:`p_\star = (3-\sqrt6)/4 \approx 0.1376`. This replaces
-    the manuscript's Eq. (32)-(33), which combines the *physical* two-or-more-error
-    probability :math:`p_f \approx 10p^2` with an extra, unjustified factor of
-    :math:`\tfrac{2}{3}p_f` rather than using it as the leading term of
-    :math:`p_L(p)` itself.
+    and low-noise break-even point
+    :math:`p_\star = (3-\sqrt6)/4 \approx 0.1376`. The physical probability of
+    two or more errors alone does not determine the logical channel: some
+    higher-weight patterns have trivial residual logical action.
     """
     return 10 * p**2 - (200 / 9) * p**3 + (160 / 9) * p**4 - (128 / 27) * p**5
 
@@ -647,9 +645,10 @@ def logical_error_polynomial(p: float) -> float:
 def logical_error_probability_bruteforce(p: float) -> float:
     """Exact [[5,1,3]] logical error probability via brute-force enumeration.
 
-    Independently validates :func:`logical_error_polynomial` (and, through it, the
-    exact-mode fidelity from :func:`qec_recover_and_decode`) without relying on the
-    closed-form polynomial or reusing any of the recovery-map code under test:
+    Checks :func:`logical_error_polynomial` without using the closed-form expression,
+    but shares the production recovery Kraus and syndrome helpers. The separate
+    binary-symplectic oracle in ``tests/test_qec_recovery.py`` provides independent
+    validation of the logical weight distribution. In this helper,
     every one of the ``4**5 = 1024`` five-qubit Pauli error patterns is applied
     directly to both logical basis states, recovered via the syndrome-indexed
     Kraus operator, and checked for whether the residual action on the code space
@@ -700,14 +699,16 @@ def qec_recover_and_decode(
     returns a density matrix on the reduced space
     :math:`(N+1)^M \\times 2^N`.
 
-    For ``mode == "sampled"`` trajectories that carry a ``"pauli_labels"`` entry
+    For ``mode == "sampling"`` trajectories that carry a ``"pauli_labels"`` entry
     (as produced by :func:`depolarizing_channels_encoded`), the syndrome for each
     block is computed directly from the actually-sampled Pauli error via
     :func:`pauli_label_syndrome`, and the matching recovery Kraus operator is
     applied deterministically -- no search over syndrome branches is needed. If
-    ``"pauli_labels"`` is absent (e.g. hand-built trajectories), this falls back to
-    selecting the highest-probability branch, which is only valid for exact Pauli
-    trajectories and is unsound for coherent or otherwise non-Pauli noise.
+    ``"pauli_labels"`` is absent (e.g. legacy physical-Pauli trajectories), recovery
+    emits a warning and verifies that exactly one syndrome carries all of the
+    state's norm. Inputs occupying multiple syndrome branches are rejected rather
+    than projected onto their most likely branch; use exact density-matrix
+    recovery for such coherent inputs.
 
     Parameters
     ----------
@@ -768,10 +769,16 @@ def qec_recover_and_decode(
                 "probability; the tracked Pauli label may be inconsistent with the "
                 "trajectory."
             )
+        norm_sq = float(np.vdot(psi_vec, psi_vec).real)
+        if not np.isclose(p_branch, norm_sq, rtol=tol_inner, atol=tol_inner):
+            raise ValueError(
+                "Trajectory is not confined to its tracked Pauli syndrome; "
+                "use exact density-matrix recovery for coherent noise."
+            )
         dims_new = dims_cur[:ax] + [2] + dims_cur[ax + 1 :]
         return vec / np.sqrt(p_branch), dims_new
 
-    def _kraus_state_argmax(
+    def _kraus_state_single_syndrome(
         psi_vec: np.ndarray,
         dims_cur: list[int],
         ax: int,
@@ -791,6 +798,12 @@ def qec_recover_and_decode(
                 best_vec = vec
         if best_p < tol_inner:
             raise RuntimeError("All syndrome branch probabilities ~ 0.")
+        norm_sq = float(np.vdot(psi_vec, psi_vec).real)
+        if not np.isclose(best_p, norm_sq, rtol=tol_inner, atol=tol_inner):
+            raise ValueError(
+                "Unlabeled trajectory occupies multiple syndrome branches; "
+                "use exact density-matrix recovery for coherent noise."
+            )
         dims_new = dims_cur[:ax] + [2] + dims_cur[ax + 1 :]
         return best_vec / np.sqrt(best_p), dims_new
 
@@ -819,8 +832,8 @@ def qec_recover_and_decode(
     if pauli_labels is None:
         warnings.warn(
             "depolarizing_channels_encoded output has no 'pauli_labels'; falling "
-            "back to argmax syndrome-branch selection. This is only valid for "
-            "exact Pauli trajectories and is unsound for coherent/non-Pauli noise.",
+            "back to validated single-syndrome recovery. Coherent trajectories "
+            "occupying multiple syndrome branches are rejected.",
             RuntimeWarning,
             stacklevel=2,
         )
@@ -838,7 +851,9 @@ def qec_recover_and_decode(
                     psi, dims_fused, ax, pauli_labels[idx][ell], tol
                 )
             else:
-                psi, dims_cur = _kraus_state_argmax(psi, dims_fused, ax, K_local, tol)
+                psi, dims_cur = _kraus_state_single_syndrome(
+                    psi, dims_fused, ax, K_local, tol
+                )
         rho_est += np.outer(psi, psi.conj())
     return DensityMatrix(rho_est / len(trajs))
 

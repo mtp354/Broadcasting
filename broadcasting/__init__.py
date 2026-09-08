@@ -20,7 +20,7 @@ from .circuit import (
 from .fidelity import add_fidelity
 from .protocol import ProtocolConfig, BroadcastResult
 from .backend import ExactBackend, SamplingBackend, HPCBackend, HardwareBackend
-from .results import save_run, load_run, list_runs
+from .results import save_run, load_run, list_runs, write_run_json
 
 __all__ = [
     # helpers / primitives
@@ -51,6 +51,7 @@ __all__ = [
     "HardwareBackend",
     # results I/O
     "save_run",
+    "write_run_json",
     "load_run",
     "list_runs",
 ]

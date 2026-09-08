@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import uuid
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -24,18 +25,37 @@ DEFAULT_OPTIMIZATION_LEVEL = 3
 
 
 def _default_run_suffix() -> str:
-    """Collision-safe suffix for auto-generated result filenames.
-
-    Prefers SLURM job/array-task identifiers -- stable and guaranteed unique
-    across the concurrently-running tasks of one array submission -- falling
-    back to a short random UUID fragment otherwise (e.g. interactive/notebook
-    use). Only affects newly created filenames; existing files are untouched.
-    """
+    """SLURM identity, when available, plus randomness unique to every save."""
     job_id = os.environ.get("SLURM_JOB_ID")
-    if job_id:
-        task_id = os.environ.get("SLURM_ARRAY_TASK_ID")
-        return f"_{job_id}_{task_id}" if task_id is not None else f"_{job_id}"
-    return f"_{uuid.uuid4().hex[:8]}"
+    task_id = os.environ.get("SLURM_ARRAY_TASK_ID")
+    label = f"_{job_id}" if job_id else ""
+    if job_id and task_id is not None:
+        label += f"_{task_id}"
+    return f"{label}_{uuid.uuid4().hex}"
+
+
+def write_run_json(data: dict[str, Any], filepath: str | Path) -> Path:
+    """Publish complete JSON atomically, refusing to overwrite any existing path.
+
+    The temporary file and destination live on the same filesystem. Hard-link
+    creation is atomic and exclusive, so readers never see a partial record.
+    """
+    filepath = Path(filepath)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8",
+                                         dir=filepath.parent, prefix=".run_",
+                                         suffix=".tmp", delete=False) as handle:
+            temporary = Path(handle.name)
+            json.dump(data, handle, indent=2, default=_json_default, allow_nan=False)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.link(temporary, filepath)
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
+    return filepath
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +111,7 @@ def save_run(
             fidelities = result.fidelities
             counts_field = meta.get("counts")
         n_samples = None
-        theta_samples = meta.get("theta_samples", [list(config.thetas)])
+        theta_samples = meta.get("theta_samples", [list(meta.get("thetas", config.thetas))])
     elif mode.startswith("hpc"):
         # A submission receipt (command built/submitted, no results yet) --
         # not a completed sweep, so no sweep values/fidelities are recorded.
@@ -104,21 +124,21 @@ def save_run(
         fidelities = []
         counts_field = None
         n_samples = None
-        theta_samples = [list(config.thetas)]
+        theta_samples = [list(meta.get("thetas", config.thetas))]
     else:
         experiment_type = "simulation"
         if "sampl" in mode:
             backend_label = "aer_sampling"
-            n_samples = config.n_samples or meta.get("n_samples")
+            n_samples = meta.get("n_samples", config.n_samples)
         else:
             backend_label = "aer_exact"
             n_samples = None
         opt_level = None
         sweep_axis = "p"
-        sweep_values = list(config.p_list)
+        sweep_values = list(meta.get("p_list", config.p_list))
         fidelities = result.fidelities
         counts_field = None
-        theta_samples = [list(config.thetas)]
+        theta_samples = [list(meta.get("thetas", config.thetas))]
 
     extra_meta = {
         k: v
@@ -133,6 +153,7 @@ def save_run(
             "p_list",
             "alpha",
             "n_samples",
+            "seed",
             "tau",
             "shots",
             "backend",
@@ -155,14 +176,16 @@ def save_run(
         "optimization_level": opt_level,
         "job_id": meta.get("job_id"),
         "shots": meta.get("shots"),
-        "seed": config.seed,
+        "seed": meta.get("seed", config.seed),
         "n_samples": n_samples,
         "protocol": {
-            "M": config.M,
-            "N": config.N,
-            "alpha": config.alpha,
-            "use_qec": config.use_qec,
+            "M": meta.get("M", config.M),
+            "N": meta.get("N", config.N),
+            "alpha": meta.get("alpha", config.alpha),
+            "use_qec": meta.get("use_qec", config.use_qec),
             "theta_samples": theta_samples,
+            "linear_feedforward": meta.get("linear_feedforward", config.linear_feedforward),
+            "outcomes_list": meta.get("outcomes_list", config.outcomes_list),
         },
         "sweep": {"axis": sweep_axis, "values": sweep_values},
         "fidelities": fidelities,
@@ -171,10 +194,7 @@ def save_run(
         "metadata": extra_meta,
     }
 
-    with open(filepath, "w") as f:
-        json.dump(data, f, indent=2, default=_json_default)
-
-    return filepath
+    return write_run_json(data, filepath)
 
 
 # ---------------------------------------------------------------------------
@@ -244,6 +264,9 @@ def load_run(filepath: str | Path) -> dict[str, Any]:
         "counts": counts_grid,
         "metadata": raw.get("metadata", {}),
         # Convenience / legacy aliases
+        "protocol": proto,
+        "linear_feedforward": proto.get("linear_feedforward"),
+        "outcomes_list": proto.get("outcomes_list"),
         "M": proto["M"],
         "N": proto["N"],
         "alpha": proto.get("alpha"),

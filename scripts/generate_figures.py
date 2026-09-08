@@ -1,407 +1,244 @@
 #!/usr/bin/env python3
-"""generate_figures.py -- Reproducible figure generation pipeline.
+"""Generate manuscript figures from pinned saved inputs without collecting data.
 
-Generates all manuscript and paper figures directly from authoritative saved JSON
-records in results/ and results/qec513/. Strips plot titles by default and exports
-in both PNG and vector PDF formats to manuscript/ and figures/.
+    python scripts/generate_figures.py --formats png,pdf
 
-Usage
------
-    python scripts/generate_figures.py [--all] [--quick] [--formats png,pdf]
+The source inventory, historical overrides, and exact output stems live in
+figures/sources.json. New convergence simulations require --collect-convergence;
+that explicit collection step archives every measurement before rendering it.
 """
+from __future__ import annotations
 
 import argparse
+from dataclasses import asdict, replace
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import sys
+import uuid
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Ensure project root is in python path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+from broadcasting.analysis import delay_axis, joint_success_statistics
 from broadcasting.backend import ExactBackend, SamplingBackend
 from broadcasting.plotting import save_figure
 from broadcasting.protocol import ProtocolConfig
-from broadcasting.results import list_runs, load_run
+from broadcasting.provenance import software_provenance
+from broadcasting.results import write_run_json
 from broadcasting.simulation import logical_error_polynomial
-from broadcasting.validation import dedupe_by_job, group_by_cohort
+from broadcasting.validation import dedupe_by_job
+from scripts.figure_sources import figure_runs, source_manifest
 
 
-def generate_figure_1_convergence(
-    out_dirs: list[Path],
-    *,
-    quick: bool = False,
-    formats: tuple[str, ...] = ("png", "pdf"),
-) -> None:
-    """Figure 1: Monte Carlo sampling error convergence with fitted exponent."""
-    print("\n--- Generating Figure 1: MC Sampling Convergence ---")
+def _save(fig, key, out_dirs, formats):
+    if not out_dirs:
+        return fig
+    spec = source_manifest()["figures"][key]
+    for directory in out_dirs:
+        stem = spec["manuscript_output" if directory.name == "manuscript" else "figure_output"]
+        for fmt in formats:
+            path = save_figure(fig, directory / f"{stem}.{fmt}", strip_titles=True)
+            print(f"Saved {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}")
+    plt.close(fig)
+    return fig
+
+
+def generate_figure_1_convergence(out_dirs, *, quick=False, formats=("png", "pdf"), collect=False, archive_dir=None):
+    """Explicitly collect, archive, and plot independent Monte Carlo repetitions.
+
+    This function is deliberately gated: ordinary figure regeneration is read-only
+    with respect to experimental records. Reuse of each seed across sample sizes
+    makes a log-log fit descriptive, not an independent-error regression test.
+    """
+    if not collect:
+        raise ValueError("Convergence requires explicit collection; the old multi-seed figure was withdrawn.")
     p_arr = np.linspace(0, 1, 21)
-    conv_config = ProtocolConfig(
-        M=1,
-        N=2,
-        alpha=1.0 / np.sqrt(2),
-        thetas=[0.0],
-        p_list=p_arr.tolist(),
-        use_qec=True,
-        outcomes_list=[0],
-        seed=0,
-    )
-
-    exact_fids = np.asarray(ExactBackend().run(conv_config).fidelities)
-
+    config = ProtocolConfig(M=1, N=2, alpha=1 / np.sqrt(2), thetas=[0.0],
+                            p_list=p_arr.tolist(), use_qec=True, outcomes_list=[0])
+    exact = np.asarray(ExactBackend().run(config).fidelities)
     n_sweep = [50, 100, 200, 500, 1000] if quick else [50, 100, 200, 500, 1000, 2000, 5000]
     seeds = [0, 1, 2] if quick else [0, 1, 2, 3, 4]
-
     errors = np.zeros((len(seeds), len(n_sweep)))
+    measurements = []
     for si, seed in enumerate(seeds):
-        for ni, ns in enumerate(n_sweep):
-            sampled = SamplingBackend(n_samples=ns, seed=seed).run(conv_config)
-            diff = np.abs(np.asarray(sampled.fidelities) - exact_fids)
-            errors[si, ni] = np.trapezoid(diff, p_arr, axis=0).sum()
-
-    mean_errors = errors.mean(axis=0)
-    std_errors = errors.std(axis=0)
-
-    log_n = np.log(n_sweep)
-    log_err = np.log(mean_errors)
-    slope, intercept = np.polyfit(log_n, log_err, 1)
-    residuals = log_err - (slope * log_n + intercept)
-    dof = len(n_sweep) - 2
-    slope_se = (
-        np.sqrt(np.sum(residuals**2) / dof / np.sum((log_n - log_n.mean()) ** 2))
-        if dof > 0
-        else float("nan")
-    )
-    print(f"  Fitted exponent: {slope:.3f} +/- {slope_se:.3f} (theoretical -0.5)")
-
+        for ni, samples in enumerate(n_sweep):
+            effective = replace(config, seed=seed, n_samples=samples)
+            sampled = SamplingBackend().run(effective)
+            fids = np.asarray(sampled.fidelities)
+            errors[si, ni] = np.trapezoid(np.abs(fids - exact), p_arr, axis=0).sum()
+            measurements.append({"seed": seed, "n_samples": samples,
+                                 "execution_metadata": sampled.metadata,
+                                 "fidelities": fids.tolist(),
+                                 "error_area": float(errors[si, ni])})
+    archive_dir = Path(archive_dir) if archive_dir else ROOT / "results" / "convergence"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    archive = archive_dir / f"convergence_{uuid.uuid4().hex}.json"
+    write_run_json({"timestamp": datetime.now(timezone.utc).isoformat(), "config": asdict(config),
+                    "software": software_provenance(),
+                    "exact_fidelities": exact.tolist(), "seeds": seeds, "sample_counts": n_sweep,
+                    "measurements": measurements,
+                    "fit_scope": "Descriptive log-log OLS; shared seeds correlate sample-size estimates. Exponent uncertainty is not estimated."}, archive)
+    print(f"Archived convergence measurements: {archive}")
+    means, deviations = errors.mean(axis=0), errors.std(axis=0, ddof=1)
+    slope, intercept = np.polyfit(np.log(n_sweep), np.log(means), 1)
     fig, ax = plt.subplots(figsize=(6.5, 4.2))
-    ax.errorbar(
-        n_sweep,
-        mean_errors,
-        yerr=std_errors,
-        fmt="o",
-        color="tab:blue",
-        capsize=3,
-        label=f"Observed ({len(seeds)} seeds, mean +/- std)",
-    )
-    fit_line = np.exp(intercept) * np.asarray(n_sweep, dtype=float) ** slope
-    ax.plot(
-        n_sweep,
-        fit_line,
-        "--",
-        color="black",
-        linewidth=1.2,
-        label=f"Fit: $n^{{{slope:.3f} \\pm {slope_se:.3f}}}$",
-    )
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlabel("Number of trajectories $n_s$")
-    ax.set_ylabel("Error area $\\int |F_\\mathrm{sampled} - F_\\mathrm{exact}|\\,dp$")
-    ax.grid(True, which="both", alpha=0.25)
-    ax.legend(framealpha=0.9)
-    plt.tight_layout()
-
-    for d in out_dirs:
-        for fmt in formats:
-            fname = "mc_sampling_convergence" if d.name == "manuscript" else "sampling_convergence"
-            save_figure(fig, d / f"{fname}.{fmt}", strip_titles=True)
-            print(f"  Saved -> {d / f'{fname}.{fmt}'}")
-    plt.close(fig)
-
-
-def generate_figure_2_qec_memory(
-    out_dirs: list[Path],
-    formats: tuple[str, ...] = ("png", "pdf"),
-) -> None:
-    """Figure 2: [[5,1,3]] standalone memory benchmark."""
-    print("\n--- Generating Figure 2: QEC Encoded Memory Benchmark ---")
-    qec_dir = ROOT / "results" / "qec513"
-    qec_files = sorted(qec_dir.glob("qec513_delay_sweep_*.json"))
-    if not qec_files:
-        print("  Warning: No QEC files found in results/qec513/")
-        return
-
-    saved = []
-    seen_jobs = {}
-    for p in qec_files:
-        with open(p) as f:
-            rec = json.load(f)
-        jid = rec.get("job_id")
-        if jid and jid in seen_jobs:
-            continue
-        if jid:
-            seen_jobs[jid] = p.name
-        saved.append(rec)
-
-    fig, ax = plt.subplots(figsize=(7, 4.5))
-    ref = saved[0]
-    scale = 4e-3
-    x_ref = scale * np.asarray(ref["tau_values"], dtype=float)
-    ax.plot(x_ref, ref["ideal_fidelities"], color="tab:green", linewidth=1.5, label="Noise-free")
-
-    colors = plt.cm.tab10.colors
-    for i, run in enumerate(saved):
-        tau = scale * np.asarray(run["tau_values"], dtype=float)
-        opt = run.get("optimization_level", "?")
-        backend = run.get("backend", "ibm_hardware")
-        shots = run.get("shots", "?")
-        label = f"{backend} opt={opt} ({shots} shots)"
-        ax.plot(tau, run["backend_fidelities"], color=colors[i % len(colors)], linewidth=1.2, label=label)
-
-    ax.axhline(0.5, color="gray", linestyle="--", alpha=0.5, label="Random guessing (0.5)")
-    ax.set_xlabel("Delay time ($\\mu$s)")
-    ax.set_ylabel("Logical State Fidelity")
-    ax.set_ylim(0, 1.05)
+    ax.errorbar(n_sweep, means, yerr=deviations, fmt="o", capsize=3,
+                label=f"{len(seeds)} distinct effective seeds, mean ± sample SD")
+    ax.plot(n_sweep, np.exp(intercept) * np.asarray(n_sweep) ** slope, "k--",
+            label=f"Descriptive fit: $n^{{{slope:.3f}}}$")
+    ax.set(xscale="log", yscale="log", xlabel="Number of trajectories", ylabel="Integrated absolute fidelity error")
     ax.grid(alpha=0.25)
-    ax.legend(fontsize=8, loc="best")
-    plt.tight_layout()
-
-    for d in out_dirs:
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    for directory in out_dirs:
         for fmt in formats:
-            fname = "qec fidelity" if d.name == "manuscript" else "qec513_saved_sweeps"
-            save_figure(fig, d / f"{fname}.{fmt}", strip_titles=True)
-            print(f"  Saved -> {d / f'{fname}.{fmt}'}")
+            save_figure(fig, directory / f"sampling_convergence_new.{fmt}")
     plt.close(fig)
+    return archive
 
 
-def generate_figure_4_qec_crossover(
-    out_dirs: list[Path],
-    formats: tuple[str, ...] = ("png", "pdf"),
-) -> None:
-    """Figure 4: QEC crossover comparison with exact, sampled, and closed-form curves."""
-    print("\n--- Generating Figure 4: QEC Crossover ---")
-    runs = list_runs(ROOT / "results")
-
-    def find_run(use_qec: bool, backend: str):
-        for r in runs:
-            if (
-                r.get("experiment_type") == "simulation"
-                and r.get("M") == 1
-                and r.get("N") == 2
-                and bool(r.get("use_qec")) == use_qec
-                and r.get("backend") == backend
-                and r.get("sweep", {}).get("axis") == "p"
-            ):
-                return r
-        return None
-
-    run_no_qec = find_run(False, "aer_exact")
-    run_qec_exact = find_run(True, "aer_exact")
-    run_qec_samp = find_run(True, "aer_sampling")
-
-    if not (run_no_qec and run_qec_exact):
-        print("  Warning: Missing simulation runs for QEC crossover in results/")
-        return
-
-    p_vals = np.asarray(run_no_qec["sweep"]["values"], dtype=float)
-    fid_no_qec = np.asarray(run_no_qec["fidelities"], dtype=float).mean(axis=1)
-    fid_qec_exact = np.asarray(run_qec_exact["fidelities"], dtype=float).mean(axis=1)
-    fid_qec_samp = (
-        np.asarray(run_qec_samp["fidelities"], dtype=float).mean(axis=1)
-        if run_qec_samp
-        else None
-    )
-
-    # Analytical curves
-    p_fine = np.linspace(0, 1, 200)
-    f_bare_theory = 1.0 - (2.0 / 3.0) * p_fine
-    f_qec_theory = 1.0 - (2.0 / 3.0) * np.array([logical_error_polynomial(p) for p in p_fine])
-    p_star = (3.0 - np.sqrt(6.0)) / 4.0
-
-    fig, ax = plt.subplots(figsize=(7, 4.5))
-    ax.plot(p_fine, f_bare_theory, "k--", linewidth=1.2, label="Bare theoretical $1 - 2p/3$")
-    ax.plot(p_fine, f_qec_theory, "r-", linewidth=1.5, label="QEC theoretical $1 - \\frac{2}{3}p_L(p)$")
-    ax.plot(p_vals, fid_no_qec, "o", color="black", markersize=4, label="Exact bare (simulation)")
-    ax.plot(p_vals, fid_qec_exact, "s", color="red", markersize=4, label="Exact QEC (simulation)")
-    if fid_qec_samp is not None:
-        ax.plot(p_vals, fid_qec_samp, "^", color="tab:purple", markersize=4, label="Sampled QEC ($n_s=1000$)")
-
-    ax.axvline(p_star, color="gray", linestyle=":", label=f"$p^* \\approx {p_star:.4f}$")
+def generate_figure_2_qec_memory(out_dirs, formats=("png", "pdf")):
+    """Four historical Kingston memory curves with explicit encoded/bare provenance."""
+    runs = figure_runs("qec_memory")
+    ref = runs[0]
+    fig, ax = plt.subplots(figsize=(6.5, 4.2))
+    scale, unit = delay_axis(ref)
+    ax.plot(scale * np.asarray(ref["tau_values"]), ref["ideal_fidelities"], "k--", linewidth=1.2, label="Noise-free")
+    for run in runs:
+        run_scale, run_unit = delay_axis(run)
+        if run_unit != unit:
+            raise ValueError("Memory curves must use common, explicitly supported delay units.")
+        qec = "Encoded" if run["use_qec"] else "Bare"
+        date = run["timestamp"][:10]
+        ax.plot(run_scale * np.asarray(run["tau_values"]), run["backend_fidelities"], linewidth=1.2,
+                label=f"{qec}, opt={run['optimization_level']}, {date}")
     ax.axhline(0.5, color="gray", linestyle="--", alpha=0.5)
-
-    ax.set_xlabel("Depolarizing probability $p$")
-    ax.set_ylabel("Receiver fidelity $F$")
-    ax.set_xlim(0, 1)
-    ax.set_ylim(0.3, 1.02)
+    ax.set(xlabel=f"Delay time ({unit})", ylabel="Recovered-state fidelity", ylim=(0, 1.05))
     ax.grid(alpha=0.25)
-    ax.legend(fontsize=8, loc="best")
-    plt.tight_layout()
-
-    for d in out_dirs:
-        for fmt in formats:
-            fname = "qec vs no qec vs sampling" if d.name == "manuscript" else "qec_crossover"
-            save_figure(fig, d / f"{fname}.{fmt}", strip_titles=True)
-            print(f"  Saved -> {d / f'{fname}.{fmt}'}")
-    plt.close(fig)
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    _save(fig, "qec_memory", out_dirs, formats)
 
 
-def generate_figure_5_delay_sweeps(
-    out_dirs: list[Path],
-    formats: tuple[str, ...] = ("png", "pdf"),
-) -> None:
-    """Figure 5: Hardware idle delay sweeps on IBM Kingston."""
-    print("\n--- Generating Figure 5: Hardware Delay Sweeps ---")
-    files = {
-        "opt3": ROOT / "results" / "run_20260518_120232.json",
-        "opt0": ROOT / "results" / "run_20260518_122119.json",
-    }
-
-    scale = 4e-3  # us / dt
-
-    for opt_key, fpath in files.items():
-        if not fpath.exists():
-            print(f"  Warning: {fpath.name} not found.")
-            continue
-        run = load_run(fpath)
-        tau_dt = np.asarray(run["sweep"]["values"], dtype=float)
-        tau_us = tau_dt * scale
-        fids = np.asarray(run["fidelities"], dtype=float)
-
-        fig, ax = plt.subplots(figsize=(7, 4.5))
-        for r_idx in range(fids.shape[1]):
-            ax.plot(tau_us, fids[:, r_idx], "-", linewidth=1.2, label=f"Receiver {r_idx + 1}")
-        ax.plot(tau_us, fids.mean(axis=1), "k--", linewidth=1.5, label="Average")
-
-        ax.axhline(0.5, color="gray", linestyle=":", alpha=0.5, label="Random (0.5)")
-        ax.set_xlabel("Idle delay time ($\\mu$s)")
-        ax.set_ylabel("Fidelity $P(0)$")
-        ax.set_ylim(0.4, 1.02)
-        ax.grid(alpha=0.25)
-        ax.legend(fontsize=9, loc="best")
-        plt.tight_layout()
-
-        for d in out_dirs:
-            for fmt in formats:
-                fname = f"delay time vs fidelity 121 {opt_key}" if d.name == "manuscript" else f"delay_sweep_121_{opt_key}"
-                save_figure(fig, d / f"{fname}.{fmt}", strip_titles=True)
-                print(f"  Saved -> {d / f'{fname}.{fmt}'}")
-        plt.close(fig)
-
-
-def generate_figure_6_scaling(
-    out_dirs: list[Path],
-    formats: tuple[str, ...] = ("png", "pdf"),
-) -> None:
-    """Figure 6: Hardware fidelity scaling at tau=0 across network sizes."""
-    print("\n--- Generating Figure 6: Hardware Scaling at tau=0 ---")
-    runs = list_runs(ROOT / "results")
-    hw_runs = [r for r in runs if r.get("experiment_type") == "hardware"]
-    hw_runs = dedupe_by_job(hw_runs)
-
-    cohorts = group_by_cohort(hw_runs, keys=("backend", "shots"))
-    print("  Stratified hardware cohorts:")
-    for key, group in sorted(cohorts.items(), key=lambda kv: str(kv[0])):
-        print(f"    {key}: {len(group)} run(s)")
-
-    points = []
-    for r in hw_runs:
-        sweep_vals = np.asarray(r.get("sweep", {}).get("values", []), dtype=float)
-        if sweep_vals.size == 0:
-            continue
-        z_idx = int(np.argmin(np.abs(sweep_vals)))
-        if abs(sweep_vals[z_idx]) > 1e-9:
-            continue
-        fids = np.asarray(r["fidelities"][z_idx], dtype=float)
-        points.append(
-            (
-                r["M"],
-                r["N"],
-                r.get("backend", "unknown"),
-                float(fids.mean()),
-                float(fids.min()),
-                float(fids.max()),
-            )
-        )
-
-    if not points:
-        print("  Warning: No tau=0 hardware points found.")
-        return
-
+def generate_figure_4_qec_crossover(out_dirs, formats=("png", "pdf")):
+    """Exact and sampled curves on their own saved grids with a small-p inset."""
+    runs = figure_runs("qec_crossover")
+    for run in runs:
+        if run["M"] != 1 or run["N"] != 2 or run["sweep"]["axis"] != "p":
+            raise ValueError("Crossover source has the wrong protocol or sweep axis.")
+        if not np.isclose(run["alpha"], runs[0]["alpha"]) or not np.allclose(run["theta_samples"], runs[0]["theta_samples"]):
+            raise ValueError("Crossover sources must have matching alpha and theta settings.")
+    p_fine = np.linspace(0, 1, 500)
+    p_star = (3 - np.sqrt(6)) / 4
     fig, ax = plt.subplots(figsize=(6.8, 4.5))
-    m_values = sorted({p[0] for p in points})
-    backend_values = sorted({p[2] for p in points})
+    inset = ax.inset_axes([0.60, 0.54, 0.37, 0.40])
+    for axis in [ax, inset]:
+        axis.plot(p_fine, 1 - 2 * p_fine / 3, "k--", linewidth=1.1, label="Bare theory")
+        axis.plot(p_fine, 1 - 2 * logical_error_polynomial(p_fine) / 3, "r-", linewidth=1.2, label="Encoded theory")
+        labels = ["Exact bare", "Exact encoded", f"Sampled encoded ($n_s={runs[2]['n_samples']}$)"]
+        for run, marker, color, label in zip(runs, ["o", "s", "^"], ["black", "red", "tab:purple"], labels):
+            x = np.asarray(run["sweep"]["values"])
+            y = np.asarray(run["fidelities"]).mean(axis=1)
+            if x.shape != y.shape:
+                raise ValueError("Crossover source grid and fidelity lengths differ.")
+            axis.plot(x, y, marker, color=color, markersize=3.5, label=label)
+        axis.axvline(p_star, color="gray", linestyle=":")
+        axis.grid(alpha=0.2)
+    inset.set(xlim=(0, 0.20), ylim=(0.84, 1.01))
+    inset.tick_params(labelsize=7)
+    ax.set(xlabel="Depolarizing probability $p$", ylabel="Receiver fidelity $F$", xlim=(0, 1), ylim=(0.3, 1.02))
+    ax.legend(fontsize=8, loc="lower left")
+    fig.tight_layout()
+    return _save(fig, "qec_crossover", out_dirs, formats)
 
-    m_colors = {
-        m: c
-        for m, c in zip(
-            m_values, plt.cm.tab10(np.linspace(0, 1, max(len(m_values), 2)))
-        )
-    }
-    backend_markers = {
-        b: mk for b, mk in zip(backend_values, ["o", "s", "^", "D", "v", "P"])
-    }
 
-    seen_labels = set()
-    n_values = sorted({p[1] for p in points})
-    for M, N, backend, mean_fid, min_fid, max_fid in sorted(points):
-        label = f"$M={M}$, {backend}"
-        show_label = label not in seen_labels
-        seen_labels.add(label)
+def generate_figure_5_delay_sweeps(out_dirs, formats=("png", "pdf")):
+    for key in ["delay_opt3", "delay_opt0"]:
+        run = figure_runs(key)[0]
+        scale, unit = delay_axis(run)
+        tau = scale * np.asarray(run["sweep"]["values"])
+        fids = np.asarray(run["fidelities"])
+        fig, ax = plt.subplots(figsize=(6.5, 4.2))
+        for i in range(run["N"]):
+            ax.plot(tau, fids[:, i], linewidth=1.2, label=f"Receiver {i + 1}")
+        ax.plot(tau, fids.mean(axis=1), "k--", linewidth=1.2, label="Average")
+        ax.axhline(0.5, color="gray", linestyle=":", alpha=0.5)
+        ax.set(xlabel=f"Idle delay time ({unit})", ylabel="Fidelity $P(0)$", ylim=(0.4, 1.02))
+        ax.grid(alpha=0.25)
+        ax.legend(fontsize=8)
+        fig.tight_layout()
+        _save(fig, key, out_dirs, formats)
 
-        ax.errorbar(
-            N,
-            mean_fid,
-            yerr=[[mean_fid - min_fid], [max_fid - mean_fid]],
-            fmt=backend_markers[backend],
-            color=m_colors[M],
-            markeredgecolor="black",
-            markersize=7,
-            capsize=4,
-            linewidth=1.2,
-            label=label if show_label else "_nolegend_",
-        )
-        ax.scatter(N, min_fid, color=m_colors[M], marker="_", s=120, linewidths=2)
 
-    ax.axhline(0.5, color="gray", linestyle="--", alpha=0.5)
-    ax.set_xlabel("Number of receivers ($N$)")
-    ax.set_ylabel("Receiver fidelity at $\\tau=0$ (mean, spread, worst-case --)")
-    ax.set_ylim(0.3, 1.02)
-    ax.set_xticks(n_values)
-    ax.set_xlim(min(n_values) - 0.5, max(n_values) + 0.5)
-    ax.legend(title="Senders, Backend", fontsize=8, loc="upper right")
-    ax.grid(alpha=0.25)
-    plt.tight_layout()
+def plot_hardware_tau0(runs):
+    """Display separate per-job/theta points; receiver spread is not an error bar."""
+    points = []
+    for run in dedupe_by_job(runs):
+        if run.get("experiment_type") != "hardware" or run.get("sweep", {}).get("axis") != "tau":
+            continue
+        values = np.asarray(run["sweep"]["values"])
+        indices = np.flatnonzero(values == 0)
+        if len(indices) != 1 or not run.get("counts"):
+            continue
+        for theta_index, row in enumerate(run["counts"]):
+            stats = joint_success_statistics(row[int(indices[0])], run["N"])
+            points.append((run, theta_index, stats))
+    if not points:
+        raise ValueError("No saved joint receiver counts at tau=0.")
+    points.sort(key=lambda p: (p[0]["backend"], p[0]["timestamp"], p[1]))
+    fig, ax = plt.subplots(figsize=(8.5, max(4.0, len(points) * 0.36)))
+    colors = dict(zip(sorted({r["backend"] for r, _, _ in points}), plt.cm.tab10.colors))
+    labels, seen = [], set()
+    for y, (run, theta, stats) in enumerate(points):
+        local = stats["local_fidelities"]
+        backend = run["backend"]
+        color = colors[backend]
+        ax.plot([min(local), max(local)], [y, y], color=color, linewidth=2, alpha=0.65)
+        ax.scatter(stats["mean_local"]["estimate"], y, color=color, s=24,
+                   label=backend if backend not in seen else "_nolegend_")
+        ax.scatter(stats["worst_receiver"]["estimate"], y, color=color, marker="|", s=90)
+        seen.add(backend)
+        labels.append(f"{run['timestamp'][5:10]} {run['timestamp'][11:19]}  M{run['M']} N{run['N']}  "
+                      f"opt{run['optimization_level']}  {stats['shots']} shots  θ{theta}")
+    ax.set_yticks(range(len(points)), labels, fontsize=8)
+    ax.invert_yaxis()
+    ax.axvline(0.5, color="gray", linestyle=":", alpha=0.5)
+    ax.set(xlabel="Receiver fidelity at τ=0: mean (dot), receiver range (line)", xlim=(0.3, 1.02))
+    ax.grid(axis="x", alpha=0.25)
+    ax.legend(fontsize=8, loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=3)
+    fig.tight_layout()
+    return fig
 
-    for d in out_dirs:
-        for fmt in formats:
-            fname = "fidelity scaling hardware" if d.name == "manuscript" else "hardware_tau0_scaling"
-            save_figure(fig, d / f"{fname}.{fmt}", strip_titles=True)
-            print(f"  Saved -> {d / f'{fname}.{fmt}'}")
-    plt.close(fig)
+
+def generate_figure_6_scaling(out_dirs, formats=("png", "pdf")):
+    fig = plot_hardware_tau0(figure_runs("hardware_tau0"))
+    _save(fig, "hardware_tau0", out_dirs, formats)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate publication figures with stripped titles.")
-    parser.add_argument("--all", action="store_true", default=True, help="Generate all figures")
-    parser.add_argument("--quick", action="store_true", help="Quick mode for convergence fitting")
-    parser.add_argument("--formats", default="png,pdf", help="Comma-separated formats (e.g. png,pdf)")
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--all", action="store_true", help="Generate all saved-data figures (default).")
+    parser.add_argument("--formats", default="png,pdf")
+    parser.add_argument("--collect-convergence", action="store_true", help="Explicitly collect NEW simulation measurements and archive them.")
+    parser.add_argument("--quick", action="store_true", help="Shorter sample-size grid, only with --collect-convergence.")
     args = parser.parse_args()
-
-    fmts = tuple(f.strip() for f in args.formats.split(","))
+    if args.quick and not args.collect_convergence:
+        parser.error("--quick applies only to explicit --collect-convergence.")
+    formats = tuple(f.strip() for f in args.formats.split(","))
     out_dirs = [ROOT / "manuscript", ROOT / "figures"]
-    for d in out_dirs:
-        d.mkdir(exist_ok=True)
-
-    print("==========================================================")
-    print("Broadcasting Protocol: Publication Figure Generation")
-    print(f"Output directories: {[str(d) for d in out_dirs]}")
-    print(f"Formats: {fmts}")
-    print("==========================================================")
-
-    generate_figure_1_convergence(out_dirs, quick=args.quick, formats=fmts)
-    generate_figure_2_qec_memory(out_dirs, formats=fmts)
-    generate_figure_4_qec_crossover(out_dirs, formats=fmts)
-    generate_figure_5_delay_sweeps(out_dirs, formats=fmts)
-    generate_figure_6_scaling(out_dirs, formats=fmts)
-
-    print("\n==========================================================")
-    print("All figures successfully regenerated without titles.")
-    print("==========================================================")
+    if args.collect_convergence:
+        generate_figure_1_convergence(out_dirs, quick=args.quick, formats=formats, collect=True)
+    else:
+        print("Convergence figure withdrawn: no independent saved measurements; collection is disabled.")
+    generate_figure_2_qec_memory(out_dirs, formats)
+    generate_figure_4_qec_crossover(out_dirs, formats)
+    generate_figure_5_delay_sweeps(out_dirs, formats)
+    generate_figure_6_scaling(out_dirs, formats)
 
 
 if __name__ == "__main__":
     main()
-

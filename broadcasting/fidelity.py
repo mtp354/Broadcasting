@@ -28,11 +28,9 @@ def add_fidelity(circuit, N, thetas, alpha=1 / np.sqrt(2), receiver_qubits=None)
     thetas : sequence of float
         Sender angles (used to compute target phase).
     alpha : float
-        Real amplitude parameter of the target state, ``0 <= alpha <= 1``
+        Real amplitude parameter of the target state, ``-1 <= alpha <= 1``
         (default ``1/sqrt(2)``, the equatorial case used throughout the
-        manuscript). Must be real -- see the module-level note on the
-        alpha real/complex convention mismatch between this module and
-        `broadcasting.circuit`/`broadcasting.state_preparation`.
+        manuscript). Must be real; complex input is rejected.
     receiver_qubits : list[int] | None
         Qubit indices for receivers. If None, uses circuit metadata or
         defaults to the last N qubits.
@@ -51,7 +49,9 @@ def add_fidelity(circuit, N, thetas, alpha=1 / np.sqrt(2), receiver_qubits=None)
     if N > circuit.num_qubits:
         raise ValueError(f"N={N} exceeds circuit.num_qubits={circuit.num_qubits}.")
 
-    alpha = float(np.real(alpha))
+    if np.iscomplexobj(alpha):
+        raise ValueError("alpha must be real and in [-1, 1].")
+    alpha = float(alpha)
     if not (-1.0 <= alpha <= 1.0):
         raise ValueError(f"alpha must be real and in [-1, 1], got {alpha}.")
 
