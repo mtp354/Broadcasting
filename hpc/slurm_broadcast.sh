@@ -75,23 +75,55 @@ echo "Python:        $(which python)"
 echo "=========================================="
 
 # --- Configure experiment parameters here ---
+# All of these can be set via `--export` (see broadcasting.backend.HPCBackend,
+# which builds this from a ProtocolConfig) or plain environment variables.
 MODE="${MODE:-exact}"
 M="${M:-1}"
 N="${N:-2}"
+P_MIN="${P_MIN:-0.0}"
+P_MAX="${P_MAX:-1.0}"
 P_STEPS="${P_STEPS:-50}"
+N_SAMPLES="${N_SAMPLES:-1000}"
 USE_QEC="${USE_QEC:-}"
+ALPHA="${ALPHA:-}"
+THETAS="${THETAS:-}"
+OUTCOMES="${OUTCOMES:-}"
+SEED="${SEED:-}"
 
 QEC_FLAG=""
 if [ -n "${USE_QEC}" ]; then
     QEC_FLAG="--use-qec"
 fi
 
+ALPHA_FLAG=""
+if [ -n "${ALPHA}" ]; then
+    ALPHA_FLAG="--alpha ${ALPHA}"
+fi
+
+THETAS_FLAG=""
+if [ -n "${THETAS}" ]; then
+    THETAS_FLAG="--thetas ${THETAS}"
+fi
+
+OUTCOMES_FLAG=""
+if [ -n "${OUTCOMES}" ]; then
+    OUTCOMES_FLAG="--outcomes ${OUTCOMES}"
+fi
+
+SEED_FLAG=""
+if [ -n "${SEED}" ]; then
+    SEED_FLAG="--seed ${SEED}"
+fi
+
 python -m hpc.run_experiment \
     --mode "${MODE}" \
     --M "${M}" \
     --N "${N}" \
+    --p-min "${P_MIN}" \
+    --p-max "${P_MAX}" \
     --p-steps "${P_STEPS}" \
-    ${QEC_FLAG} \
+    --n-samples "${N_SAMPLES}" \
+    ${QEC_FLAG} ${ALPHA_FLAG} ${THETAS_FLAG} ${OUTCOMES_FLAG} ${SEED_FLAG} \
     --output-dir results
 
 # Archive results back to persistent global storage

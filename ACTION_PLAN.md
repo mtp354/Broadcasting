@@ -216,14 +216,15 @@ equation, algebra checked with `sympy`). Items 2, 3 (fully), and 4 are **reopene
   `p_L(1)=22/27` algebraically (matches `logical_error_polynomial(1)` in code — confirm with a test).
 - [Code] Add a test asserting `logical_error_polynomial(1) == 22/27` and `1 - 2/3*logical_error_polynomial(1) == 37/81`, to lock in the `p>3/4` regime numbers before they go in the manuscript.
 
-## Phase 1 — Recovery-map tests & tiered simulation strategy — 🟡 core items done, fast-path deferred
+## Phase 1 — Recovery-map tests & Monte Carlo accounting — 🟡 core items done, fast-path not pursued
 
 **Status:** Items 6, 7, 8 are done and tested (92 tests passing). Item 9 is only partially reflected
 in the manuscript (text now *describes* the accounting gap but doesn't measure it, and undercounts:
-see below). Items 10–11 are unimplemented; item 12 is **withdrawn** (see Phase 0 — proven exact, not
-needed). Manuscript wording around 10-11 was too generous ("... or, when only fidelity is required,
-accumulate the scalar per-trajectory fidelity directly...") — **soften that sentence** to describe it
-as a recommended future option, not an available one, until it's actually implemented.
+see below). Items 10–11 are **not being pursued** (user decision — see below); item 12 is
+**withdrawn** (see Phase 0 — proven exact, not needed). Manuscript wording around 10-11 was too
+generous ("... or, when only fidelity is required, accumulate the scalar per-trajectory fidelity
+directly...") — **soften that sentence** to describe it as a possible future option, not an
+available one, since it isn't being built.
 
 - [Code] **Item 6** ✅: weight-one correction, trace preservation (over the **full 32-dim space**,
   stronger than originally planned "on the codespace"), closed-form-vs-brute-force polynomial match,
@@ -246,21 +247,19 @@ as a recommended future option, not an available one, until it's actually implem
   bare-channel path uses full dense `D×D` matrix products per Pauli term (cubic-ish per-step work in
   `D`), not the quadratic local-contraction cost implied by the write-up — correct the wording or
   implement the cheaper local contraction.
-- [Code] **Items 10, 11 (Tier 2/streaming fast path)** — formalize as a 4-tier simulation hierarchy
-  per the review, and implement Tiers 1–2 as the follow-up work package:
-  1. **Tier 1 — closed form, O(1):** `F_bare(p)=1-2p/3`, `F_QEC(p)=1-(2/3)p_L(p)` (done, Phase 0).
-  2. **Tier 2 — logical Pauli-frame sampling, O(N):** sample logical Paulis directly from
-     `{1-p_L(p), p_L(p)/3, p_L(p)/3, p_L(p)/3}` on the unencoded `(N+1)^M·2^N` state. This should
-     become the default path for the independent-depolarizing-noise case explored in this paper.
-  3. **Tier 3 — streaming physical Pauli Monte Carlo, O(D) peak memory:** sample physical Paulis,
-     look up syndromes via `pauli_label_syndrome`, apply `K_s`, accumulate scalar fidelity on the fly
-     without retaining trajectory vectors or building `ρ̂`. This is the corrected version of the
-     current sampling path.
-  4. **Tier 4 — dense encoded density matrix, O(D²):** keep as the small-system (`M≤1,N≤2`) reference
-     used to validate Tiers 1–3, exactly as it's used today.
-- [MS] Rewrite the Monte Carlo methodology section once Tiers 2–3 exist, replacing the "available
-  option" wording with an accurate description of what's implemented and what's the recommended
-  default for this noise model.
+- [Code] **Items 10, 11 — decided against, not being pursued (user instruction, 2026-09-08)**: the
+  review's proposed 4-tier simulation hierarchy (closed form → logical Pauli-frame sampling →
+  streaming physical Monte Carlo → dense encoded reference) is **not being built**. Only two tiers
+  are actually needed and both already exist: the **closed-form** `logical_error_polynomial`/
+  `F_QEC(p)` (Phase 0, done) for the analytical result, and the existing **dense/exact and
+  Monte-Carlo-sampling** paths (`ExactBackend`/`SamplingBackend`, `depolarizing_channels_encoded`)
+  for the numerics actually used to produce the manuscript's figures. The intermediate "logical
+  Pauli-frame fast path" and "streaming physical Monte Carlo" tiers were speculative scalability
+  improvements for larger `(M,N)` than this manuscript actually reports on, and are not worth the
+  implementation/verification cost right now.
+- [MS] Soften the Monte Carlo methodology section's "accumulate the scalar per-trajectory fidelity
+  directly and skip the density-matrix estimate entirely" sentence to read as a possible future
+  option rather than an available one, since it isn't being implemented.
 
 ## Phase 2 — Correctness & provenance bug fixes 🆕 (HPC-sensitive, do before further data reanalysis) — ✅ done
 
@@ -347,36 +346,41 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
   (`find_duplicate_jobs`, `group_by_cohort`, `dedupe_by_job`) with
   [tests/test_validation.py](tests/test_validation.py), reused by the hardware-scaling cell above.
 
-## Phase 4 — Manuscript framing, terminology & prior art (no data needed)
+## Phase 4 — Manuscript framing, terminology & prior art (no data needed) — 🟡 mostly done
 
-- [MS] **Item 20, 21**: Reword introduction's "circumvented" language; add explicit statement that
-  receivers learn only `Σθⱼ` and the classical string `n̄` is independent of any individual `θⱼ`.
-- [MS] **Item 22**: Soften "useful cryptographic primitive" claim — state precisely what privacy
-  property holds (no Byzantine agreement / authentication claims).
-- [MS] **Item 13, 14, 15**: Rewrite the Fig. 6 interpretation to state "circuit-size-dependent
-  degradation consistent with accumulated hardware noise; correlated errors remain one possible
-  explanation." Clarify Fig. 2 is a standalone encoded-memory test, distinct in scope from unencoded
-  Figs. 5/6.
-- [MS] **Item 17, 18 (corrected)**: State plainly that optimization levels 0–3 govern
-  layout/routing/synthesis and do not by default enable dynamical decoupling. Distinguish transpiler
-  `optimization_level` from Runtime error mitigation, **without** proposing a `resilience_level`
-  option for the Sampler path this project actually uses (that option is Estimator-only).
-- [MS] **Item 19**: Replace the visual "quasi-periodic" claim with a quantified
-  autocorrelation/periodogram statement — allow the result to be inconclusive/negative; don't force
-  a periodicity conclusion the data doesn't support.
-- [MS] **Item 41 (new)**: Fix the Fig. 3 label/caption mismatch — either point the QEC-circuit
-  paragraph at the correct figure (add one showing the actual 3-stage syndrome-extraction circuit if
-  none currently exists) or correct the text to reference the right figure.
-- [MS] **Items 24–27**: Add explicit statements on invalid sender-qudit outcome handling (clarify:
-  currently *no correction is applied*, not rejection), the compressed feedforward dependency (once
-  Phase 6 lands), decoder qubit-ordering convention, and circuit scheduling.
-- [MS] **Item 23, 28**: Add 1996 no-broadcasting citation, fix misattributed references, full
-  copyedit pass.
-- [MS] **Item 44 (new)**: Add prior-art differentiation from critique §2.1 — cite Kumar & Pathak
-  (*Quantum Inf. Process.* 23, 148, 2024) and explicitly contrast: (1) the Sukeno–Hillery
-  `M`-sender/`N`-receiver Dicke resource family vs. their graph/cluster-state construction, (2) the
-  exact factorization theorem (Phase 0) and exact `[[5,1,3]]` logical polynomial/break-even, (3) the
-  dynamic-circuit QEC syndrome-extraction implementation.
+- [MS] **Item 20, 21** ✅: Reworded the introduction and protocol-description "circumvented" language
+  to state the theorems' hypotheses simply don't apply (restricted, sender-known state family +
+  prior entanglement), not that they're violated/circumvented. Added the precise privacy statement:
+  the classical broadcast reveals only `Φ=Σθⱼ`, independent of any individual `θⱼ`.
+- [MS] **Item 22** ✅: Conclusion no longer calls the protocol a "useful cryptographic primitive";
+  states the specific privacy property instead and explicitly disclaims Byzantine-agreement /
+  device-independent security claims.
+- [MS] **Item 13, 14, 15** ✅: Fig. 6 interpretation rewritten to the defensible claim (accumulated
+  independent hardware noise as circuit size grows is sufficient to explain the decline; correlated
+  noise remains an open, unmeasured possibility). Fig. 2 explicitly flagged as a standalone
+  encoded-memory benchmark, distinct in scope from the unencoded broadcasting circuits behind
+  Figs. 5/6 — no combined QEC-broadcasting circuit has been benchmarked.
+- [MS] **Item 17, 18 (corrected)** ✅: Methods section no longer lists dynamical decoupling as
+  something optimization levels 0–3 do; states DD is a separate, explicitly-scheduled pass not used
+  in the reported runs, and separately notes optimization level is distinct from Runtime error
+  mitigation (Estimator-only, not used by our Sampler-based execution) — without proposing the
+  withdrawn `resilience_level` option.
+- [MS] **Item 19** — 🟡 honestly softened, not fully resolved: replaced the false "staggered DD"
+  causal claim with an explicit statement that the drop-out periodicity is only a visual
+  observation, not yet quantified (no autocorrelation/periodogram analysis has actually been run
+  against saved delay-sweep data yet — that analysis helper is still Phase 5/8 future work; this
+  phase only removed the unsupported claim rather than replacing it with a real quantification).
+- [MS] **Item 41 (new)** ✅: Removed the incorrect `Fig.~\ref{fig:circuit}` cross-reference from the
+  QEC-stages paragraph (that figure shows the *unencoded* circuit) rather than pointing at the wrong
+  figure; no new QEC-circuit figure was added (still open if one is wanted).
+- [MS] **Item 23** ✅: Added the original 1996 no-broadcasting theorem citation (Barnum, Caves, Fuchs,
+  Jozsa, Schumacher, PRL 76, 2818) alongside the 2007 generalization.
+- [MS] **Item 44 (new)** ✅: Added prior-art paragraph citing Kumar & Pathak (verified via arXiv:2305.00389
+  abstract — confirms noise modeling + IBM proof-of-principle claims from the critique) and
+  explicitly contrasted three distinguishing contributions (Dicke resource family, exact logical
+  polynomial/break-even, dynamic-circuit QEC integration).
+- [MS] **Items 24–27, 28** — ❌ still open: invalid-outcome-handling statement, decoder qubit-ordering
+  clarity, circuit-scheduling statement, and the full copyedit pass are not yet done.
 
 ## Phase 5 — Dynamical decoupling & optimization-vs-mitigation code (corrected scope)
 
@@ -391,78 +395,77 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
 - [Code] Add an autocorrelation/periodogram helper for fidelity-vs-delay traces (Phase 4, item 19),
   usable directly on existing delay-sweep result files — no new data required for this analysis.
 
-## Phase 6 — Structured hardware circuit redesign (non-data prerequisite for Phase 8)
+## Phase 6 — Structured hardware circuit redesign (non-data prerequisite for Phase 8) — decision made: keep generic synthesis
 
-These are code changes that must land *before* any new hardware data collection in Phase 8.
+**Update (2026-09-08, user decision):** a structured Dicke-state resource-prep circuit was built,
+tested, and run on real hardware (see revision 5/4 notes below) as a genuine A/B test against
+`qc.initialize`. The result: it performed *worse* on the one real hardware comparison run (0.872/0.794
+vs. 0.909/0.822 fidelity). Given that result, **the structured-prep attempt has been reverted** —
+`structured_state_prep`, `use_structured_prep`, and the comparison script/notebook cells are removed.
+`qc.initialize` (generic isometry synthesis) is kept as the sole resource-state preparation path, and
+the existing Gram–Schmidt `[[5,1,3]]` decode unitary is kept as-is — **no structured Clifford decoder
+will be pursued either**. Item 16 (both the prep and decoder halves) is now closed as "decided
+against" rather than "deferred"/"partial":
 
-- [Code] **Item 16 (prep)** ✅ **partial**: Added `broadcasting/circuit.py::structured_state_prep`,
-  a structured Dicke-state preparation circuit implemented and verified for **`N in {1, 2}`**
-  (the paper's primary hardware cases). Confirms the review's convention correction: the sender
-  register really does encode `k = N - popcount(receiver_bits)` — verified by construction (the
-  half-adder computes `receiver_0 XOR receiver_1` for the sum bit directly, no inversion needed,
-  because `NOT(a) XOR NOT(b) = a XOR b`) and by an exact statevector-overlap test against
-  `build_initial_statevector` for `M∈{1,2,3}`, `alpha∈{0, 0.3, 0.8, 1, 1/√2}`
-  ([tests/test_structured_circuits.py](tests/test_structured_circuits.py)). `N≥3` raises
-  `NotImplementedError` explicitly (falls back to `qc.initialize` unless requested) rather than
-  silently producing a wrong circuit — generalizing to arbitrary `N` (a coherent population-count
-  circuit) is still open.
-- [Code] **Item 16 (decoder)** — ❌ **deferred**: did not replace the Gram–Schmidt `32×32` decode
-  unitary this round. Constructing a genuinely correct structured Clifford decoder requires either
-  a verified binary-symplectic tableau completion or a trustworthy literature circuit; neither could
-  be verified to my satisfaction in the time available, and shipping an unverified "structured"
-  decoder for real hardware use was judged riskier than keeping the existing (already-tested)
-  Gram-Schmidt decoder. Flagging as a dedicated follow-up rather than guessing.
-- [Code] **Item 25 (corrected approach)** ✅: Implemented in `broadcasting/circuit.py` as
-  `linear_feedforward=True` (now the default) — `M·nq` single-bit-conditioned phase rotations
-  replacing the `(N+1)^M`-branch loop, using the additive-phase-decomposition identity
-  `Σ_j n_j = Σ_{j,b} bit_{j,b}·2^b`. Verified to reproduce the old exponential feedforward's
-  fidelities within shot noise for `(M,N)∈{(1,1),(1,2),(2,2)}`
-  ([tests/test_structured_circuits.py](tests/test_structured_circuits.py)`::TestLinearFeedforward`).
-  The old exponential path is kept (`linear_feedforward=False`) for direct A/B comparison. **Behavior
-  change, as anticipated**: for an *invalid* sender outcome (register value `>N`), the linear version
-  applies the same linear phase formula rather than skipping correction (matching the review's
-  explicitly endorsed design in §3.1) — documented in the function's docstring.
-- [Code] `ProtocolConfig` gained `use_structured_prep`/`linear_feedforward` fields, threaded through
-  `HardwareBackend.run()`/`run_tau_sweep()`, so hardware experiments can opt into either circuit
-  variant without any other code changes.
-- [Code] For every redesigned circuit, measure and report qubit count, depth, two-qubit gate count,
-  duration, and conditional-operation count (both before/after, so the "structured vs. generic"
-  improvement is a measured number, not an estimate) — feeds directly into Phase 4's manuscript text.
-  **Partial**: [scripts/submit_structured_test.py](scripts/submit_structured_test.py) reports
-  local depth + transpiled depth/two-qubit-gate-count (against `FakeBrisbane`) for both variants;
-  duration/conditional-operation-count reporting is not yet added.
+- [Code] **Item 16 (prep)** — ❌ **reverted, not pursued**: `structured_state_prep` was implemented,
+  tested (exact statevector match to `build_initial_statevector`), and hardware-validated, but the
+  real-hardware A/B result did not support it — reverted in favor of keeping `qc.initialize`.
+- [Code] **Item 16 (decoder)** — ❌ **decided against, keeping Gram-Schmidt**: no structured Clifford
+  decoder was built or will be built; `broadcasting/qec_513.py::five_qubit_decode_gate`'s
+  Gram-Schmidt construction remains the only decoder. (Originally deferred pending verification
+  difficulty; now a firm decision given the prep-side result above — not worth revisiting without
+  new evidence that generic synthesis is actually the bottleneck.)
+- [Code] **Item 25 (corrected approach)** ✅ *(kept — unrelated to the prep/decoder reversion)*:
+  Implemented in `broadcasting/circuit.py` as `linear_feedforward=True` (now the default) — `M·nq`
+  single-bit-conditioned phase rotations replacing the `(N+1)^M`-branch loop, using the
+  additive-phase-decomposition identity `Σ_j n_j = Σ_{j,b} bit_{j,b}·2^b`. Verified to reproduce the
+  old exponential feedforward's fidelities within shot noise for `(M,N)∈{(1,1),(1,2),(2,2)}`
+  ([tests/test_feedforward.py](tests/test_feedforward.py)). The old exponential path is kept
+  (`linear_feedforward=False`) for direct A/B comparison. **Behavior change, as anticipated**: for an
+  *invalid* sender outcome (register value `>N`), the linear version applies the same linear phase
+  formula rather than skipping correction (matching the review's explicitly endorsed design in
+  §3.1) — documented in the function's docstring. This is a classical-control simplification
+  independent of the encoder/decoder question and is unaffected by the reversion above.
+- [Code] `ProtocolConfig` kept `linear_feedforward` (the `use_structured_prep` field was removed).
 - [Code] **Item 24**: Add explicit handling/reporting of invalid sender-qudit outcomes in
   results-processing code, documenting the current no-correction behavior and whether it should
-  change.
+  change. — still open.
 
 ## Phase 7 — Reproducibility & configuration hygiene 🆕
 
-- [Code] **Item 50**: Add a short `README.md`: architecture overview, environment setup, one small
-  simulation command, how to run tests, manuscript build command, and the distinction between the
-  broadcasting protocol (`run_broadcast.ipynb`) and the standalone `qec_testing.ipynb` memory
-  benchmark. Pin a tested dependency set (the review's validation environment: Qiskit 2.2.1,
-  Aer 0.17.2, Runtime 0.42.0, NumPy 2.3.3) and record versions with future runs.
+- [Code] **Item 50** ✅: Added [README.md](README.md): architecture overview, repo structure, setup
+  (venv + `pip install -r requirements.txt`), IBM Quantum account setup (new
+  `channel="ibm_quantum_platform"` API), how to run tests, the `ProtocolConfig`/`Backend` (including
+  `HPCBackend`) architecture, a full walkthrough of every `run_broadcast.ipynb` `MODE`, an explicit
+  figure-by-figure table mapping each manuscript figure to the notebook mode/cell that produces its
+  data, the HPC (`MODE="hpc"` + `scripts/merge_hpc_runs.py`) workflow, manuscript build commands, and
+  the data-safety policy. Did not pin exact dependency versions (the repo has no lockfile and the
+  installed versions here differ from the review's environment — Qiskit 2.5.2/Aer 0.17.2/Runtime
+  0.49.0 vs. the review's 2.2.1/0.17.2/0.42.0 — recording *a* tested set precisely would go stale
+  immediately; `requirements.txt` is left unpinned deliberately).
 - [Code] Register the existing `slow` pytest marker (currently causes a warning) and separate
-  quick mathematical tests from expensive integration checks.
+  quick mathematical tests from expensive integration checks. — still open.
 - [Code] Make one configuration source authoritative across notebooks, CLI, backend, and serializer
   (builds on item 45); document the two meanings of `p_list` (backend-level sweep points vs.
   low-level per-receiver probabilities) and whether reduced states describe only the last sweep
-  point.
+  point. — still open.
 - [Code] Consolidate duplicated logical-basis/stabilizer definitions across `qec_513.py` and
   `simulation.py` carefully — **keep the independent oracle from item 49 separate** even after
   consolidation, and add explicit native-qudit/little-endian conversion tests between the two state
   representations (`simulation.py`'s numerical path vs. `circuit.py`/`qec_513.py`'s Qiskit
-  little-endian circuit path).
+  little-endian circuit path). — still open.
 
 ## Phase 8 — New data collection **[Data]**
 
 Everything here requires new simulation or hardware runs; do this last, after Phases 0–7 land.
-**Reuse existing data first** — the review demonstrates that global/worst-case/covariance analysis
-(item 14) is already computable from the 13 existing hardware runs' saved joint-receiver bitstrings
-without any new collection (e.g. `run_20260518_120232.json` at `τ=0`: mean local fidelity 0.9099,
-worst-receiver 0.8941, global/all-zero fidelity 0.8493, product-of-locals 0.827671, receiver
-success-covariance 0.0216). Do this reanalysis before deciding what new data is actually needed, and
-keep the collection matrix small/bounded (a few representative sizes, targeted ablations).
+**Reuse existing data first** — item 14 (global/worst-case/covariance analysis) is now implemented as
+a real cell in `visualizations.ipynb` ("Joint/Global Fidelity And Receiver Covariance"), which reads
+directly from existing saved joint-receiver bitstrings with no new collection needed; verified against
+`run_20260518_120232.json` at `τ=0`, reproducing the review's numbers exactly: mean local fidelity
+0.9099, worst-receiver 0.8941, global/all-zero fidelity 0.8493, product-of-locals 0.827668, receiver
+success-covariance 0.021634. Run that reanalysis across the other 12 hardware runs before deciding
+what new data is actually needed, and keep the collection matrix small/bounded (a few representative
+sizes, targeted ablations).
 
 - [Data] **Item 31**: Re-run the `M=1,N=2` fidelity-vs-delay hardware experiment with enough
   additional shots/repeats that Receiver 1 vs. Receiver 2 asymmetry can be distinguished from shot
@@ -490,6 +493,99 @@ keep the collection matrix small/bounded (a few representative sizes, targeted a
   includes the Phase 1 recovery-map tests (plus the independent oracle from item 49) so
   reviewers/readers can verify correctness themselves. Reproducibility bookkeeping (Phase 7) should
   already be in place by this point so the deposit is a packaging task, not new work.
+
+---
+
+---
+
+## What changed in revision 6 — reverted structured prep, trimmed Phase 1, README, joint-fidelity cell
+
+At the user's request:
+- **Removed `Untitled-1.ipynb`** — confirmed via diff to be a stale, untracked duplicate of an earlier
+  version of `run_broadcast.ipynb` with no unique content.
+- **Reverted the structured resource-state prep ("the other attempt")**, keeping generic `qc.initialize`
+  as the sole encoder and the Gram-Schmidt `[[5,1,3]]` decode gate as the sole decoder — see the
+  updated Phase 6 section above for the reasoning (the one real hardware A/B test showed structured
+  prep performing *worse*, so it isn't worth carrying forward). Removed
+  `structured_state_prep`/`use_structured_prep` from `circuit.py`/`protocol.py`/`backend.py`, deleted
+  `scripts/submit_structured_test.py` and `tests/test_structured_circuits.py`, removed the
+  corresponding notebook section, and replaced the test coverage with
+  [tests/test_feedforward.py](tests/test_feedforward.py) (the unrelated, still-kept
+  `linear_feedforward` improvement). 114/114 tests passing (down from 146 — the removed count matches
+  the deleted structured-prep tests exactly, no unrelated coverage lost).
+- **Trimmed Phase 1's tiered Monte Carlo plan** per instruction ("don't bother with the Tier 2 fast
+  path, remove tiers not needed") — the speculative 4-tier hierarchy is dropped; only the closed-form
+  result (done) and the existing dense/Monte-Carlo methods (already in production use) remain.
+- **Fixed a real bug found while cleaning up**: the Configuration cell in `run_broadcast.ipynb` had a
+  scrambled/merged line (`print(...)for i, sample in ...`) left over from an earlier multi-part edit
+  in a previous revision — caught by compiling every notebook cell's source and fixed. All three
+  notebooks (`run_broadcast.ipynb`, `visualizations.ipynb`, `qec_testing.ipynb`) now compile cleanly
+  cell-by-cell (verified with a script, not just visual inspection).
+- **Added [README.md](README.md)** (Phase 7, item 50) — architecture, setup, IBM account setup (new
+  `ibm_quantum_platform` channel), the `ProtocolConfig`/`Backend` pattern, a full `run_broadcast.ipynb`
+  walkthrough, and an explicit table mapping every manuscript figure to the mode/cell that produces its
+  data.
+- **Added a real joint-fidelity/covariance analysis cell** to `visualizations.ipynb` (previously this
+  was only described as "computable" in the plan, via an ad-hoc terminal script, not implemented as
+  reusable notebook code) — computes mean/worst/global fidelity and pairwise receiver covariance
+  directly from any saved hardware run's joint counts; verified to reproduce the exact previously
+  quoted numbers for `run_20260518_120232.json`.
+
+---
+
+## What changed in revision 5 — HPCBackend + Phase 4 manuscript edits
+
+**Architecture note (user request):** the codebase already followed the requested OOP pattern for
+three of four execution paths (`ProtocolConfig` as the "senders/receivers/error-correction/shots/
+sweep" input object, handed to a `Backend` ABC subclass), but had no formal HPC backend class — HPC
+runs went through a separate procedural script instead. Added `broadcasting.backend.HPCBackend`, a
+fourth `Backend` subclass that builds (and, if `submit=True`, launches) the `sbatch` command for
+`hpc/slurm_broadcast.sh` from the *same* `ProtocolConfig` used by `ExactBackend`/`SamplingBackend`,
+so all four backends are now genuinely polymorphic and interchangeable from the notebook's
+perspective. Details:
+- `HPCBackend(mode, script_path, *, array, concurrency, submit)` — `mode` is explicit (`"exact"` or
+  `"sampling"`), not inferred from `config.n_samples` truthiness (repeating that inference would have
+  reintroduced the exact bug fixed in Phase 2's item 35).
+- Extended `hpc/slurm_broadcast.sh` to forward `ALPHA`/`THETAS`/`OUTCOMES`/`SEED`/`P_MIN`/`P_MAX`
+  (previously only `MODE`/`M`/`N`/`P_STEPS`/`USE_QEC` were passed through), so `HPCBackend` has full
+  parity with `ProtocolConfig`.
+- `results.py::save_run` gained an `hpc_submission` experiment type (a job-submission receipt with
+  empty fidelities, not a completed sweep) so `HPCBackend` results don't get mislabeled as completed
+  `aer_exact` runs.
+- Wired into `run_broadcast.ipynb` as `MODE = "hpc"` (alongside the existing modes), with `HPC_MODE`/
+  `HPC_SUBMIT`/`HPC_ARRAY`/`HPC_CONCURRENCY` configuration variables; `HPC_SUBMIT` defaults to `False`
+  (only builds/prints the `sbatch` command — actually submitting requires running from a machine with
+  `sbatch` on PATH, i.e. the HPC login node, which this fix was verified without doing).
+- 6 new tests in `tests/test_backend.py` (mode validation, command construction, array-range
+  formatting, submit=False never touching `subprocess`, submit=True parsing the job ID). 146/146
+  tests passing throughout.
+
+**Cleanup, per user request:** removed redundant/duplicate validation that had accumulated across the
+structured-circuit comparison code (notebook cells and `scripts/submit_structured_test.py`) — dropped
+the `N`-in-`{1,2}` pre-checks that duplicated validation already inside `structured_state_prep`,
+dropped the `linear_feedforward` flag from the comparison (relies on its own default), dropped the
+fake-backend transpile side-comparison, and switched hardware submission to `HardwareBackend`'s
+built-in least-busy selection instead of a hardcoded backend name. Genuinely necessary validation
+(the `alpha` range check in `add_fidelity`, the `NotImplementedError` inside `structured_state_prep`)
+was kept, since those catch real correctness bugs found this session.
+
+**Real preliminary hardware result** (requested run, executed on `ibm_marrakesh`, whichever backend
+was least busy at the time): `M=1,N=2`, 4096 shots each —
+
+| Circuit | Receiver 0 | Receiver 1 |
+|---|---:|---:|
+| generic | 0.9094 | 0.8215 |
+| structured | 0.8723 | 0.7937 |
+
+The structured circuit did *worse* on this single real run — opposite to the Phase 6 hypothesis. One
+job pair, no repetition/error bars — not strong evidence either way, but a reminder that the
+structured-prep benefit needs the proper ablation series (Phase 8), not just the local gate-count
+comparison, before it's treated as established.
+
+**Phase 4 (manuscript framing)** — see the Phase 4 section above for what's done; verified the
+manuscript still compiles cleanly (`pdflatex` + `bibtex`, no undefined citations/references) with the
+two new bibliography entries (`barnum1996noncommuting`, `kumar2024multiparty` — the latter's arXiv
+identity independently confirmed via `arxiv.org/abs/2305.00389` before citing it).
 
 ---
 

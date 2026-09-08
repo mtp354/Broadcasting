@@ -1,14 +1,17 @@
 """Backend ABC and concrete implementations for the broadcasting protocol.
 
-Three execution backends:
+Four execution backends, all sharing the same `Backend.run(config)` interface:
 
 * **ExactBackend** — full density-matrix simulation (local).
 * **SamplingBackend** — Monte Carlo Pauli-trajectory simulation (local).
+* **HPCBackend** — builds (and optionally submits) a SLURM array job for `ExactBackend`/
+  `SamplingBackend`-equivalent sweeps on a cluster.
 * **HardwareBackend** — transpile and submit to IBM Quantum hardware.
 """
 
 from abc import ABC, abstractmethod
 from datetime import datetime
+import subprocess
 from typing import Any
 
 import numpy as np
@@ -148,6 +151,115 @@ class SamplingBackend(Backend):
         )
 
 
+class HPCBackend(Backend):
+    """Build (and optionally submit) a SLURM job running this config on the cluster.
+
+    Translates a `ProtocolConfig` into environment variables consumed by
+    `hpc/slurm_broadcast.sh` (which in turn calls `hpc.run_experiment`), so the
+    same config object used for `ExactBackend`/`SamplingBackend` can be handed
+    to the cluster without hand-writing an `sbatch` command.
+
+    This does not run the simulation itself and does not return fidelities --
+    `run()` only prepares (and, if `submit=True`, launches) the job. Fetch
+    results afterwards the usual way (`rsync`/`scripts/fetch_results.sh` +
+    `broadcasting.results.load_run`, or `scripts/merge_hpc_runs.py` first if
+    `array=True` produced one file per sweep point).
+
+    Parameters
+    ----------
+    mode : "exact" or "sampling"
+        Matches `ExactBackend`/`SamplingBackend` -- passed through explicitly
+        rather than inferred from `config.n_samples` (inferring from a
+        default-truthy field was the exact bug fixed in `results.py`).
+    script_path : str
+        Path to the SLURM batch script.
+    array : bool
+        If True, submit one array task per sweep point (`--array=0-(steps-1)`).
+        If False, a single task sweeps the whole `p_list` itself.
+    concurrency : int | None
+        Max concurrently-running array tasks (`--array=0-N%concurrency`).
+    submit : bool
+        If True, actually call `sbatch` (requires running where `sbatch` is on
+        PATH, e.g. the HPC login node). If False (default), only build and
+        return the command -- nothing is submitted.
+    """
+
+    def __init__(
+        self,
+        mode: str = "exact",
+        script_path: str = "hpc/slurm_broadcast.sh",
+        *,
+        array: bool = False,
+        concurrency: int | None = None,
+        submit: bool = False,
+    ):
+        if mode not in ("exact", "sampling"):
+            raise ValueError(f"mode must be 'exact' or 'sampling', got {mode!r}.")
+        self.mode = mode
+        self.script_path = script_path
+        self.array = array
+        self.concurrency = concurrency
+        self.submit = submit
+
+    def _env(self, config: ProtocolConfig) -> dict[str, str]:
+        p_list = config.p_list or [0.0, 1.0]
+        env = {
+            "MODE": self.mode,
+            "M": str(config.M),
+            "N": str(config.N),
+            "P_MIN": str(min(p_list)),
+            "P_MAX": str(max(p_list)),
+            "P_STEPS": str(len(p_list)),
+            "N_SAMPLES": str(config.n_samples or 1000),
+        }
+        if config.use_qec:
+            env["USE_QEC"] = "1"
+        if config.alpha is not None:
+            env["ALPHA"] = str(config.alpha)
+        if config.thetas:
+            env["THETAS"] = " ".join(str(t) for t in config.thetas)
+        if config.outcomes_list:
+            env["OUTCOMES"] = " ".join(str(o) for o in config.outcomes_list)
+        if config.seed is not None:
+            env["SEED"] = str(config.seed)
+        return env
+
+    def build_command(self, config: ProtocolConfig) -> list[str]:
+        """Return the `sbatch` command for *config* without submitting it."""
+        env = self._env(config)
+        cmd = ["sbatch"]
+        if self.array:
+            array_range = f"0-{int(env['P_STEPS']) - 1}"
+            if self.concurrency:
+                array_range += f"%{self.concurrency}"
+            cmd.append(f"--array={array_range}")
+        cmd.append(f"--export=ALL,{','.join(f'{k}={v}' for k, v in env.items())}")
+        cmd.append(self.script_path)
+        return cmd
+
+    def run(self, config: ProtocolConfig) -> BroadcastResult:
+        cmd = self.build_command(config)
+
+        job_id = None
+        if self.submit:
+            proc = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            job_id = next((tok for tok in proc.stdout.split() if tok.isdigit()), None)
+
+        return BroadcastResult(
+            fidelities=[],
+            metadata={
+                "mode": f"hpc ({self.mode})",
+                "command": " ".join(cmd),
+                "submitted": self.submit,
+                "job_id": job_id,
+                "M": config.M,
+                "N": config.N,
+                "use_qec": config.use_qec,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
+
+
 class HardwareBackend(Backend):
     """IBM Quantum hardware execution.
 
@@ -206,7 +318,6 @@ class HardwareBackend(Backend):
             alphas=config.alpha,
             tau=config.tau,
             use_receiver_qec_513=config.use_qec,
-            use_structured_prep=config.use_structured_prep,
             linear_feedforward=config.linear_feedforward,
         )
         qc, reg_name, phi = add_fidelity(
@@ -296,7 +407,6 @@ class HardwareBackend(Backend):
                 alphas=config.alpha,
                 tau=None,
                 use_receiver_qec_513=config.use_qec,
-                use_structured_prep=config.use_structured_prep,
                 linear_feedforward=config.linear_feedforward,
             )
             qc, reg_name, _ = add_fidelity(

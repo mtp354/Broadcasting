@@ -19,7 +19,7 @@ from .circuit import (
 )
 from .fidelity import add_fidelity
 from .protocol import ProtocolConfig, BroadcastResult
-from .backend import ExactBackend, SamplingBackend, HardwareBackend
+from .backend import ExactBackend, SamplingBackend, HPCBackend, HardwareBackend
 from .results import save_run, load_run, list_runs
 
 __all__ = [
@@ -47,6 +47,7 @@ __all__ = [
     # backends
     "ExactBackend",
     "SamplingBackend",
+    "HPCBackend",
     "HardwareBackend",
     # results I/O
     "save_run",

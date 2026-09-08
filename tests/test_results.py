@@ -97,3 +97,23 @@ class TestHardwareDtRecording:
         path = save_run(result, config, results_dir=tmp_path)
         loaded = load_run(path)
         assert loaded["metadata"]["dt"] == 5e-4
+
+
+class TestHPCSubmissionRecord:
+    def test_saved_as_hpc_submission_not_a_completed_sweep(self, tmp_path):
+        config = _make_config()
+        result = BroadcastResult(
+            fidelities=[],
+            metadata={
+                "mode": "hpc (exact)", "M": 1, "N": 2, "use_qec": False,
+                "command": "sbatch --export=ALL,MODE=exact,M=1,N=2 hpc/slurm_broadcast.sh",
+                "submitted": False, "job_id": None,
+                "timestamp": datetime.now().isoformat(),
+            },
+        )
+        path = save_run(result, config, results_dir=tmp_path)
+        loaded = load_run(path)
+        assert loaded["experiment_type"] == "hpc_submission"
+        assert loaded["fidelities"] == []
+        assert loaded["metadata"]["submitted"] is False
+        assert "sbatch" in loaded["metadata"]["command"]

@@ -92,6 +92,19 @@ def save_run(
             counts_field = meta.get("counts")
         n_samples = None
         theta_samples = meta.get("theta_samples", [list(config.thetas)])
+    elif mode.startswith("hpc"):
+        # A submission receipt (command built/submitted, no results yet) --
+        # not a completed sweep, so no sweep values/fidelities are recorded.
+        # Reconstruct the requested run from `metadata.command`.
+        experiment_type = "hpc_submission"
+        backend_label = "hpc"
+        opt_level = None
+        sweep_axis = "p"
+        sweep_values = []
+        fidelities = []
+        counts_field = None
+        n_samples = None
+        theta_samples = [list(config.thetas)]
     else:
         experiment_type = "simulation"
         if "sampl" in mode:
