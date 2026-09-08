@@ -1,5 +1,7 @@
 """Tests for broadcasting.backend — polymorphic Backend ABC."""
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
@@ -97,6 +99,62 @@ class TestHardwareBackend:
         hb = HardwareBackend(service=None)
         sampler = hb._sampler(backend=FakeBrisbane())
         assert sampler.options.dynamical_decoupling.enable is False
+
+    def test_run_tau_sweep_transpiles_once_per_theta_sample(self, monkeypatch):
+        # Regression test: binding tau *before* transpiling meant transpiling
+        # once per tau value (very slow / can hang for dynamic circuits).
+        # Transpiling once (tau left free) and binding the ISA circuit per tau
+        # value is what actually gets submitted.
+        call_counts = {"pm_run": 0}
+
+        class _FakePM:
+            def run(self, qc):
+                call_counts["pm_run"] += 1
+                return qc
+
+        monkeypatch.setattr(
+            "qiskit.transpiler.generate_preset_pass_manager",
+            lambda **kwargs: _FakePM(),
+        )
+
+        class _FakePubResult:
+            def __init__(self):
+                self.data = SimpleNamespace(fid=self)
+
+            def get_counts(self):
+                return {"00": 100}
+
+        class _FakeJob:
+            def __init__(self, n_pubs):
+                self._n_pubs = n_pubs
+
+            def job_id(self):
+                return "fakejob"
+
+            def result(self):
+                return [_FakePubResult() for _ in range(self._n_pubs)]
+
+        class _FakeSampler:
+            def run(self, pubs, shots):
+                self.pubs = pubs
+                return _FakeJob(len(pubs))
+
+        fake_sampler = _FakeSampler()
+        hb = HardwareBackend(service=None, backend_name="fake_backend")
+        monkeypatch.setattr(hb, "_sampler", lambda backend: fake_sampler)
+        monkeypatch.setattr(
+            hb,
+            "_backend",
+            lambda: SimpleNamespace(name="fake_backend", target=SimpleNamespace(dt=1e-9)),
+        )
+
+        config = _base_config(p_list=[])
+        tau_values = [0, 100, 200, 300]
+
+        hb.run_tau_sweep(config, tau_values)
+
+        assert call_counts["pm_run"] == 1
+        assert len(fake_sampler.pubs) == len(tau_values)
 
 
 class TestHPCBackend:

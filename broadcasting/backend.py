@@ -409,7 +409,12 @@ class HardwareBackend(Backend):
                 )
 
         backend = self._backend()
-        circuits = []
+        pm = generate_preset_pass_manager(
+            backend=backend,
+            optimization_level=self.optimization_level,
+        )
+
+        pubs = []
         run_index: list[tuple[int, int]] = []
         reg_name = "fid"
 
@@ -426,21 +431,26 @@ class HardwareBackend(Backend):
             qc, reg_name, _ = add_fidelity(
                 qc, N=config.N, thetas=thetas, alpha=config.alpha
             )
-            tau_param = next(p for p in qc.parameters if p.name == "tau")
+
+            # Transpile once per theta sample with tau left as a free Parameter,
+            # then bind it per tau value below -- binding a transpiled circuit
+            # is cheap, but transpiling one circuit per tau value (the previous
+            # behavior) does full layout/routing/optimization len(tau_values)
+            # times and can hang for a very long time before anything submits.
+            print(
+                f"Transpiling theta sample {ti + 1}/{len(theta_samples)} "
+                f"(optimization_level={self.optimization_level})..."
+            )
+            isa_circuit = pm.run(qc)
+            isa_tau_param = next(p for p in isa_circuit.parameters if p.name == "tau")
 
             for tau in tau_values:
-                circuits.append(qc.assign_parameters({tau_param: tau}))
+                pubs.append((isa_circuit.assign_parameters({isa_tau_param: tau}),))
                 run_index.append((ti, tau))
 
-        pm = generate_preset_pass_manager(
-            backend=backend,
-            optimization_level=self.optimization_level,
-        )
-        isa_circuits = pm.run(circuits)
-        job = self._sampler(backend).run(
-            [(circuit,) for circuit in isa_circuits],
-            shots=self.shots,
-        )
+        print(f"Submitting job with {len(pubs)} PUB(s)...")
+        job = self._sampler(backend).run(pubs, shots=self.shots)
+        print(f"Job ID: {job.job_id()}")
         results = job.result()
 
         n_theta = len(theta_samples)
