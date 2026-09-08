@@ -279,13 +279,11 @@ class HardwareBackend(Backend):
         backend_name: str | None = None,
         shots: int = 8192,
         optimization_level: int = 3,
-        dynamical_decoupling: bool = False,
     ):
         self.service = service
         self.backend_name = backend_name
         self.shots = shots
         self.optimization_level = optimization_level
-        self.dynamical_decoupling = dynamical_decoupling
 
     def _backend(self) -> Any:
         if self.backend_name:
@@ -293,28 +291,9 @@ class HardwareBackend(Backend):
         return self.service.least_busy(simulator=False, operational=True)
 
     def _sampler(self, backend: Any) -> Any:
-        """Build a SamplerV2 with the manual DD yes/no option applied.
-
-        ``dynamical_decoupling`` is a genuine ``SamplerV2`` option
-        (``options.dynamical_decoupling.enable``), distinct from
-        ``resilience_level`` (Estimator-only, not used here). Confirmed on
-        real hardware (2026-09-08) that Runtime rejects DD for the dynamic
-        (mid-circuit-measurement + classical-feedforward) circuits this class
-        builds, so this raises early instead of submitting a job that will
-        fail server-side.
-        """
-        if self.dynamical_decoupling:
-            raise ValueError(
-                "dynamical_decoupling=True is not supported here: Runtime's "
-                "DD pass rejects circuits with mid-circuit measurement and "
-                "classical feedforward (confirmed on real hardware), which "
-                "every circuit built by this class has. Leave it False."
-            )
-
         from qiskit_ibm_runtime import SamplerV2 as Sampler
 
-        sampler = Sampler(mode=backend)
-        return sampler
+        return Sampler(mode=backend)
 
     @staticmethod
     def _fidelities_from_counts(counts: dict[str, int], N: int) -> list[float]:
@@ -325,6 +304,41 @@ class HardwareBackend(Backend):
             sum(v for bs, v in counts.items() if bs[N - 1 - i] == "0") / total
             for i in range(N)
         ]
+
+    @staticmethod
+    def _compute_invalid_sender_rate(counts: dict[str, int], M: int, N: int) -> float:
+        """Compute the fraction of shots with out-of-range sender measurement values.
+
+        Each sender qudit is represented by ``nq = ceil(log2(N + 1))`` bits.
+        Values in ``{0, ..., N}`` are physically valid qudit outcomes; values
+        ``> N`` are unphysical outcomes caused by measurement or circuit error.
+        """
+        from math import ceil, log2
+
+        nq = int(ceil(log2(N + 1)))
+        total_shots = sum(counts.values())
+        if total_shots == 0:
+            return 0.0
+
+        L = M * nq
+        invalid_shots = 0
+        for bs, count in counts.items():
+            clean_bs = bs.replace(" ", "")
+            if len(clean_bs) != L:
+                continue
+            is_invalid = False
+            for j in range(M):
+                v_j = sum(
+                    int(clean_bs[L - 1 - (j * nq + b)]) * (1 << b)
+                    for b in range(nq)
+                )
+                if v_j > N:
+                    is_invalid = True
+                    break
+            if is_invalid:
+                invalid_shots += count
+
+        return invalid_shots / total_shots
 
     def run(self, config: ProtocolConfig) -> BroadcastResult:
         # Import here to avoid hard dependency when not using hardware
@@ -367,6 +381,14 @@ class HardwareBackend(Backend):
         counts = fid_data.get_counts()
         fidelities = self._fidelities_from_counts(counts, config.N)
 
+        sender_counts = None
+        invalid_sender_rate = None
+        if hasattr(pub_result.data, "c_senders"):
+            sender_counts = dict(pub_result.data.c_senders.get_counts())
+            invalid_sender_rate = self._compute_invalid_sender_rate(
+                sender_counts, config.M, config.N
+            )
+
         return BroadcastResult(
             fidelities=fidelities,
             target_state=None,
@@ -383,10 +405,11 @@ class HardwareBackend(Backend):
                 "backend": backend.name,
                 "job_id": job.job_id(),
                 "counts": counts,
+                "sender_counts": sender_counts,
+                "invalid_sender_rate": invalid_sender_rate,
                 "optimization_level": self.optimization_level,
                 "tau": config.tau,
                 "dt": getattr(getattr(backend, "target", None), "dt", None),
-                "dynamical_decoupling": self.dynamical_decoupling,
                 "timestamp": datetime.now().isoformat(),
             },
         )
@@ -473,12 +496,26 @@ class HardwareBackend(Backend):
         counts_grid: list[list[dict[str, int] | None]] = [
             [None] * n_tau for _ in range(n_theta)
         ]
+        sender_counts_grid: list[list[dict[str, int] | None]] = [
+            [None] * n_tau for _ in range(n_theta)
+        ]
+        invalid_rates_grid: list[list[float | None]] = [
+            [None] * n_tau for _ in range(n_theta)
+        ]
 
+        has_sender_data = False
         for (ti, tau), pub_result in zip(run_index, results):
             counts = getattr(pub_result.data, reg_name).get_counts()
             j = tau_index[tau]
             fid_grid[ti][j] = self._fidelities_from_counts(counts, config.N)
             counts_grid[ti][j] = dict(counts)
+            if hasattr(pub_result.data, "c_senders"):
+                has_sender_data = True
+                s_counts = dict(pub_result.data.c_senders.get_counts())
+                sender_counts_grid[ti][j] = s_counts
+                invalid_rates_grid[ti][j] = self._compute_invalid_sender_rate(
+                    s_counts, config.M, config.N
+                )
 
         fidelities = np.mean(np.asarray(fid_grid, dtype=float), axis=0).tolist()
 
@@ -503,8 +540,9 @@ class HardwareBackend(Backend):
                 "sweep_values": tau_values,
                 "per_theta_fidelities": fid_grid if n_theta > 1 else None,
                 "counts": counts_grid,
+                "sender_counts": sender_counts_grid if has_sender_data else None,
+                "invalid_sender_rate": invalid_rates_grid if has_sender_data else None,
                 "dt": getattr(getattr(backend, "target", None), "dt", None),
-                "dynamical_decoupling": self.dynamical_decoupling,
                 "timestamp": datetime.now().isoformat(),
             },
         )

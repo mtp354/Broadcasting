@@ -482,7 +482,7 @@ def plot_periodicity_comparison(
     """Side-by-side autocorrelation and periodogram comparison across runs.
 
     Intended for comparing tau-sweep fidelity traces collected with different
-    settings (e.g. dynamical decoupling on vs. off) without asserting a
+    settings (e.g. optimization levels or repetition runs) without asserting a
     conclusion about a shared cause.
     """
     if len(runs) != len(labels):

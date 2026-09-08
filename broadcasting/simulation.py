@@ -322,29 +322,14 @@ def apply_corrections(
 # ---------------------------------------------------------------------------
 
 def _five_qubit_logical_basis() -> tuple[np.ndarray, np.ndarray]:
-    """Return ``(|0_L>, |1_L>)`` for the [[5,1,3]] code (big-endian)."""
+    """Return ``(|0_L>, |1_L>)`` for the [[5,1,3]] code.
 
-    def bits_to_index(bitstr: str) -> int:
-        idx = 0
-        for ch in bitstr:
-            idx = (idx << 1) | int(ch)
-        return idx
+    Delegates to :func:`broadcasting.qec_513.five_qubit_logical_basis` to maintain
+    a single authoritative definition of the logical basis across the codebase.
+    """
+    from .qec_513 import five_qubit_logical_basis
 
-    v0 = np.zeros(32, dtype=complex)
-    for s in ("00000", "10010", "01001", "10100", "01010", "00101"):
-        v0[bits_to_index(s)] += 0.25
-    for s in (
-        "11011", "00110", "11000", "11101", "00011",
-        "11110", "01111", "10001", "01100", "10111",
-    ):
-        v0[bits_to_index(s)] -= 0.25
-
-    v1 = np.zeros(32, dtype=complex)
-    for idx, amp in enumerate(v0):
-        if amp != 0:
-            v1[idx ^ 0b11111] = amp
-
-    return v0, v1
+    return five_qubit_logical_basis()
 
 
 def encode_initial_state(

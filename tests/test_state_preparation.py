@@ -113,3 +113,42 @@ class TestQECStatevector:
         assert not np.allclose(tensor_c, tensor_f), (
             "C-order and F-order reshapes should differ for bare state with N=2"
         )
+
+
+class TestCrossRepresentationEquivalence:
+    """Verifies exact isomorphism between the native-qudit representation
+    in broadcasting.simulation and Qiskit's little-endian binary multi-qubit
+    representation in broadcasting.state_preparation."""
+
+    @pytest.mark.parametrize("M,N", [(1, 1), (1, 2), (2, 2)])
+    @pytest.mark.parametrize("alpha_val", [0.3, 1 / np.sqrt(2), 0.85])
+    def test_native_qudit_to_binary_qubit_embedding(self, M, N, alpha_val):
+        from broadcasting.simulation import get_initial_state
+
+        psi_sim = get_initial_state(M, N, alpha_val).data
+        psi_circ = db.build_initial_statevector(M, N, alpha_val)
+        nq = int(ceil(log2(N + 1)))
+
+        dims_sim = [N + 1] * M + [2] * N
+        sim_tensor = psi_sim.reshape(dims_sim)
+        embedded = np.zeros_like(psi_circ)
+
+        for idx in np.ndindex(*dims_sim):
+            senders = idx[:M]
+            receivers = idx[M:]
+            amp = sim_tensor[idx]
+            if abs(amp) == 0:
+                continue
+            bit_index = 0
+            for j, s_val in enumerate(senders):
+                for b in range(nq):
+                    bit = (s_val >> b) & 1
+                    bit_pos = j * nq + b
+                    bit_index |= (bit << bit_pos)
+            for ell, r_val in enumerate(receivers):
+                bit_pos = M * nq + ell
+                bit_index |= (r_val << bit_pos)
+            embedded[bit_index] = amp
+
+        overlap = abs(np.vdot(embedded, psi_circ))
+        assert overlap == pytest.approx(1.0, abs=1e-10)

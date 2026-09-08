@@ -115,7 +115,7 @@ def test_plot_periodicity_comparison_requires_matching_lengths():
     run = _tau_run([[0.8, 0.8], [0.7, 0.7]])
 
     with pytest.raises(ValueError):
-        plot_periodicity_comparison([run], labels=["DD off", "DD on"])
+        plot_periodicity_comparison([run], labels=["run A", "run B"])
 
 
 def test_plot_periodicity_comparison_returns_two_panel_figure():
@@ -125,7 +125,7 @@ def test_plot_periodicity_comparison_returns_two_panel_figure():
     on = 0.85 + 0.05 * np.cos(2 * np.pi * tau / 1200)
     runs = [_tau_run([[v, v] for v in off]), _tau_run([[v, v] for v in on])]
 
-    fig = plot_periodicity_comparison(runs, labels=["DD off", "DD on"], show=False)
+    fig = plot_periodicity_comparison(runs, labels=["run A", "run B"], show=False)
 
     assert len(fig.axes) == 2
     plt.close(fig)

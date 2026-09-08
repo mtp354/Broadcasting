@@ -15,6 +15,13 @@ was independently verified versus what remains a reviewer-reported claim to chec
 items that don't require the (deferred) Clifford `[[5,1,3]]` decoder redesign, plus a ready-to-run
 preliminary hardware test script. See "What changed in revision 3" after the phase list.
 
+**Revision 7 (2026-09-08):** Removed all Dynamical Decoupling (DD) options from the codebase after
+empirical hardware validation on IBM Quantum (`ibm_marrakesh`) confirmed server-side rejection of DD
+on dynamic circuits (`IBMInputValueError: 'Dynamical decoupling currently cannot be used with dynamic circuits'`).
+Post-hoc delay periodicity analysis (`autocorrelation_from_run`, `periodogram_from_run`) is retained
+without DD. Closed out Phase 5 and marked DD ablation infeasible. Registered `slow` pytest marker in
+`pytest.ini` achieving 120/120 passing tests with zero warnings.
+
 ## ⚠️ HPC data-safety ground rules (per user instruction)
 
 **The hardware runs in `results/`, `results/legacy/`, and `results/qec513/` cannot be regenerated.**
@@ -97,10 +104,10 @@ own session) are flagged as directional estimates to confirm before quoting in t
   using specific numbers in the manuscript or in Phase 6 justification.
 - Specific hardware error-rate/survival-probability arithmetic (`e2≈8e-3`, `(0.992)^45≈0.69`, etc.)
   — illustrative, not checked against actual backend calibration snapshots for the runs in question.
-- The claim that Qiskit Runtime's built-in DD option is incompatible with dynamic circuits, requiring
-  a separately-compiled scheduling pass — consistent with known Qiskit dynamic-circuit/scheduling
-  constraints, but **verify against the currently pinned `qiskit`/`qiskit-ibm-runtime` versions**
-  before implementing Phase 5.
+- The claim that Qiskit Runtime's built-in DD option is incompatible with dynamic circuits —
+  **confirmed empirically on IBM hardware** (raises `IBMInputValueError: 'Dynamical decoupling currently
+  cannot be used with dynamic circuits'`). Consequently, all DD options have been removed from the
+  codebase.
 - The reviewer's `resilience_level` correction (Sampler vs. Estimator) **is consistent with public
   Qiskit IBM Runtime API design** (resilience options are Estimator-specific); revision 1's Phase 4
   item proposing a `resilience_level` knob for `HardwareBackend`'s Sampler-based execution is
@@ -382,22 +389,18 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
 - [MS] **Items 24–27, 28** — ❌ still open: invalid-outcome-handling statement, decoder qubit-ordering
   clarity, circuit-scheduling statement, and the full copyedit pass are not yet done.
 
-## Phase 5 — Dynamical decoupling & optimization-vs-mitigation code (corrected scope)
+## Phase 5 — Dynamical decoupling & optimization-vs-mitigation (resolved: DD removed, periodicity analysis kept)
 
-- [Code] **Item 17 (corrected, superseded 2026-09-XX)** ✅: The original plan assumed a custom
-  `PassManager` (`ALAPScheduleAnalysis` + `PadDynamicalDecoupling`) would be needed and that
-  Runtime's built-in DD toggle might not exist for `SamplerV2`/might not compose with dynamic
-  circuits. **This was wrong on the first point** — confirmed against the
-  `qiskit-ibm-runtime` 0.49 docs that `SamplerOptions.dynamical_decoupling` is a genuine, supported
-  `SamplerV2` suboptions object (`enable`, `sequence_type`, `scheduling_method`,
-  `extra_slack_distribution`, `skip_reset_qubits`), distinct from `resilience_level`
-  (Estimator-only, correctly not used here). Implemented as a manual yes/no toggle:
-  `HardwareBackend(..., dynamical_decoupling: bool = False)`, applied via a new `_sampler()` helper
-  (`broadcasting/backend.py`) that sets `sampler.options.dynamical_decoupling.enable` before
-  `run()`/`run_tau_sweep()`; recorded in saved run metadata. Whether this composes cleanly with our
-  dynamic (mid-circuit-measurement + feedforward) circuits on real hardware is **still unverified
-  empirically** — the API accepts the option, but actual behavior on a dynamic circuit should be
-  checked against the first real DD-on hardware run.
+- [Code] **Item 17 (resolved 2026-09-08 — DD options removed)**: Initially implemented as a toggle
+  `HardwareBackend(..., dynamical_decoupling=False)`. However, hardware execution on `ibm_marrakesh`
+  confirmed that IBM Runtime's server-side circuit validator explicitly rejects dynamic circuits when
+  dynamical decoupling is enabled:
+  `IBMInputValueError: 'Dynamical decoupling currently cannot be used with dynamic circuits'`.
+  Because our broadcasting circuits require mid-circuit measurement and classical feedforward, DD
+  cannot be used on current IBM Quantum hardware. Consequently, **all DD options have been completely
+  removed from the codebase** (`broadcasting/backend.py`, `tests/test_backend.py`, `run_broadcast.ipynb`,
+  and `README.md`). The manuscript (lines 424, 553) correctly notes that DD is a separate pass not
+  applied in our runs and that drop-outs cannot be attributed to DD.
 - [Code] **Item 18 (withdrawn as originally scoped)**: Do **not** add a `resilience_level` parameter
   to `HardwareBackend` — it executes via `SamplerV2`, which doesn't accept it. If error mitigation is
   ever wanted for an Estimator-based measurement, scope that separately.
@@ -405,9 +408,9 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
   usable directly on existing delay-sweep result files ✅: implemented as
   `autocorrelation_from_run`/`periodogram_from_run`/`plot_periodicity_comparison` in
   [broadcasting/plotting.py](broadcasting/plotting.py) (uses `scipy.signal.periodogram`; `scipy`
-  added to `requirements.txt`). Wired into `run_broadcast.ipynb`'s new **Optional Figure 5 DD
-  Periodicity Comparison** cell (`RUN_DD_COMPARISON`), which runs the `M=1,N=2` no-QEC tau sweep
-  twice on one fixed backend (DD off, DD on) and compares.
+  added to `requirements.txt`). Wired into `run_broadcast.ipynb`'s updated **Optional Figure 5 Periodicity
+  Analysis** cell (`RUN_PERIODICITY_ANALYSIS`), which analyzes delay traces directly from saved or
+  in-memory hardware tau-sweep runs without broken DD submissions.
 
 
 ## Phase 6 — Structured hardware circuit redesign (non-data prerequisite for Phase 8) — decision made: keep generic synthesis
@@ -491,9 +494,10 @@ sizes, targeted ablations).
 - [Data] **Ablation series**: Run the structured-circuit ablation (Phase 6) — separately add resource
   prep, sender phase/Fourier ops, delay, feedforward, syndrome extraction, correction, decoding — to
   localize fidelity loss with measured gate counts, not estimates.
-- [Data] **DD ablation**: Only pursue explicit no-DD / standard-DD / staggered-DD variants (Phase 5)
-  if the reanalysis of existing delay-sweep data (Phase 5's autocorrelation helper) actually shows a
-  periodic structure worth explaining; an inconclusive result is an acceptable outcome.
+- [Data] **DD ablation** — ❌ **abandoned/infeasible on current hardware**: Closed because IBM
+  Runtime explicitly rejects dynamical decoupling passes on dynamic circuits with mid-circuit
+  measurements (`IBMInputValueError`). Delay sweeps are analyzed via post-hoc autocorrelation and
+  periodogram signal processing without DD.
 - [Data] **Metadata**: Archive job IDs, physical qubit layout, gate counts, depth, scheduled
   duration, readout errors, two-qubit error rates, backend `dt`, and contemporaneous `T1`/`T2` for
   every new hardware run — the current saved schema only stores the receiver fidelity register, not
@@ -510,6 +514,32 @@ sizes, targeted ablations).
   already be in place by this point so the deposit is a packaging task, not new work.
 
 ---
+
+## What changed in revision 7 — removed Dynamical Decoupling, zero-warning test suite, Phase 5 resolution
+
+At the user's request:
+- **Removed Dynamical Decoupling (DD) completely across the codebase**:
+  Empirical hardware execution on `ibm_marrakesh` (2026-09-08) confirmed that IBM Runtime's server-side
+  circuit validator rejects dynamic circuits when dynamical decoupling is enabled:
+  `IBMInputValueError: 'Dynamical decoupling currently cannot be used with dynamic circuits'`.
+  Since the broadcasting protocol fundamentally relies on mid-circuit measurement and classical feedforward,
+  DD is inapplicable.
+  - `broadcasting/backend.py`: Stripped `dynamical_decoupling` argument from `HardwareBackend.__init__`,
+    removed `self.dynamical_decoupling`, simplified `_sampler()`, and removed DD metadata logging.
+  - `tests/test_backend.py`: Removed DD assertion and deleted incompatible/defaults tests.
+  - `tests/test_plotting.py`: Replaced DD comparison labels with neutral `"run A"`, `"run B"`.
+  - `broadcasting/plotting.py`: Cleaned docstring of `plot_periodicity_comparison` to remove DD assumptions.
+  - `run_broadcast.ipynb`: Removed `DYNAMICAL_DECOUPLING` from configuration and execution cells, converted
+    Cell 12/13 into a pure post-hoc delay periodicity analysis cell (`RUN_PERIODICITY_ANALYSIS`) using
+    `autocorrelation_from_run` and `periodogram_from_run`, and cleared the saved error traceback.
+  - `README.md`: Removed `DYNAMICAL_DECOUPLING` from configuration and reproduction tables.
+- **Phase 5 resolved and closed**: DD options are closed/abandoned as infeasible on current hardware;
+  post-hoc signal processing on delay traces is retained.
+- **Phase 8 DD ablation updated**: Marked DD ablation as infeasible on current hardware.
+- **Test suite zero-warning cleanup**: Registered `slow` marker in `pytest.ini`, eliminating
+  `PytestUnknownMarkWarning`. Added `test_full_depolarization_anti_contraction_values` in
+  `tests/test_qec_recovery.py` locking in $p_L(1) = 22/27$ and $F_{\text{QEC}}(1) = 37/81$.
+  All 120/120 tests pass with zero warnings in 1m 34s.
 
 ---
 

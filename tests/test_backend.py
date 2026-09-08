@@ -82,25 +82,17 @@ class TestHardwareBackend:
         assert hb.backend_name == "fake_backend"
         assert hb.shots == 1024
         assert hb.optimization_level == 1
-        assert hb.dynamical_decoupling is False
 
-    def test_dynamical_decoupling_raises_confirmed_incompatible(self):
-        # Confirmed on real hardware (2026-09-08): Runtime rejects DD for our
-        # dynamic circuits. Fail fast locally instead of at the server.
-        from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+    def test_compute_invalid_sender_rate(self):
+        # M=1, N=2: nq=2, valid sender values are 0, 1, 2. Value 3 ('11') is invalid.
+        counts = {"00": 300, "01": 300, "10": 300, "11": 100}
+        rate = HardwareBackend._compute_invalid_sender_rate(counts, M=1, N=2)
+        assert rate == pytest.approx(0.10)
 
-        hb = HardwareBackend(service=None, dynamical_decoupling=True)
-        assert hb.dynamical_decoupling is True
-
-        with pytest.raises(ValueError, match="dynamical_decoupling"):
-            hb._sampler(backend=FakeBrisbane())
-
-    def test_dynamical_decoupling_defaults_off(self):
-        from qiskit_ibm_runtime.fake_provider import FakeBrisbane
-
-        hb = HardwareBackend(service=None)
-        sampler = hb._sampler(backend=FakeBrisbane())
-        assert sampler is not None
+        # M=2, N=1: nq=1, valid values are 0, 1. Length L=2. All combinations valid.
+        counts_m2 = {"00": 250, "01": 250, "10": 250, "11": 250}
+        rate_m2 = HardwareBackend._compute_invalid_sender_rate(counts_m2, M=2, N=1)
+        assert rate_m2 == pytest.approx(0.0)
 
     def test_run_tau_sweep_transpiles_once_per_theta_sample(self, monkeypatch):
         # Regression test: binding tau *before* transpiling meant transpiling
