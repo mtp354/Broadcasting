@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-09-08T13:27:38.171052",
+  "experiment_type": "hardware",
+  "backend": "ibm_marrakesh",
+  "optimization_level": 3,
+  "job_id": "dag4b0hhvn6c73cq3k80",
+  "shots": 4096,
+  "seed": 42,
+  "n_samples": null,
+  "protocol": {
+    "M": 1,
+    "N": 2,
+    "alpha": 0.7071067811865475,
+    "use_qec": false,
+    "theta_samples": [
+      [
+        4.862909272689599
+      ]
+    ]
+  },
+  "sweep": {
+    "axis": "tau",
+    "values": [
+      0
+    ]
+  },
+  "fidelities": [
+    [
+      0.872314453125,
+      0.793701171875
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": [
+    [
+      {
+        "00": 2937,
+        "10": 636,
+        "11": 209,
+        "01": 314
+      }
+    ]
+  ],
+  "metadata": {
+    "dt": 4e-09
+  }
+}

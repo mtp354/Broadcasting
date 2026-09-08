@@ -516,6 +516,29 @@ matching the already-working pattern in `qec_testing.ipynb` and `scripts/submit_
 authenticates successfully and can query `service.least_busy(...)` — no hardware job was submitted in
 the process of verifying this.
 
+**Cleanup + first real hardware comparison:** simplified the structured-vs-generic comparison code
+(notebook cells and `scripts/submit_structured_test.py`) — removed redundant `N`-validation that
+duplicated checks already done inside `structured_state_prep`, dropped the `linear_feedforward`
+flag from the comparison (it now just relies on its own default of `True`), dropped the fake-backend
+transpile side-comparison, and switched hardware submission to `HardwareBackend`'s built-in
+least-busy selection (`backend_name=None`) instead of a hardcoded backend name.
+
+Ran the actual preliminary hardware comparison (`M=1, N=2`, `2×4096` shots, `ibm_marrakesh`,
+optimization level 3):
+
+| Circuit | Receiver 0 fidelity | Receiver 1 fidelity |
+|---|---:|---:|
+| generic (`qc.initialize` + exponential feedforward) | 0.9094 | 0.8215 |
+| structured (Dicke prep + linear feedforward) | 0.8723 | 0.7937 |
+
+**Honest result: the structured circuit did *worse* on this single real run**, opposite to the
+hypothesis motivating Phase 6. This is one job pair on one backend at one point in time (no error
+bars, no repetition, no isolation of which sub-circuit change is responsible) — not strong evidence
+either way, but it means the structured-prep benefit is not a given and needs the proper ablation
+series (Phase 8) rather than being assumed from the local gate-count comparison alone. Saved as
+`results/run_20260908_132728_4fc6f552.json` (generic) and `results/run_20260908_132738_ef85f542.json`
+(structured) using the new collision-safe filenames.
+
 ---
 
 ## What changed in revision 3 — preliminary hardware test ready to run
