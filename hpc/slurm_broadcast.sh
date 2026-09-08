@@ -31,10 +31,26 @@ GLOBAL_DIR=/global/u/prest-hc-13/Broadcasting
 # Create log directory if needed
 mkdir -p "${SCRATCH_DIR}/slurm_logs"
 
-# Sync latest code from global storage to scratch (excludes venv and caches)
-rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
-      --exclude='results' \
-      "${GLOBAL_DIR}/" "${SCRATCH_DIR}/"
+# Sync latest code from global storage to scratch (excludes venv and caches).
+# Guarded by a flock + "done" marker (both on the shared scratch filesystem, not
+# node-local /tmp) so that concurrently-starting SLURM array tasks perform the
+# sync exactly once instead of racing each other into the same destination.
+SYNC_ID="${SLURM_ARRAY_JOB_ID:-${SLURM_JOB_ID:-manual}}"
+SYNC_LOCK="${SCRATCH_DIR}/.sync.lock"
+SYNC_DONE="${SCRATCH_DIR}/.synced_${SYNC_ID}"
+
+(
+    flock -x 200
+    if [ ! -f "${SYNC_DONE}" ]; then
+        echo "Syncing code from ${GLOBAL_DIR} to ${SCRATCH_DIR}..."
+        rsync -a --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
+              --exclude='results' \
+              "${GLOBAL_DIR}/" "${SCRATCH_DIR}/"
+        touch "${SYNC_DONE}"
+    else
+        echo "Code already synced for this submission (marker: ${SYNC_DONE})."
+    fi
+) 200>"${SYNC_LOCK}"
 
 # Load modules
 module purge

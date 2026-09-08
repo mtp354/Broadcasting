@@ -262,7 +262,7 @@ as a recommended future option, not an available one, until it's actually implem
   option" wording with an accurate description of what's implemented and what's the recommended
   default for this noise model.
 
-## Phase 2 — Correctness & provenance bug fixes 🆕 (HPC-sensitive, do before further data reanalysis) — 🟡 mostly done
+## Phase 2 — Correctness & provenance bug fixes 🆕 (HPC-sensitive, do before further data reanalysis) — ✅ done
 
 New phase inserted ahead of plotting/manuscript polish, per the review's recommended sequencing
 ("fix concrete data/API bugs before further investment"). All items here are code/analysis fixes;
@@ -277,10 +277,14 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
   filenames. Only affects filenames generated when `filepath` isn't given explicitly; explicit
   `filepath=...` calls (used by hardware tau-sweep notebooks) are unaffected. Verified with
   `TestFilenameCollisionSafety` (two same-second calls produce distinct files).
-- [Code] **Item 46 [HPC-sensitive]** — ❌ still open: `hpc/slurm_broadcast.sh`'s per-array-task
-  `rsync` is unchanged; needs a follow-up (move the sync to a one-time setup step) before the next
-  large array submission.
-- [Code] **Item 38 [HPC-sensitive]** — ❌ still open: no `scripts/merge_hpc_runs.py` yet.
+- [Code] **Item 46** ✅ **[HPC-sensitive]**: `hpc/slurm_broadcast.sh`'s code sync is now guarded by a
+  `flock` + "done" marker file, both on the shared scratch filesystem (not node-local `/tmp`, which
+  isn't shared across compute nodes) so concurrently-starting array tasks perform the `rsync` exactly
+  once instead of racing each other.
+- [Code] **Item 38** ✅ **[HPC-sensitive]**: Added [scripts/merge_hpc_runs.py](scripts/merge_hpc_runs.py) —
+  a read-only utility that groups per-task SLURM array JSON outputs by config fingerprint and merges
+  each group into one multi-point sweep record; never modifies or deletes the source files. Verified
+  on synthetic per-task files.
 - [Code] **Item 37** ✅: `broadcasting/fidelity.py::add_fidelity` now takes a real `alpha` parameter
   (default `1/√2`) and builds `Rz(2Φ)` then `Ry(-2·arccos(alpha))`; proven or a general state
   `Rz` and `Ry` map the target to `|0>` up to global phase, so `P(0)` recovers the true fidelity
@@ -291,7 +295,10 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
   [tests/test_structured_circuits.py](tests/test_structured_circuits.py).
 - [Code] **Item 45** ✅: `hpc/run_experiment.py`'s default `alpha` changed to `1/√2`, matching
   `ProtocolConfig`. Already-recorded runs keep their own saved `alpha`; unaffected.
-- [Code] **Item 43** — ❌ still open (analysis-only dedup step for `results/qec513/` not yet added).
+- [Code] **Item 43** ✅: `qec_testing.ipynb`'s "Compare Saved QEC Sweeps" cell now deduplicates by
+  `job_id` (skips `..._163539.json`, reporting it as a duplicate of `..._163257.json`, without
+  deleting either file) and no longer silently defaults a missing `use_qec` field to `True` — it's
+  now labeled `"QEC?"` (unknown) since none of the six legacy files actually recorded that field.
 - [Code] **Item 42** ✅: `HardwareBackend.run()`/`run_tau_sweep()` now record
   `backend.target.dt` in the saved metadata (`"dt"` key) for every new hardware run. Existing
   records are untouched; the `4e-3` hardcoded conversion in the notebooks remains as-is for now
@@ -304,30 +311,41 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
   for exact runs, sampling runs (explicit non-default `n_samples`/`seed`), filename collision safety,
   and `dt` propagation.
 
-## Phase 3 — Plotting, figure provenance & data-cohort fixes (no data needed)
+## Phase 3 — Plotting, figure provenance & data-cohort fixes (no data needed) — ✅ done
 
 
-- [Code] **Item 40**: Adopt a figure-manifest approach — one small script/notebook cell per figure
-  that names its generator, input run IDs, configuration, output path, and caption facts — and make
-  it the single source that writes into `manuscript/` (or `figures/`) under the **exact filenames the
-  manuscript embeds**, fixing the `mc_sampling_convergence.png`/`qec vs no qec vs sampling.png`/
-  `fidelity scaling hardware.png` vs. exported-name mismatches (item 40).
-- [Code] **Item 39**: Fix the hardware-scaling figure's cohort mismatch — filter/stratify
-  `visualizations.ipynb`'s "Hardware Fidelity At Tau Zero" cell by backend and shot count explicitly;
-  do not plot points from different backends as if they were a controlled `N`-scaling sweep. Correct
-  the caption to state the true multi-backend, multi-shot-count cohort (or restrict the figure to a
-  single backend if that's the intended comparison).
-- [Code] **Item 32**: Re-verify title removal *on the actual regenerated figures* once the filename
-  fix above lands — the helper defaults were already correct, but the currently-embedded PNGs
-  predate the fix and still show titles.
-- [Code] **Item 30**: Fit `log(error)` vs. `log(n_s)` by linear regression across multiple RNG seeds
-  in the sampling-convergence cell, reporting the fitted exponent and its uncertainty, instead of
-  overlaying an assumed `1/√n` line anchored to one point.
-- [Code] **Item 33 (non-data parts)**: compress the x-axis, use a colorblind-safe qualitative palette
-  instead of `magma`, and add worst-receiver/full-spread series — **only after** item 39's cohort fix,
-  so the added polish isn't applied to a figure that's still comparing incomparable backends.
-- [Code] Add basic dataset-validation helpers (duplicate-job detection, backend/shots consistency
-  checks) reusable across the figure-generation scripts.
+- [Code] **Item 40** ✅: `visualizations.ipynb`'s QEC-crossover and hardware-scaling cells, and
+  `run_broadcast.ipynb`'s sampling-convergence cell, now save directly to the **exact filenames the
+  manuscript embeds** (`manuscript/qec vs no qec vs sampling.png`,
+  `manuscript/fidelity scaling hardware.png`, `manuscript/mc_sampling_convergence.png`) in addition to
+  their existing `figures/` exports, so re-running them actually updates what's embedded. A full
+  figure-manifest script (one generator per figure with explicit input run IDs) is still a
+  nice-to-have follow-up; the immediate provenance breakage (re-running ≠ updating the manuscript) is
+  fixed for these three figures. The remaining manually-named files in `manuscript/`
+  (`delay time vs fidelity 121 opt3.png`/`opt0`, `fidelity between receivers.png`, `qec fidelity.png`)
+  don't correspond to a single canonical generating cell — each is a manually-selected run — so they
+  weren't remapped; use `save_figure(fig, Path("manuscript") / "exact name.png")` directly when you
+  regenerate one of those.
+- [Code] **Item 39** ✅: The hardware-scaling cell now groups runs by `(backend, shots)` via the new
+  `broadcasting/validation.py::group_by_cohort` and prints the cohort breakdown explicitly (confirmed
+  against real data: `ibm_kingston`/4096&10000, `ibm_marrakesh`/4096&8192, `ibm_fez`/4096&8192 — 6
+  distinct cohorts across 13 hardware runs) instead of silently pooling them. It also now verifies the
+  nearest sweep value is actually `0` before calling it "tau=0" (skips and prints a message otherwise),
+  and deduplicates by `job_id` first via the new `dedupe_by_job` helper.
+- [Code] **Item 32**: Once the figures are regenerated via the fixed cells above, titles are stripped
+  by `save_figure`'s existing default — verified the new hardware-scaling render (see below) has none.
+- [Code] **Item 30** ✅: The sampling-convergence cell now runs 5 seeds × 8 sample sizes, fits
+  `log(error) = slope·log(n) + intercept` by linear regression, and reports the fitted exponent with
+  its standard error (expected ≈ −0.5), plotted as a genuine log-log fit line instead of an assumed
+  `1/√n` overlay anchored to one point. Smoke-tested against the real backend.
+- [Code] **Item 33 (non-data parts)** ✅: hardware-scaling plot now uses `tab10` (colorblind-safe,
+  keyed by `M`) instead of `magma`, integer-only compressed x-axis (`ax.set_xticks`/`set_xlim` on the
+  actual `N` values present), and plots mean (with min/max spread as error bars) **and** worst-receiver
+  fidelity as a separate marker per point — verified visually against the real 13-run dataset
+  (see "What changed" note below for a rendered example).
+- [Code] ✅: Added [broadcasting/validation.py](broadcasting/validation.py)
+  (`find_duplicate_jobs`, `group_by_cohort`, `dedupe_by_job`) with
+  [tests/test_validation.py](tests/test_validation.py), reused by the hardware-scaling cell above.
 
 ## Phase 4 — Manuscript framing, terminology & prior art (no data needed)
 
@@ -472,6 +490,31 @@ keep the collection matrix small/bounded (a few representative sizes, targeted a
   includes the Phase 1 recovery-map tests (plus the independent oracle from item 49) so
   reviewers/readers can verify correctness themselves. Reproducibility bookkeeping (Phase 7) should
   already be in place by this point so the deposit is a packaging task, not new work.
+
+---
+
+## What changed in revision 4 — Phase 2 closed out, Phase 3 done, and a real blocker fixed
+
+Finished Phase 2's remaining `[HPC-sensitive]` items and completed Phase 3 in full:
+
+- **Phase 2 closeout**: `hpc/slurm_broadcast.sh`'s code sync is now `flock`-guarded (once per array
+  submission, not once per task); added [scripts/merge_hpc_runs.py](scripts/merge_hpc_runs.py) to
+  assemble per-task SLURM outputs into one sweep record; `qec_testing.ipynb`'s sweep-comparison cell
+  now deduplicates by `job_id` and no longer defaults a missing `use_qec` field to `True`.
+- **Phase 3 (figure provenance, cohort mismatch, convergence fit)**: see the Phase 3 section above —
+  all items done, verified against the real 13-hardware-run dataset and smoke-tested against the
+  real simulation backends.
+
+**Unplanned but urgent fix:** while testing the preliminary hardware script from revision 3, actually
+attempting to run it surfaced a real, immediate blocker — `run_broadcast.ipynb` used
+`QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main")`, but the installed
+`qiskit-ibm-runtime` (0.42.0) has removed the `"ibm_quantum"` channel entirely (only
+`"ibm_quantum_platform"`, `"ibm_cloud"`, `"local"` remain). This would have blocked *any* hardware
+submission from this notebook. Fixed both call sites to `QiskitRuntimeService(name="mprest1")`,
+matching the already-working pattern in `qec_testing.ipynb` and `scripts/submit_structured_test.py`
+(both already used the modern named-saved-account API and were unaffected). Verified the fix
+authenticates successfully and can query `service.least_busy(...)` — no hardware job was submitted in
+the process of verifying this.
 
 ---
 
