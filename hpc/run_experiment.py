@@ -52,7 +52,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--alpha",
         type=float,
         default=None,
-        help="Input-state coefficient (default: 1/sqrt(N+1)).",
+        help="Input-state coefficient (default: 1/sqrt(2), matching ProtocolConfig).",
     )
     p.add_argument(
         "--thetas",
@@ -111,7 +111,7 @@ def main(argv: list[str] | None = None) -> None:
     else:
         p_list = p_full.tolist()
 
-    alpha = args.alpha if args.alpha is not None else 1.0 / np.sqrt(args.N + 1)
+    alpha = args.alpha if args.alpha is not None else 1.0 / np.sqrt(2)
 
     if args.thetas is not None:
         thetas = args.thetas

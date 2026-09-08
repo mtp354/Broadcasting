@@ -35,6 +35,14 @@ class ProtocolConfig:
         Number of Monte Carlo trajectories (used only by SamplingBackend).
     seed : int | None
         RNG seed for reproducibility.
+    use_structured_prep : bool
+        HardwareBackend only. If True, use the structured (non-generic-isometry)
+        resource-state preparation circuit instead of ``qc.initialize``. Only
+        implemented for N in {1, 2} (raises NotImplementedError otherwise).
+    linear_feedforward : bool
+        HardwareBackend only. If True (default), use the M*ceil(log2(N+1))
+        single-bit-conditioned byproduct correction instead of the
+        (N+1)**M-branch exponential feedforward.
     """
 
     M: int
@@ -47,6 +55,8 @@ class ProtocolConfig:
     tau: float | None = None
     n_samples: Optional[int] = 200
     seed: int | None = None
+    use_structured_prep: bool = False
+    linear_feedforward: bool = True
 
 
 @dataclass

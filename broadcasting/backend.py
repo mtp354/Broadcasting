@@ -206,8 +206,12 @@ class HardwareBackend(Backend):
             alphas=config.alpha,
             tau=config.tau,
             use_receiver_qec_513=config.use_qec,
+            use_structured_prep=config.use_structured_prep,
+            linear_feedforward=config.linear_feedforward,
         )
-        qc, reg_name, phi = add_fidelity(qc, N=config.N, thetas=config.thetas)
+        qc, reg_name, phi = add_fidelity(
+            qc, N=config.N, thetas=config.thetas, alpha=config.alpha
+        )
 
         # Transpile
         pm = generate_preset_pass_manager(
@@ -245,6 +249,7 @@ class HardwareBackend(Backend):
                 "counts": counts,
                 "optimization_level": self.optimization_level,
                 "tau": config.tau,
+                "dt": getattr(getattr(backend, "target", None), "dt", None),
                 "timestamp": datetime.now().isoformat(),
             },
         )
@@ -291,8 +296,12 @@ class HardwareBackend(Backend):
                 alphas=config.alpha,
                 tau=None,
                 use_receiver_qec_513=config.use_qec,
+                use_structured_prep=config.use_structured_prep,
+                linear_feedforward=config.linear_feedforward,
             )
-            qc, reg_name, _ = add_fidelity(qc, N=config.N, thetas=thetas)
+            qc, reg_name, _ = add_fidelity(
+                qc, N=config.N, thetas=thetas, alpha=config.alpha
+            )
             tau_param = next(p for p in qc.parameters if p.name == "tau")
 
             for tau in tau_values:
@@ -349,6 +358,7 @@ class HardwareBackend(Backend):
                 "sweep_values": tau_values,
                 "per_theta_fidelities": fid_grid if n_theta > 1 else None,
                 "counts": counts_grid,
+                "dt": getattr(getattr(backend, "target", None), "dt", None),
                 "timestamp": datetime.now().isoformat(),
             },
         )

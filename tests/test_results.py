@@ -1,0 +1,99 @@
+"""Round-trip tests for broadcasting.results save/load, covering the
+mode-mislabeling fix (item 35) and filename-collision fix (item 36).
+"""
+
+from datetime import datetime
+
+import numpy as np
+import pytest
+
+from broadcasting.protocol import BroadcastResult, ProtocolConfig
+from broadcasting.results import load_run, save_run
+
+
+def _make_config(**overrides):
+    defaults = dict(M=1, N=2, alpha=1 / np.sqrt(2), thetas=[0.3], p_list=[0.0, 0.5])
+    defaults.update(overrides)
+    return ProtocolConfig(**defaults)
+
+
+def _make_result(mode: str, **extra_meta):
+    metadata = {"mode": mode, "M": 1, "N": 2, "use_qec": False, "thetas": [0.3],
+                "p_list": [0.0, 0.5], "alpha": 1 / np.sqrt(2),
+                "timestamp": datetime.now().isoformat()}
+    metadata.update(extra_meta)
+    return BroadcastResult(
+        fidelities=[[0.9, 0.9], [0.6, 0.6]],
+        metadata=metadata,
+    )
+
+
+class TestModeLabeling:
+    """Regression tests for the config.n_samples-truthiness mislabeling bug."""
+
+    def test_exact_run_labeled_exact_even_with_default_n_samples(self, tmp_path):
+        # ProtocolConfig.n_samples defaults to 200 (truthy) -- this must not
+        # cause an "exact"-mode result to be mislabeled as "aer_sampling".
+        config = _make_config()
+        assert config.n_samples == 200
+        result = _make_result("exact")
+
+        path = save_run(result, config, results_dir=tmp_path)
+        loaded = load_run(path)
+
+        assert loaded["backend"] == "aer_exact"
+        assert loaded["n_samples"] is None
+
+    def test_sampling_run_labeled_sampling(self, tmp_path):
+        config = _make_config(n_samples=37, seed=314)
+        result = _make_result("sampled (37 trajectories)")
+
+        path = save_run(result, config, results_dir=tmp_path)
+        loaded = load_run(path)
+
+        assert loaded["backend"] == "aer_sampling"
+        assert loaded["n_samples"] == 37
+        assert loaded["seed"] == 314
+
+    def test_exact_run_labeled_exact_with_n_samples_none(self, tmp_path):
+        config = _make_config(n_samples=None)
+        result = _make_result("exact")
+
+        path = save_run(result, config, results_dir=tmp_path)
+        loaded = load_run(path)
+
+        assert loaded["backend"] == "aer_exact"
+
+
+class TestFilenameCollisionSafety:
+    def test_default_filenames_do_not_collide(self, tmp_path):
+        config = _make_config()
+        result = _make_result("exact")
+
+        path1 = save_run(result, config, results_dir=tmp_path)
+        path2 = save_run(result, config, results_dir=tmp_path)
+
+        assert path1 != path2
+        assert path1.exists() and path2.exists()
+
+    def test_explicit_filepath_still_respected(self, tmp_path):
+        config = _make_config()
+        result = _make_result("exact")
+        target = tmp_path / "my_run.json"
+
+        path = save_run(result, config, filepath=target)
+
+        assert path == target
+        assert path.exists()
+
+
+class TestHardwareDtRecording:
+    def test_dt_passed_through_metadata(self, tmp_path):
+        config = _make_config()
+        result = _make_result(
+            "hardware (ibm_test)", backend="ibm_test", shots=100,
+            job_id="abc123", tau=0, dt=5e-4,
+        )
+        path = save_run(result, config, results_dir=tmp_path)
+        loaded = load_run(path)
+        assert loaded["metadata"]["dt"] == 5e-4

@@ -9,6 +9,8 @@ plotting helpers keep working unchanged.
 from __future__ import annotations
 
 import json
+import os
+import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -19,6 +21,21 @@ from .protocol import BroadcastResult, ProtocolConfig
 
 RESULTS_DIR = Path("results")
 DEFAULT_OPTIMIZATION_LEVEL = 3
+
+
+def _default_run_suffix() -> str:
+    """Collision-safe suffix for auto-generated result filenames.
+
+    Prefers SLURM job/array-task identifiers -- stable and guaranteed unique
+    across the concurrently-running tasks of one array submission -- falling
+    back to a short random UUID fragment otherwise (e.g. interactive/notebook
+    use). Only affects newly created filenames; existing files are untouched.
+    """
+    job_id = os.environ.get("SLURM_JOB_ID")
+    if job_id:
+        task_id = os.environ.get("SLURM_ARRAY_TASK_ID")
+        return f"_{job_id}_{task_id}" if task_id is not None else f"_{job_id}"
+    return f"_{uuid.uuid4().hex[:8]}"
 
 
 # ---------------------------------------------------------------------------
@@ -48,7 +65,7 @@ def save_run(
 
     if filepath is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filepath = results_dir / f"run_{timestamp}.json"
+        filepath = results_dir / f"run_{timestamp}{_default_run_suffix()}.json"
     else:
         filepath = Path(filepath)
 
@@ -77,7 +94,7 @@ def save_run(
         theta_samples = meta.get("theta_samples", [list(config.thetas)])
     else:
         experiment_type = "simulation"
-        if "sampl" in mode or config.n_samples:
+        if "sampl" in mode:
             backend_label = "aer_sampling"
             n_samples = config.n_samples or meta.get("n_samples")
         else:

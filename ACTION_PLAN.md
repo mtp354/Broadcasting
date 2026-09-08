@@ -11,6 +11,10 @@ summation — proven unneeded, see Phase 1), and corrects two infeasible proposa
 (Sampler `resilience_level`, runtime-arithmetic feedforward). See "Review synthesis" below for what
 was independently verified versus what remains a reviewer-reported claim to check before acting on.
 
+**Revision 3 (2026-09-08):** Implements the Phase 2 correctness fixes and the Phase 6 structured-circuit
+items that don't require the (deferred) Clifford `[[5,1,3]]` decoder redesign, plus a ready-to-run
+preliminary hardware test script. See "What changed in revision 3" after the phase list.
+
 ## ⚠️ HPC data-safety ground rules (per user instruction)
 
 **The hardware runs in `results/`, `results/legacy/`, and `results/qec513/` cannot be regenerated.**
@@ -258,41 +262,50 @@ as a recommended future option, not an available one, until it's actually implem
   option" wording with an accurate description of what's implemented and what's the recommended
   default for this noise model.
 
-## Phase 2 — Correctness & provenance bug fixes 🆕 (HPC-sensitive, do before further data reanalysis)
+## Phase 2 — Correctness & provenance bug fixes 🆕 (HPC-sensitive, do before further data reanalysis) — 🟡 mostly done
 
 New phase inserted ahead of plotting/manuscript polish, per the review's recommended sequencing
 ("fix concrete data/API bugs before further investment"). All items here are code/analysis fixes;
 **none require deleting or rewriting existing result files** (see HPC ground rules above).
 
-- [Code] **Item 35**: Fix `results.py`'s mode-resolution logic to record what was *actually executed*
-  (resolve backend mode once, from the executing backend object, not from `config.n_samples`
-  truthiness) and serialize the effective mode/sample-count/seed. Add round-trip tests (**item 47**)
-  for exact and sampling runs, not just hardware sweeps.
-- [Code] **Item 36, 46 [HPC-sensitive]**: Add a collision-safe filename suffix
-  (`SLURM_JOB_ID`/`SLURM_ARRAY_TASK_ID`/uuid fallback) to `results.py`'s default filename generation.
-  Test on a throwaway `--array=0-1` dry run before using in a real submission. Separately, fix
-  `hpc/slurm_broadcast.sh` so the code `rsync` happens once (e.g. before submitting the array, or in
-  a single setup job) instead of once per concurrent array task.
-- [Code] **Item 38 [HPC-sensitive]**: Add `scripts/merge_hpc_runs.py`: a read-only utility that
-  assembles per-task SLURM array JSON outputs (each a single `p` point) into one sweep record for
-  plotting, without modifying the source per-task files.
-- [Code] **Item 37**: Generalize `broadcasting/fidelity.py::add_fidelity` for arbitrary real `alpha`
-  (`Ry(-2·arccos(alpha))` then `Rz(2Φ)`, reducing to the current equatorial circuit when
-  `alpha=1/√2`), or add explicit validation that rejects/warns on non-equatorial `alpha` until fixed.
-  Add tests at `alpha∈{0,1}` (computational-basis endpoints) and a few interior values.
-- [Code] **Item 45**: Align `hpc/run_experiment.py`'s default `alpha` with `ProtocolConfig`
-  (`1/√2`), leaving already-recorded runs' own saved `alpha` untouched.
-- [Code] **Item 43**: Add a small dedup-by-job-ID step in analysis code for `results/qec513/`
-  (exclude the confirmed duplicate `..._163539.json` from repetition counts), without deleting the
-  file.
-- [Code] **Item 42**: Query `backend.target.dt` (or the equivalent Runtime metadata) and persist it
-  per hardware run going forward; keep the hardcoded `4e-3` only as a documented fallback for
-  existing Kingston/Marrakesh/Fez records where it's verified correct.
-- [Code] **Item 48**: Document the `alpha` real-vs-complex convention mismatch between
-  `broadcasting/simulation.py` (real `alpha`) and `broadcasting/circuit.py` (complex `alpha`,
-  modulus used) in both modules' docstrings, or unify if feasible without breaking either call site.
+- [Code] **Item 35** ✅: Fixed `results.py`'s mode-resolution logic — `backend_label` now depends
+  only on the executing backend's reported `mode` string (`"sampl" in mode`), no longer on
+  `config.n_samples` truthiness. Regression tests in
+  [tests/test_results.py](tests/test_results.py) (`TestModeLabeling`) lock this in.
+- [Code] **Item 36** ✅ **[HPC-sensitive]**: Added `_default_run_suffix()` to `results.py` — prefers
+  `SLURM_JOB_ID`/`SLURM_ARRAY_TASK_ID` when present, else a short uuid — appended to auto-generated
+  filenames. Only affects filenames generated when `filepath` isn't given explicitly; explicit
+  `filepath=...` calls (used by hardware tau-sweep notebooks) are unaffected. Verified with
+  `TestFilenameCollisionSafety` (two same-second calls produce distinct files).
+- [Code] **Item 46 [HPC-sensitive]** — ❌ still open: `hpc/slurm_broadcast.sh`'s per-array-task
+  `rsync` is unchanged; needs a follow-up (move the sync to a one-time setup step) before the next
+  large array submission.
+- [Code] **Item 38 [HPC-sensitive]** — ❌ still open: no `scripts/merge_hpc_runs.py` yet.
+- [Code] **Item 37** ✅: `broadcasting/fidelity.py::add_fidelity` now takes a real `alpha` parameter
+  (default `1/√2`) and builds `Rz(2Φ)` then `Ry(-2·arccos(alpha))`; proven or a general state
+  `Rz` and `Ry` map the target to `|0>` up to global phase, so `P(0)` recovers the true fidelity
+  `⟨target|ρ|target⟩` for *any* `ρ`, not just approximately — and reduces to the old
+  `Rz(-φ)`+`H` circuit exactly (same measurement statistics) when `alpha=1/√2`, so all existing
+  equatorial tests are unaffected. `broadcasting/backend.py`'s `HardwareBackend.run()` and
+  `run_tau_sweep()` now pass `config.alpha` through. Verified in
+  [tests/test_structured_circuits.py](tests/test_structured_circuits.py).
+- [Code] **Item 45** ✅: `hpc/run_experiment.py`'s default `alpha` changed to `1/√2`, matching
+  `ProtocolConfig`. Already-recorded runs keep their own saved `alpha`; unaffected.
+- [Code] **Item 43** — ❌ still open (analysis-only dedup step for `results/qec513/` not yet added).
+- [Code] **Item 42** ✅: `HardwareBackend.run()`/`run_tau_sweep()` now record
+  `backend.target.dt` in the saved metadata (`"dt"` key) for every new hardware run. Existing
+  records are untouched; the `4e-3` hardcoded conversion in the notebooks remains as-is for now
+  (still correct for existing Kingston/Marrakesh/Fez records) — updating the notebooks to *read*
+  the newly-recorded `dt` instead of hardcoding it is still open (Phase 3/8 follow-up once enough
+  new runs carry the field).
+- [Code] **Item 48**: Documented (not unified) — `add_fidelity`'s docstring now explicitly notes the
+  real/complex `alpha` convention mismatch with `circuit.py`/`state_preparation.py`.
+- [Code] **Item 47** ✅: Added [tests/test_results.py](tests/test_results.py) with round-trip tests
+  for exact runs, sampling runs (explicit non-default `n_samples`/`seed`), filename collision safety,
+  and `dt` propagation.
 
 ## Phase 3 — Plotting, figure provenance & data-cohort fixes (no data needed)
+
 
 - [Code] **Item 40**: Adopt a figure-manifest approach — one small script/notebook cell per figure
   that names its generator, input run IDs, configuration, output path, and caption facts — and make
@@ -364,27 +377,42 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
 
 These are code changes that must land *before* any new hardware data collection in Phase 8.
 
-- [Code] **Item 16 (refined)**: Replace `qc.initialize(init_state, ...)` in `broadcasting/circuit.py`
-  with a structured Dicke-state preparation circuit. **Convention correction from review**: the
-  sender register must encode `k = N - popcount(receiver_bits)` (the number of receiver **zeros**),
-  matching the existing resource-state/phase convention — a generic "Hamming weight" without this
-  qualifier implements a different (mirrored) protocol. Validate the structured circuit against the
-  existing `get_initial_state`/statevector construction on asymmetric, non-equatorial inputs before
-  comparing gate counts.
-- [Code] **Item 16 (decoder)**: Replace the generic Gram–Schmidt `32×32` decode unitary
-  (`broadcasting/qec_513.py::five_qubit_decode_gate`) with a structured Clifford `[[5,1,3]]`
-  encoder/inverse-decoder circuit. Validate against the existing codespace mapping (`|0_L⟩→|00000⟩`,
-  `|1_L⟩→|00001⟩`) and all 15 single-qubit errors before comparing gate counts against the
-  Gram-Schmidt baseline.
-- [Code] **Item 25 (corrected approach)**: Replace the `(N+1)^M`-branch exponential feedforward with
-  `M·⌈log2(N+1)⌉` independent single-bit conditional phase rotations (phase corrections commute and
-  decompose bit-by-bit: `P(-φ_n̄) = Π_j Π_b [P(-2π·2^b/(N+1))]^{c_{j,b}}`), **not** real-time classical
-  modular-arithmetic evaluation — IBM dynamic-circuit runtimes place real restrictions on classical
-  expression evaluation, and per-bit conditional gates avoid needing any arithmetic at all. Explicitly
-  preserve or revise the invalid-outcome policy (currently: unmatched outcomes get no correction).
+- [Code] **Item 16 (prep)** ✅ **partial**: Added `broadcasting/circuit.py::structured_state_prep`,
+  a structured Dicke-state preparation circuit implemented and verified for **`N in {1, 2}`**
+  (the paper's primary hardware cases). Confirms the review's convention correction: the sender
+  register really does encode `k = N - popcount(receiver_bits)` — verified by construction (the
+  half-adder computes `receiver_0 XOR receiver_1` for the sum bit directly, no inversion needed,
+  because `NOT(a) XOR NOT(b) = a XOR b`) and by an exact statevector-overlap test against
+  `build_initial_statevector` for `M∈{1,2,3}`, `alpha∈{0, 0.3, 0.8, 1, 1/√2}`
+  ([tests/test_structured_circuits.py](tests/test_structured_circuits.py)). `N≥3` raises
+  `NotImplementedError` explicitly (falls back to `qc.initialize` unless requested) rather than
+  silently producing a wrong circuit — generalizing to arbitrary `N` (a coherent population-count
+  circuit) is still open.
+- [Code] **Item 16 (decoder)** — ❌ **deferred**: did not replace the Gram–Schmidt `32×32` decode
+  unitary this round. Constructing a genuinely correct structured Clifford decoder requires either
+  a verified binary-symplectic tableau completion or a trustworthy literature circuit; neither could
+  be verified to my satisfaction in the time available, and shipping an unverified "structured"
+  decoder for real hardware use was judged riskier than keeping the existing (already-tested)
+  Gram-Schmidt decoder. Flagging as a dedicated follow-up rather than guessing.
+- [Code] **Item 25 (corrected approach)** ✅: Implemented in `broadcasting/circuit.py` as
+  `linear_feedforward=True` (now the default) — `M·nq` single-bit-conditioned phase rotations
+  replacing the `(N+1)^M`-branch loop, using the additive-phase-decomposition identity
+  `Σ_j n_j = Σ_{j,b} bit_{j,b}·2^b`. Verified to reproduce the old exponential feedforward's
+  fidelities within shot noise for `(M,N)∈{(1,1),(1,2),(2,2)}`
+  ([tests/test_structured_circuits.py](tests/test_structured_circuits.py)`::TestLinearFeedforward`).
+  The old exponential path is kept (`linear_feedforward=False`) for direct A/B comparison. **Behavior
+  change, as anticipated**: for an *invalid* sender outcome (register value `>N`), the linear version
+  applies the same linear phase formula rather than skipping correction (matching the review's
+  explicitly endorsed design in §3.1) — documented in the function's docstring.
+- [Code] `ProtocolConfig` gained `use_structured_prep`/`linear_feedforward` fields, threaded through
+  `HardwareBackend.run()`/`run_tau_sweep()`, so hardware experiments can opt into either circuit
+  variant without any other code changes.
 - [Code] For every redesigned circuit, measure and report qubit count, depth, two-qubit gate count,
   duration, and conditional-operation count (both before/after, so the "structured vs. generic"
   improvement is a measured number, not an estimate) — feeds directly into Phase 4's manuscript text.
+  **Partial**: [scripts/submit_structured_test.py](scripts/submit_structured_test.py) reports
+  local depth + transpiled depth/two-qubit-gate-count (against `FakeBrisbane`) for both variants;
+  duration/conditional-operation-count reporting is not yet added.
 - [Code] **Item 24**: Add explicit handling/reporting of invalid sender-qudit outcomes in
   results-processing code, documenting the current no-correction behavior and whether it should
   change.
@@ -444,6 +472,57 @@ keep the collection matrix small/bounded (a few representative sizes, targeted a
   includes the Phase 1 recovery-map tests (plus the independent oracle from item 49) so
   reviewers/readers can verify correctness themselves. Reproducibility bookkeeping (Phase 7) should
   already be in place by this point so the deposit is a packaging task, not new work.
+
+---
+
+## What changed in revision 3 — preliminary hardware test ready to run
+
+At the user's request, Phase 2 (correctness/provenance bug fixes) and the non-decoder parts of
+Phase 6 (structured circuits) were implemented so a **preliminary hardware comparison could be
+prepared now**, ahead of the rest of the plan. Nothing was submitted to real IBM hardware — that
+step is left to the user, per the script's design (see below).
+
+**Code changes** (133/133 tests passing, including 20 new tests):
+- `broadcasting/results.py`: mode-mislabeling fix (item 35), collision-safe filenames (item 36).
+- `broadcasting/fidelity.py`: generalized `add_fidelity` for arbitrary real `alpha` (item 37),
+  proven to reduce to the exact old behavior at `alpha=1/√2` (no regressions).
+- `broadcasting/backend.py`: passes `config.alpha` through to `add_fidelity`; records `backend.target.dt`
+  in saved metadata (item 42).
+- `hpc/run_experiment.py`: default `alpha` aligned with `ProtocolConfig` (item 45).
+- `broadcasting/circuit.py`: new `structured_state_prep()` (Dicke-state prep for `N∈{1,2}`, item 16
+  partial) and `linear_feedforward` bit-conditional byproduct correction (item 25), both opt-in via
+  new `ProtocolConfig` fields `use_structured_prep`/`linear_feedforward` (default: old behavior
+  preserved for `use_structured_prep`, new linear behavior is now default for `linear_feedforward`
+  since it's strictly cheaper and proven equivalent for valid outcomes).
+- New tests: [tests/test_results.py](tests/test_results.py) (round-trip/collision safety),
+  [tests/test_structured_circuits.py](tests/test_structured_circuits.py) (structured-prep exact
+  match to reference statevector; linear-vs-exponential feedforward equivalence).
+
+**Preliminary test script:** [scripts/submit_structured_test.py](scripts/submit_structured_test.py).
+Run with no arguments for a **local-only** sanity check (noiseless Aer fidelity check + transpiled
+gate-count comparison against `FakeBrisbane`, no IBM account needed):
+
+```
+"/path/to/qiskit-env/bin/python" scripts/submit_structured_test.py
+```
+
+To actually submit to hardware (uses your saved `QiskitRuntimeService` account, small shot count by
+default), you must explicitly pass `--submit`:
+
+```
+python scripts/submit_structured_test.py --submit --backend ibm_kingston --shots 2000
+```
+
+**Honest preliminary finding from the local-only check** (not yet hardware-validated): for `M=1,N=2`
+transpiled against `FakeBrisbane`, the structured circuit's depth/two-qubit-gate-count improvement
+over `qc.initialize` was **modest** (89→81 depth, 18→17 two-qubit gates), not the dramatic
+"30-60+ CNOTs" reduction the review speculated for this specific small case — `qc.initialize`'s
+generic synthesis turned out to be less wasteful than guessed for `N=2`. This is exactly the kind of
+number Phase 6 asked to have *measured rather than estimated*; it may still be that larger `N` (once
+structured prep is generalized) shows a bigger gap, or that the real hardware fidelity improvement
+(distinct from raw gate count, e.g. via better qubit-layout locality) is more significant than the
+transpiled gate count alone suggests — that's exactly what the preliminary hardware run should tell
+us next.
 
 ---
 
