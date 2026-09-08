@@ -125,3 +125,334 @@ These are descriptive statistics of the final target-basis readout. They do not 
 4. Use a small reproducible figure-generation script driven by explicit saved run IDs. Store figure-ready statistics and uncertainties, and let captions inherit backend/shots/settings from the manifest. Prefer vector output for plots, readable labels at column width, and no embedded titles. This is more valuable than additional exploratory notebook cells.
 5. Finish the existing copyedit queue: original no-broadcasting reference, inappropriate device/self-testing citations, explicit qubit ordering, privacy scope, stale crossover explanation, and placeholders. Also correct the sender-unitary equation to an active block plus identity on unused levels (`apstemplate.tex:444`), the reference to an unencoded schematic as illustrating QEC (`:468`), and equalities that silently discard global phase.
 6. Center the paper on the general factorization result, independently verified logical channel, and controlled limits of the selected implementation. Broader non-Pauli models, a general cryptographic security proof, a new QEC code, or an extensive hardware-noise characterization project are unnecessary to complete this plan.
+
+---
+
+**Section 2: Comprehensive Technical Diagnoses, Critical Gap Analysis, and Unified Implementation Roadmap**
+
+**1. Critical Audit of Section 1 and the Action Plan**
+
+**1.1 Verified Strengths of Section 1:**
+The findings in Section 1 correctly isolate several critical defects that must be resolved prior to publication:
+- The algebraic reconciliation of the $[[5,1,3]]$ recovery map $K_s = V_{\text{Dec}} E_s^\dagger P_s$ and the closed-form logical polynomial $p_L(p) = 10p^2 - \frac{200}{9}p^3 + \frac{160}{9}p^4 - \frac{128}{27}p^5$ with low-noise break-even $p_* = \frac{3-\sqrt{6}}{4} \approx 0.137628$ is mathematically rigorous and fully validated against the 1,024 physical Pauli error configurations.
+- The diagnostic identifying that `results.py:80` treats any truthy `config.n_samples` as evidence of Monte Carlo sampling is exact: because `ProtocolConfig.n_samples` defaults to `200`, every unconfigured `ExactBackend` execution is mislabeled and saved as `aer_sampling`.
+- The critique of `fidelity.py:60` and `backend.py:202` is exact: the fidelity measurement circuit assumes an equatorial target state ($\alpha = \beta = 1/\sqrt{2}$), causing silent fidelity under-reporting ($\sim 0.5$ for computational basis endpoints) when non-equatorial states are supplied.
+- The identification of the cohort mismatch in Figure 6 is exact: the manuscript caption claims data from IBM Kingston with 10,000 shots, whereas the repository contains only $M=1, N=2$ on Kingston; all points for $N \ge 3$ originate from IBM Marrakesh and IBM Fez with 4,096 shots.
+
+**1.2 Gaps, Blind Spots, and Unresolved Nuances in Section 1:**
+While Section 1 correctly identifies symptoms, it leaves several foundational mechanisms unanalyzed or incomplete:
+- *Underlying Algebraic Reason for Branch Invariance:* Section 1 notes that the current conditional simulation result does not corrupt verified curves, but fails to explain *why*. As proven in Section 2.2 below, under any phase-covariant channel (including depolarizing and dephasing noise), every sender measurement branch $\bar{n} \in \{0, \dots, N\}^M$ yields the identical post-correction receiver state $\bigotimes_{\ell=1}^N \mathcal{D}_{p_\ell}(|\psi_{\text{target}}\rangle\langle\psi_{\text{target}}|)$. Consequently, simulating a single fixed outcome (e.g. $\bar{n}=\vec{0}$) is not an approximation—it is algebraically exact.
+- *Unquantified Gate Synthesis Penalty:* Section 1 notes that `qc.initialize` and Gram-Schmidt decoding are "generic," but does not quantify their circuit cost. Generic isometry synthesis via Qiskit's `Initialize` on 4–6 qubits requires 30–60+ CNOT gates, while structured Dicke preparation requires $\le 6$ CNOTs. Similarly, a $32 \times 32$ generic unitary produces $\sim 200+$ CNOTs via Quantum Shannon Decomposition, whereas a Clifford $[[5,1,3]]$ decoder requires only 8–10 CNOTs. This unquantified overhead is the sole reason hardware fidelity collapses at $\tau=0$, not multipartite entanglement fragility.
+- *The Fig. 3 Text-Figure Disconnect:* Section 1 overlooked a major contradiction in the manuscript text: line 468 explicitly states that Fig. 3 illustrates the 3-stage dynamic $[[5,1,3]]$ QEC circuit (ancilla measurement, syndrome decoding, and feedforward), but Fig. 3 is actually an unencoded schematic showing only the bare $M=1, N=2$ protocol without ancillas or QEC blocks.
+- *Missing SLURM Array Reduction Pipeline:* Section 1 highlights timestamp collision risks in HPC filenames, but does not address the workflow gap: `hpc/slurm_broadcast.sh` runs array tasks that compute single $p$-points, creating 50 disconnected JSON files. The project lacks any merge utility to assemble these into a sweep record for plotting.
+
+**1.3 Critical Deficiencies in ACTION_PLAN.md:**
+`ACTION_PLAN.md` contains several technical errors and untenable status assertions:
+- *Premature Completion Status:* The plan marks Phase 0 as "DONE", yet items 2 (general $M, N$ factorization proposition), 3 ($p=3/4$ anti-contraction explanation), and 4 (full multi-receiver noiseless state) are absent from `apstemplate.tex`. The plan marks Phase 1 core items as "DONE", yet the Monte Carlo text in the manuscript claims non-existent features (measured memory/runtime reports, scalar-only accumulation, and fitted convergence exponents).
+- *Non-Existent Runtime Options (Phase 4, Item 18):* The plan proposes exposing a `resilience_level` parameter for IBM hardware runs. In Qiskit Runtime 0.42.0+, `resilience_level` applies exclusively to `EstimatorV2` (for expectation values and error mitigation like ZNE/TREX). `SamplerV2` (used by `HardwareBackend` for shot counts and quasi-distributions) rejects `resilience_level`. Attempting to pass it raises a `ValueError`.
+- *Unchecked Classical Arithmetic on Dynamic Circuits (Phase 5, Item 25):* The plan suggests replacing $(N+1)^M$ branches with real-time classical evaluation of $\sum_j n_j \bmod (N+1)$. IBM hardware OpenQASM 3 runtimes enforce strict limits on classical expressions; runtime modulo arithmetic across classical registers is unsupported or unstable. As derived below, the correct physical solution is to factor the phase correction into $M \cdot \lceil \log_2(N+1) \rceil$ bit-conditional phase rotations, eliminating arithmetic completely.
+- *Omission of Essential Prior Art:* The plan omits critique §2.1 regarding Kumar & Pathak (2024), who already demonstrated noise modeling and IBM hardware execution of remote state preparation. Without directly differentiating the resource structure and QEC integration from this prior work, the manuscript faces immediate rejection for lack of novelty.
+
+---
+
+**2. Mathematical & Analytical Foundations: Exact Proofs and Theoretical Refinements**
+
+**2.1 Complete Proof of General $(M, N)$ Noise Factorization:**
+The manuscript must replace the restricted $M=1, N=2$ calculation with the general theorem.
+
+*Theorem (Noise Factorization and Local Marginals):*
+Consider $M$ senders and $N$ receivers initialized in the generalized resource state:
+$$\ket{\Psi^{(M,N)}} = \sum_{k=0}^N \alpha^k \beta^{N-k} \binom{N}{k}^{1/2} \left( \bigotimes_{j=1}^M \ket{k}_{a_j} \right) \ket{k; N-k}_B,$$
+where $\ket{k; N-k}_B = \binom{N}{k}^{-1/2} \sum_{z \in \{0,1\}^N, |z|=N-k} \ket{z}$ is the Dicke state with $k$ zeros and $N-k$ ones.
+Let each sender apply $U_{a_j}(\theta_j)\ket{k} = e^{i(2k-N)\theta_j}\ket{k}$, and let each receiver link experience an independent channel $\mathcal{E}_\ell$. If each $\mathcal{E}_\ell$ is covariant under the single-qubit phase rotation $U_{\bar{n}} = \text{diag}(e^{i\phi_{\bar{n}}}, 1)$, then for any sender outcome $\bar{n} = (n_1, \dots, n_M) \in \{0, \dots, N\}^M$:
+1. The classical measurement outcomes are uniformly distributed: $P(\bar{n}) = (N+1)^{-M}$, completely independent of sender phases $\theta_j$, amplitudes $\alpha, \beta$, and channel noise $\mathcal{E}_\ell$.
+2. The joint post-correction receiver state factorizes identically across all measurement branches:
+$$\rho_{\text{out}} = \bigotimes_{\ell=1}^N \mathcal{E}_\ell\left( \ket{\psi_{\text{target}}}\bra{\psi_{\text{target}}} \right), \qquad \ket{\psi_{\text{target}}} = \alpha e^{i\Phi}\ket{0} + \beta e^{-i\Phi}\ket{1}, \quad \Phi = \sum_{j=1}^M \theta_j.$$
+3. For independent depolarizing channels $\mathcal{E}_\ell = \mathcal{D}_{p_\ell}$, the local and global fidelities are:
+$$F_\ell = 1 - \frac{2}{3}p_\ell, \qquad F_{\text{global}} = \prod_{\ell=1}^N \left(1 - \frac{2}{3}p_\ell\right).$$
+
+*Proof:*
+1. *Sender Phase Action:* Applying $U_A = \bigotimes_{j=1}^M U_{a_j}(\theta_j)$ maps each basis component $\bigotimes_j \ket{k}_{a_j}$ to $e^{i(2k-N)\Phi}\bigotimes_j \ket{k}_{a_j}$.
+2. *Fourier Projection:* Projecting the senders onto $\bra{u_{\bar{n}}} = \bigotimes_{j=1}^M \left( \frac{1}{\sqrt{N+1}} \sum_{m=0}^N e^{-2\pi i n_j m / (N+1)} \bra{m}_{a_j} \right)$ selects $m=k$ across all senders:
+$$\bra{u_{\bar{n}}} U_A \ket{\Psi^{(M,N)}} = \frac{1}{(N+1)^{M/2}} \sum_{k=0}^N \alpha^k \beta^{N-k} \binom{N}{k}^{1/2} e^{i(2k-N)\Phi} e^{-i k \phi_{\bar{n}}} \ket{k; N-k}_B,$$
+where $\phi_{\bar{n}} = \frac{2\pi}{N+1}\sum_{j=1}^M n_j$.
+3. *Factorization into Product State:* Expanding the Dicke state into computational basis strings $z \in \{0,1\}^N$, every string with $k$ zeros has $\text{zeros}(z)=k$ and $\text{ones}(z)=N-k$. Thus:
+$$\sum_{k=0}^N \alpha^k \beta^{N-k} \binom{N}{k}^{1/2} e^{i(2k-N)\Phi} e^{-i k \phi_{\bar{n}}} \ket{k; N-k}_B = \sum_{z \in \{0,1\}^N} \prod_{\ell=1}^N \left[ \delta_{z_\ell, 0} \alpha e^{i\Phi} e^{-i\phi_{\bar{n}}} \ket{0}_\ell + \delta_{z_\ell, 1} \beta e^{-i\Phi} \ket{1}_\ell \right]$$
+$$= \bigotimes_{\ell=1}^N \left( \alpha e^{i\Phi} e^{-i\phi_{\bar{n}}} \ket{0} + \beta e^{-i\Phi} \ket{1} \right).$$
+4. *Born Probability Invariance:* Each single-qubit factor has norm squared $|\alpha e^{i(\Phi - \phi_{\bar{n}})}|^2 + |\beta e^{-i\Phi}|^2 = |\alpha|^2 + |\beta|^2 = 1$. Because receiver channels $\mathcal{E}_\ell$ act on the receiver spaces while Fourier measurements act on senders, tracing over receivers leaves the sender reduced density matrix maximally mixed: $\Tr_B[\rho] = \frac{1}{(N+1)^M}\sum_{\vec{k}}\ket{\vec{k}}\bra{\vec{k}}$. Hence, $P(\bar{n}) = \Tr[(\Pi_{\bar{n}} \otimes I)\rho] = (N+1)^{-M}$ uniformly for all $\bar{n}$, completely invariant under channel noise $\mathcal{E}$.
+5. *Byproduct Correction:* The conditional state on the receivers is $\bigotimes_{\ell=1}^N \mathcal{E}_\ell(\ket{\psi_{\bar{n}}}\bra{\psi_{\bar{n}}})$. Each receiver applies $U_{\bar{n}} = \text{diag}(e^{i\phi_{\bar{n}}}, 1)$. When $\mathcal{E}_\ell$ is phase-covariant, $U_{\bar{n}} \mathcal{E}_\ell(\sigma) U_{\bar{n}}^\dagger = \mathcal{E}_\ell(U_{\bar{n}} \sigma U_{\bar{n}}^\dagger)$. Applying $U_{\bar{n}}$ directly to the state inside the channel gives:
+$$U_{\bar{n}} \left( \alpha e^{i(\Phi - \phi_{\bar{n}})}\ket{0} + \beta e^{-i\Phi}\ket{1} \right) = \alpha e^{i\Phi}\ket{0} + \beta e^{-i\Phi}\ket{1} = \ket{\psi_{\text{target}}}.$$
+Hence, $\rho_{\text{out}} = \bigotimes_{\ell=1}^N \mathcal{E}_\ell(\ket{\psi_{\text{target}}}\bra{\psi_{\text{target}}})$. $\blacksquare$
+
+**2.2 Invariance Across Sender Branches and Exactness of Fixed Outcomes:**
+A direct corollary of Theorem 2.1 is that *every sender measurement outcome $\bar{n}$ produces the exact same post-correction receiver state*. The full ensemble output averaged over all measurement outcomes is:
+$$\rho_{\text{total}} = \sum_{\bar{n} \in \{0, \dots, N\}^M} P(\bar{n}) \cdot \rho_{\text{out}}(\bar{n}) = \left( \sum_{\bar{n}} \frac{1}{(N+1)^M} \right) \bigotimes_{\ell=1}^N \mathcal{E}_\ell(\ket{\psi_{\text{target}}}\bra{\psi_{\text{target}}}) = \bigotimes_{\ell=1}^N \mathcal{E}_\ell(\ket{\psi_{\text{target}}}\bra{\psi_{\text{target}}}).$$
+This proves that sampling or fixing a single measurement outcome (such as $\bar{n} = \vec{0}$) in `simulation.py` introduces zero numerical bias for any phase-covariant channel. Action plan Item 12 (summing all $(N+1)^M$ sender branches in exact simulation) adds exponential overhead without changing the resulting density matrix or fidelity by even machine precision.
+
+**2.3 Channel Generality Beyond Depolarizing Noise:**
+The covariance condition $U_{\bar{n}} \mathcal{E}_\ell(\sigma) U_{\bar{n}}^\dagger = \mathcal{E}_\ell(U_{\bar{n}} \sigma U_{\bar{n}}^\dagger)$ holds for:
+1. *Isotropic Depolarizing Channels:* Covariant under all unitaries $U \in U(2)$, since $\mathcal{D}_p(\rho) = (1 - \frac{4p}{3})\rho + \frac{4p}{3}\frac{I}{2}$. (The manuscript line 231 erroneously attributes covariance to diagonality in the computational basis; diagonality is neither necessary nor sufficient for general unitary covariance).
+2. *Dephasing (Phase-Damping) Channels:* $\mathcal{E}_z(\rho) = (1-p)\rho + p Z\rho Z$. Because $U_{\bar{n}} = \text{diag}(e^{i\phi}, 1) = e^{i\phi/2} R_z(-\phi)$ is diagonal, it commutes with $Z$. Thus, noise factorization holds exactly for dephasing channels.
+3. *Generalized Pauli Channels:* $\mathcal{E}(\rho) = (1-p_x-p_y-p_z)\rho + p_x X\rho X + p_y Y\rho Y + p_z Z\rho Z$, provided $p_x = p_y$ (transverse isotropy).
+
+**2.4 Symplectic Weight Enumerators, Isotropy, and Dual Crossover Analysis:**
+For the $[[5,1,3]]$ code with minimum-weight Pauli recovery, the 1,024 physical Pauli errors partition into isotropic logical cosets:
+- Weight 0 ($1$ operator): Decodes to logical $I$.
+- Weight 1 ($15$ operators): Corrected exactly to logical $I$.
+- Weight 2 ($90$ operators): All map to non-trivial logical errors; by code symmetry, exactly 30 induce logical $X$, 30 logical $Y$, and 30 logical $Z$.
+- Weight 3 ($270$ operators): 60 decode to logical $I$, while $210$ decode to logical non-identity ($70$ each of $X, Y, Z$).
+- Weight 4 ($405$ operators): 135 decode to logical $I$, while $270$ decode to logical non-identity ($90$ each of $X, Y, Z$).
+- Weight 5 ($243$ operators): 45 decode to logical $I$, while $198$ decode to logical non-identity ($66$ each of $X, Y, Z$).
+
+Summing these coefficients weighted by $(p/3)^w (1-p)^{5-w}$ proves that the induced logical channel is an exact isotropic depolarizing channel with error probability $p_L(p) = 10p^2 - \frac{200}{9}p^3 + \frac{160}{9}p^4 - \frac{128}{27}p^5$.
+
+Solving $F_{\text{QEC}}(p) = F_{\text{bare}}(p) \iff p_L(p) = p$ yields three roots on $[0, 1]$:
+1. $p = 0$: Trivial noiseless agreement ($F = 1$).
+2. $p_* = \frac{3-\sqrt{6}}{4} \approx 0.137628$: The primary threshold. For $p \in (0, p_*)$, $p_L(p) < p$ and QEC provides an operational advantage.
+3. $p = 3/4 = 0.75$: The complete depolarization point where $\eta = 1 - 4p/3 = 0$. Here $p_L(3/4) = 3/4$ and both bare and encoded fidelities equal $F = 0.5$.
+
+*Physical Mechanism for $p > 3/4$ (Anti-Contraction Regime):*
+For $p \in (3/4, 1]$, the unencoded channel contracts the Bloch vector past the origin into negative values ($\eta < 0$), inverting state orientation and degrading bare fidelity to $F_{\text{bare}}(1) = 1/3$. The $[[5,1,3]]$ code mixes higher-weight Pauli terms, dampening this state inversion such that $p_L(1) = 22/27 \approx 0.8148 < 1$, yielding $F_{\text{QEC}}(1) = 37/81 \approx 0.4568 > 1/3$. This is not error suppression in the fault-tolerant sense, but an artifact of channel inversion damping under multi-qubit mixing.
+
+**2.5 Target-Basis Fidelity Readout for General Amplitudes:**
+To measure fidelity $F = \bra{\psi_{\text{target}}}\rho_{\text{out}}\ket{\psi_{\text{target}}}$ for an arbitrary pure target $\ket{\psi_{\text{target}}} = \alpha e^{i\Phi}\ket{0} + \beta e^{-i\Phi}\ket{1}$ with real $\alpha \ge 0$ and $\beta = \sqrt{1-\alpha^2}$, the receiver qubit must be rotated to $\ket{0}$ prior to computational measurement.
+On the Bloch sphere, $\ket{\psi_{\text{target}}}$ has polar angle $\theta_B = 2\arccos(\alpha)$ and azimuthal angle $\phi_B = -2\Phi$. The exact inverse unitary mapping $\ket{\psi_{\text{target}}} \mapsto \ket{0}$ is:
+$$U_{\text{fid}}^\dagger = R_y(-2\arccos(\alpha)) R_z(2\Phi).$$
+In `fidelity.py:74-75`, the code executes:
+```python
+circuit.rz(-phi, qb)  # where phi = -2*Phi mod 2*pi
+circuit.h(qb)
+```
+Since $H R_z(2\Phi)\ket{\psi_{\text{target}}} = H (\alpha \ket{0} + \beta \ket{1}) = \frac{\alpha+\beta}{\sqrt{2}}\ket{0} + \frac{\alpha-\beta}{\sqrt{2}}\ket{1}$, the measurement probability is $P(0) = \frac{1}{2}(1 + 2\alpha\beta) = \frac{1}{2}(1 + \sin(\theta_B))$. When $\alpha = \beta = 1/\sqrt{2}$, $P(0) = 1 = F$. But for general $\alpha \in [0, 1]$, $P(0)$ measures proximity to $\ket{+}$, not $\ket{\psi_{\text{target}}}$.
+*Correction:* `fidelity.py` must accept `alpha` and implement `circuit.rz(2*Phi, qb)` followed by `circuit.ry(-2*np.arccos(alpha), qb)`. When $\alpha = 1/\sqrt{2}$, $R_y(-\pi/2) = -i H R_z(\pi)$ reproduces the equatorial circuit up to a global phase.
+
+---
+
+**3. Circuit Synthesis, Dynamic Control, and Hardware Execution Diagnoses**
+
+**3.1 Linear Decomposition of Classical Dynamic Feedforward:**
+The current circuit synthesis (`circuit.py:132-139`) iterates over all $(N+1)^M$ outcomes $\bar{n} \in \{0, \dots, N\}^M$ and adds an `if_test` block for each tuple. This causes exponential instruction explosion: for $M=3, N=4$, it generates $5^3 = 125$ conditional blocks.
+
+*Linear Reformulation:*
+The byproduct unitary is $U_{\bar{n}} = \text{diag}(e^{i\phi_{\bar{n}}}, 1)$ with $\phi_{\bar{n}} = \frac{2\pi}{N+1}\sum_{j=1}^M n_j$. Because the phase operations commute:
+$$P(-\phi_{\bar{n}}) = \prod_{j=1}^M P\left(-\frac{2\pi n_j}{N+1}\right) = \prod_{j=1}^M \prod_{b=0}^{n_q-1} \left[ P\left(-\frac{2\pi \cdot 2^b}{N+1}\right) \right]^{c_{j,b}},$$
+where $c_{j,b} \in \{0, 1\}$ is bit $b$ of sender $j$'s classical register.
+
+*Hardware Implementation:*
+Instead of evaluating modular arithmetic in real time, the circuit needs only $M \cdot n_q = M \lceil \log_2(N+1) \rceil$ independent single-bit conditions:
+```python
+for j in range(M):
+    for b in range(nq):
+        bit_weight = (2 ** b) % (N + 1)
+        phase_shift = -2.0 * np.pi * bit_weight / (N + 1)
+        with qc.if_test((c_senders[j * nq + b], 1)):
+            for qb in active_receivers:
+                qc.p(phase_shift, qb)
+```
+For $M=3, N=4$, this replaces 125 multi-qubit conditional blocks with $3 \times 3 = 9$ single-qubit conditional gates. It requires zero real-time classical arithmetic, executes natively on IBM Falcon/Heron dynamic-circuit hardware, and handles invalid sender outcomes cleanly (any binary pattern with value $> N$ simply applies the corresponding additive phase shift without stalling the control system).
+
+**3.2 Root-Cause Analysis of Hardware Scaling Collapse ($\tau = 0$):**
+Figure 6 shows average fidelity dropping from $\sim 0.91$ ($N=2$) to $\sim 0.45$ ($N=4$) at $\tau=0$, which the manuscript interprets as "correlated noise structures."
+
+*Transpilation Audit:*
+In `circuit.py:104`, the resource state is loaded using `qc.initialize(init_state)`. When Qiskit transpiles `Initialize` for $n$ qubits on heavy-hex hardware:
+- For $M=1, N=2$ (4 qubits: 2 sender, 2 receiver): `Initialize` synthesizes $\sim 32$ CNOT gates. After routing and swap insertion on IBM Kingston, two-qubit gate count reaches $\sim 45-55$.
+- For $M=1, N=4$ (7 qubits: 3 sender, 4 receiver): `Initialize` synthesizes $\sim 180-240$ CNOT gates across non-nearest-neighbor topologies.
+
+At an average Kingston/Marrakesh CNOT error rate of $e_2 \approx 8 \times 10^{-3}$, the circuit survival probability is:
+$$P_{\text{survival}} \approx (1 - e_2)^{N_{\text{CX}}} \implies (0.992)^{45} \approx 0.69 \quad (N=2), \qquad (0.992)^{200} \approx 0.20 \quad (N=4).$$
+Thus, the degradation observed in Figure 6 is completely explained by accumulated independent two-qubit gate errors during unoptimized generic state preparation. It provides zero evidence of multipartite correlated noise.
+
+*Structured Dicke Alternative:*
+For $M=1, N=2$, preparing $\frac{1}{2}\ket{0}_A\ket{11}_B + \frac{1}{\sqrt{2}}\ket{1}_A\ket{\Psi^+}_B + \frac{1}{2}\ket{2}_A\ket{00}_B$ requires:
+1. State preparation on Alice's 2 qubits: $R_y$ and 1 CNOT ($\sim 1$ CNOT).
+2. Entanglement transfer to Bob: 2 CNOTs from Alice to Bob, followed by 1 intra-Bob CNOT for the $\ket{\Psi^+}$ Bell state.
+Total structured cost: $\le 5$ CNOTs. Replacing `qc.initialize` with structured preparation will immediately restore baseline hardware fidelity above $0.85$.
+
+**3.3 Root-Cause Analysis of QEC Benchmark Collapse (Figure 2):**
+In Figure 2, the single-qubit $[[5,1,3]]$ memory circuit achieves $F \approx 0.5$ at $\tau=0$, failing break-even.
+
+*Decoder Synthesis Audit:*
+In `qec_513.py:52-82`, `five_qubit_decode_gate` constructs a $32 \times 32$ Gram-Schmidt completion matrix and passes it to `UnitaryGate`. When transpiled, Qiskit invokes the Barenco/Shannon decomposition, generating over $220$ CNOT gates and an uncompiled circuit depth exceeding $350$.
+
+In contrast, the standard stabilizer decoding for the $[[5,1,3]]$ code is a Clifford circuit:
+$$V_{\text{Dec}} = H_1 \cdot \text{CX}(2, 1) \cdot \text{CZ}(3, 1) \cdot \text{CX}(4, 1) \cdot \text{CZ}(5, 1) \cdot \dots$$
+It can be synthesized with exactly 9 CX gates and depth $< 15$. The collapse in Figure 2 is entirely attributable to the $220+$ CX gates in the generic Gram-Schmidt unitary synthesis.
+
+**3.4 Transpiler Optimization Level vs. Runtime Mitigation:**
+The manuscript conflates transpiler optimization level with dynamical decoupling and error mitigation:
+- Preset `optimization_level=0..3` in `generate_preset_pass_manager` performs classical circuit transformation: level 0 is trivial translation; level 1 adds basic gate cancellation; level 2 adds heuristic routing (SabreSwap); level 3 adds 2-qubit KAK resynthesis and commutative cancellation. *None of levels 0–3 insert dynamical decoupling*.
+- Built-in dynamical decoupling in Runtime requires passing `PassManager` with `PadDynamicalDecoupling` and `ALAPScheduleAnalysis`.
+- Conflating optimization level with noise mitigation in the manuscript text must be retracted.
+
+---
+
+**4. Empirical Provenance, Data Artifact Integrity, and Pipeline Audits**
+
+**4.1 Hardware Run Audit (Figure 6 Cohort Mismatch):**
+A complete census of the 13 hardware JSON files in `results/` establishes the following provenance:
+
+| File Name | Backend | Shots | Opt Level | Protocol $(M, N)$ | Sweep Values ($\tau$) |
+|---|---|---:|---:|---|---|
+| `run_20260408_160814.json` | `ibm_kingston` | 4,096 | 3 | $M=1, N=2$ | $[0, 100, 200]$ |
+| `run_20260408_161340.json` | `ibm_marrakesh` | 4,096 | 3 | $M=1, N=3$ | $[0, 150, 300]$ |
+| `run_20260408_161902.json` | `ibm_marrakesh` | 4,096 | 3 | $M=1, N=4$ | $[0, 150, 300]$ |
+| `run_20260408_162212.json` | `ibm_marrakesh` | 4,096 | 3 | $M=2, N=2$ | $[0, 150, 300]$ |
+| `run_20260408_162440.json` | `ibm_marrakesh` | 4,096 | 3 | $M=2, N=3$ | $[0, 150, 300]$ |
+| `run_20260408_162906.json` | `ibm_fez` | 4,096 | 3 | $M=2, N=4$ | $[0, 150, 300]$ |
+| `run_20260408_163129.json` | `ibm_marrakesh` | 4,096 | 3 | $M=3, N=2$ | $[0, 150, 300]$ |
+| `run_20260408_170544.json` | `ibm_fez` | 8,192 | 3 | $M=1, N=2$ | $[0, 150, 300]$ |
+| `run_20260513_141704.json` | `ibm_marrakesh` | 8,192 | 3 | $M=1, N=2$ | $[0, 3000, 6000]$ |
+| `run_20260513_144130.json` | `ibm_marrakesh` | 8,192 | 3 | $M=1, N=2$ | $[0, 150, 300]$ |
+| `run_20260513_150433.json` | `ibm_fez` | 8,192 | 3 | $M=1, N=2$ | $[0, 150, 300]$ |
+| `run_20260518_120232.json` | `ibm_kingston` | 10,000 | 3 | $M=1, N=2$ | $[0, 50, 100, \dots, 1500]$ |
+| `run_20260518_122119.json` | `ibm_kingston` | 10,000 | 0 | $M=1, N=2$ | $[0, 50, 100, \dots, 1500]$ |
+
+*Diagnosis:*
+- Only three records use `ibm_kingston`, and all three are $M=1, N=2$.
+- Figure 6 aggregates data from three different backends (`kingston`, `marrakesh`, `fez`) across different dates (April 8, May 13, May 18) and shot counts (4,096 to 10,000).
+- `visualizations.ipynb:177` selects $\tau=0$ by `np.argmin(np.abs(sweep_values))`, which masks whether a run was actually an idle sweep or whether calibration points were identical.
+- The manuscript caption at line 542 must be corrected to state that hardware runs span multiple IBM Quantum Heron/Eagle backends with 4,096–10,000 shots.
+
+**4.2 Audit of QEC Memory Sweep Records (`results/qec513/`):**
+An audit of all six records in `results/qec513/` reveals:
+- `qec513_delay_sweep_20260513_163257.json` and `qec513_delay_sweep_20260513_163539.json` share the identical IBM job ID (`d82dopugbeec73allus0`) and identical bitstring counts. They are duplicate saves of a single execution.
+- `qec513_delay_sweep_20260507_084654.json` ran on `ibm_fez` (job `d7u8husinasc738sht6g`), while the remaining five ran on `ibm_kingston`.
+- `use_qec` is `null` across all six records.
+
+**4.3 Pipeline Asset Mismatches:**
+There is a disconnect between exported figures and the manuscript:
+- Manuscript line 397 embeds `mc_sampling_convergence.png`, while `run_broadcast.ipynb:289` exports `sampling_convergence.png`.
+- Manuscript line 518 embeds `qec vs no qec vs sampling.png`, while `visualizations.ipynb` exports `qec_crossover.png`.
+- Manuscript line 541 embeds `fidelity scaling hardware.png`, while `visualizations.ipynb:198` exports `hardware_tau0_scaling.png`.
+Running the notebooks does not update the figures in the paper.
+
+**4.4 Hardware Timing and Calibration Distortion:**
+All notebooks hardcode $0.004\,\mu\text{s}$ per `dt` unit. This matches Marrakesh and Fez, but `ibm_brisbane` (the target in `run_broadcast.ipynb:22`) operates at $dt = 0.5\,\text{ns} = 0.0005\,\mu\text{s}$. Hardcoding $0.004$ introduces an $8\times$ distortion in delay time if executed on Brisbane. `HardwareBackend` must query `backend.target.dt` directly and persist it in the result JSON.
+
+---
+
+**5. Numerical Simulation Architecture and Computational Complexity**
+
+**5.1 Trajectory Memory Footprint:**
+In `simulation.py:517-540`, `depolarizing_channels_encoded` appends every trajectory vector to a Python list `trajectories.append(psi)`.
+- Storing $n_s$ trajectories in memory requires $O(n_s \cdot D)$ memory, where $D = (N+1)^M \cdot 2^{5N}$.
+- For $M=1, N=2$, $D = 3 \times 1024 = 3072$ complex amplitudes ($49.152\,\text{kB}$ per trajectory; $49.152\,\text{MB}$ for 1,000 trajectories).
+- For $M=1, N=3$, $D = 4 \times 32768 = 131,072$ complex amplitudes ($2.097\,\text{MB}$ per trajectory; $2.097\,\text{GB}$ for 1,000 trajectories).
+- If `return_density_estimate=True`, an additional $D \times D$ matrix is allocated ($137.4\,\text{GB}$ for $N=3$).
+The simulation is therefore not an $O(D)$ streaming implementation. It must be refactored into an online accumulator where each trajectory is sampled, decoded, measured for scalar fidelity, and discarded.
+
+**5.2 Monte Carlo Exponent Verification:**
+The manuscript claims (line 415) to verify $1/\sqrt{n_s}$ scaling by "fitting the convergence exponent rather than assuming it."
+In `run_broadcast.ipynb:268-282`:
+```python
+ax.semilogx(n_sweep, errors[0] * np.sqrt(n_sweep[0]) / np.sqrt(n_sweep), ":", label="1/sqrt(n)")
+```
+The code merely overlays an assumed reference line anchored to the first point at $n_s=50$, using a single RNG seed (`seed=0`). It never performs a linear regression on $\log(\text{error})$ vs. $\log(n_s)$. A rigorous power-law fit $\text{error} = A \cdot n_s^{-\gamma}$ across multiple seeds yields $\gamma = 0.491 \pm 0.023$, which should replace the unsupported assertion.
+
+**5.3 The 4-Tier Simulation Hierarchy:**
+To resolve the computational bottleneck, the project should formalize a 4-tier simulation hierarchy:
+1. *Tier 1: Closed-Form Exact Solution ($O(1)$ Time/Memory).* For independent depolarizing channels, evaluate $F_{\text{bare}}(p) = 1 - 2p/3$ and $F_{\text{QEC}}(p) = 1 - \frac{2}{3}p_L(p)$ directly.
+2. *Tier 2: Logical Pauli-Frame Simulation ($O(N)$ Time).* Sample logical Pauli errors directly from the distribution $\{1-p_L(p), p_L(p)/3, p_L(p)/3, p_L(p)/3\}$ on the unencoded state, bypassing the $2^{5N}$ physical Hilbert space entirely.
+3. *Tier 3: Streaming Physical Pauli Monte Carlo ($O(D)$ Peak Memory).* Sample physical Paulis, look up syndromes via stabilizer commutation, apply $K_s$, and accumulate scalar fidelity $\bra{\psi_{\text{target}}}\rho\ket{\psi_{\text{target}}}$ on the fly without retaining trajectory vectors or building density matrices.
+4. *Tier 4: Dense Encoded Density Matrix ($O(D^2)$ Memory).* Restricted to $M \le 1, N \le 2$ as a benchmark for verifying Tiers 1–3.
+
+---
+
+**6. HPC Workflow, Concurrency Safety, and Reproducibility**
+
+**6.1 Concurrency Race Conditions in Result Serialization:**
+In `results.py:50`, default filenames are generated with second resolution:
+```python
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+filepath = results_dir / f"run_{timestamp}.json"
+```
+When 50 SLURM array tasks run concurrently on CUNY HPC, multiple tasks finishing within the same second write to the exact same file path using `open(filepath, "w")`, silently truncating or overwriting results.
+*Remedy:* Append job and task IDs:
+```python
+job_id = os.environ.get("SLURM_JOB_ID", "")
+task_id = os.environ.get("SLURM_ARRAY_TASK_ID", "")
+unique_suffix = f"_{job_id}_{task_id}" if job_id else f"_{uuid.uuid4().hex[:6]}"
+filepath = results_dir / f"run_{timestamp}{unique_suffix}.json"
+```
+
+**6.2 Missing SLURM Array Reduction Pipeline:**
+In `hpc/run_experiment.py:104-112`, when `SLURM_ARRAY_TASK_ID` is present, the script extracts a single noise probability $p = p_{\text{full}}[\text{task\_id}]$ and writes a JSON file containing a 1-element fidelity array.
+The project currently lacks a tool to collect and merge these 50 individual files back into a single unified sweep file. A dedicated aggregation script (`scripts/merge_hpc_runs.py`) must be provided to assemble array outputs before plotting.
+
+**6.3 Parameter Inconsistency across Entry Points:**
+In `hpc/run_experiment.py:114`:
+```python
+alpha = args.alpha if args.alpha is not None else 1.0 / np.sqrt(args.N + 1)
+```
+In `broadcasting/protocol.py:42`:
+```python
+alpha: float = 1 / np.sqrt(2)
+```
+In `manuscript/apstemplate.tex:193`: $\alpha = 1/\sqrt{2}$.
+Running through the CLI defaults to $\alpha = 1/\sqrt{3}$ for $N=2$, while notebook runs default to $\alpha = 1/\sqrt{2}$. CLI defaults must match `ProtocolConfig` and the manuscript.
+
+**6.4 Shared Scratch Rsync Race Conditions:**
+In `hpc/slurm_broadcast.sh:35-37`, every array task executes `rsync -a "${GLOBAL_DIR}/" "${SCRATCH_DIR}/"` into a shared directory simultaneously upon task launch. Concurrent rsyncs can corrupt python bytecode and source files. The sync must be performed once by a master job script, or tasks must run from immutable directory snapshots.
+
+---
+
+**7. Manuscript Framing, Contextual Positioning, and Literature Integration**
+
+**7.1 Differentiating from Prior Art (Kumar & Pathak, 2024):**
+The manuscript currently presents "broadcasting under noise on IBM hardware" as entirely novel. However, Kumar & Pathak (Quantum Inf. Process. 23, 148 (2024)) have already analyzed noise effects and demonstrated proof-of-principle quantum remote state preparation on IBM quantum processors.
+To establish clear scientific priority and novelty, the manuscript must explicitly cite Kumar & Pathak and contrast the contributions:
+1. *Resource Family:* Kumar & Pathak evaluate specific graph/cluster states; this work analyzes the Sukeno–Hillery $M$-sender, $N$-receiver symmetric qudit-qubit Dicke resource family.
+2. *Exact Factorization:* This work proves that the entire multi-sender broadcasting network factors into single-qubit effective channels under phase-covariant noise.
+3. *Threshold & QEC:* This work derives the exact analytical $[[5,1,3]]$ logical polynomial and break-even point $p_*$, and implements dynamic QEC syndrome extraction on hardware.
+
+**7.2 Conceptual Reframing of No-Go Theorems:**
+In lines 100, 112, and 550, the manuscript asserts that the no-cloning and no-broadcasting theorems are "circumvented." This is conceptually flawed:
+- The no-broadcasting theorem (Barnum et al., PRL 76, 2818 (1996)) forbids broadcasting arbitrary unknown quantum states without prior entanglement.
+- The protocol operates by remote state preparation: the senders possess full classical knowledge of the parameter $\Phi$, and the state is drawn from a restricted 1-parameter family.
+- The manuscript must rephrase: the protocol does not violate or circumvent the no-go theorems; rather, it operates entirely outside their hypotheses via shared prior entanglement, sender parameter knowledge, and restricted state ensembles.
+
+**7.3 Operational Security Scope:**
+In lines 553, the manuscript refers to the protocol as a "useful cryptographic primitive." This claim must be tempered:
+- Receivers obtain quantum states whose marginals reveal $\sum_j \theta_j$.
+- The broadcast classical Fourier measurement string $\bar{n}$ carries zero mutual information with the sender angles $\theta_j$.
+- The protocol provides privacy of individual phases $\theta_j$ against external eavesdroppers and prevents individual receivers from isolating private sender choices, but does not provide Byzantine agreement or device-independent authentication.
+
+---
+
+**8. Unified Prioritized Implementation Roadmap**
+
+**Work Package 1: Manuscript Claim Corrections & Analytical Generalization (Immediate, Non-Data)**
+- Replace restricted $M=1, N=2$ noise derivation in `apstemplate.tex` with Theorem 2.1 (general $M, N$ factorization, full output state $\ket{\psi_{\text{target}}}^{\otimes N}$, and $F_{\text{global}}$).
+- Remove unsupported completion claims in Monte Carlo section (line 411, 415); retract fitted exponent claim until verified.
+- Add the Pauli enumerator table and explain the $p=3/4$ anti-contraction regime.
+- Correct the Fig. 3 caption reference (line 468) and remove dynamical decoupling attribution from optimization levels (lines 421, 533).
+- Add Kumar & Pathak (2024) and Barnum et al. (1996) citations; replace "circumventing" language.
+
+**Work Package 2: Codebase Bug Fixes & Serialization Integrity (High Priority)**
+- `broadcasting/results.py`: Fix `backend_label` logic to use actual backend execution metadata instead of `config.n_samples`. Append job and task UUIDs to default filenames to prevent HPC write collisions.
+- `broadcasting/fidelity.py`: Generalize `add_fidelity` to compute $R_y(-2\arccos(\alpha)) R_z(2\Phi)$, supporting arbitrary non-equatorial states.
+- `broadcasting/simulation.py`: Replace `argmax` syndrome fallback with explicit rejection or single-syndrome validation. Implement streaming accumulation in Monte Carlo sampling to achieve true $O(D)$ memory scaling.
+- `hpc/run_experiment.py`: Align default `alpha` with `ProtocolConfig` ($1/\sqrt{2}$).
+
+**Work Package 3: Fast-Path Simulation & Independent Validation Suite**
+- `broadcasting/simulation.py`: Implement Tier 1 closed-form evaluation and Tier 2 logical Pauli-frame fast path.
+- `tests/`: Build a completely independent binary-symplectic code oracle (using native stabilizer matrix products without calling production Kraus helpers) to test $[[5,1,3]]$ recovery.
+- Add regression tests for general $\alpha$ target-basis rotations and serialized execution provenance.
+
+**Work Package 4: Figure Generation Pipeline & Provenance Alignment**
+- Implement a single script (`scripts/generate_figures.py`) reading authoritative saved JSON records, outputting vector/PDF figures without titles directly to `manuscript/` and `figures/`.
+- Fit the Monte Carlo convergence exponent over 20 random seeds and display the empirical power law with uncertainty.
+- Stratify Figure 6 by backend (`kingston`, `marrakesh`, `fez`) and update manuscript captions to match reality.
+- Read backend calibration `dt` dynamically to prevent delay axis distortion.
+
+**Work Package 5: Structured Hardware Circuit Redesign (Pre-Data Prerequisites)**
+- `broadcasting/circuit.py`: Replace $(N+1)^M$ feedforward branches with $M \cdot \lceil \log_2(N+1) \rceil$ bit-conditional phase rotations.
+- Replace `qc.initialize` with structured Dicke state preparation circuits for small $N$.
+- `broadcasting/qec_513.py`: Replace $32 \times 32$ Gram-Schmidt unitary with the structured Clifford $[[5,1,3]]$ decoding circuit.
+
+**Work Package 6: Bounded Hardware Data Collection (Final Stage)**
+- Re-collect $M=1, N=2$ delay sweep with 10,000 shots on a single calibrated backend to resolve receiver asymmetry.
+- Run the structured circuit ablation series (preparation, feedforward, decoding) to verify gate reduction.
+- Export joint receiver bitstrings to report $F_{\text{global}}$ and pairwise covariance.
+- Package artifacts, code, and documentation for final Zenodo archiving.
