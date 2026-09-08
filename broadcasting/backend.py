@@ -297,12 +297,23 @@ class HardwareBackend(Backend):
 
         ``dynamical_decoupling`` is a genuine ``SamplerV2`` option
         (``options.dynamical_decoupling.enable``), distinct from
-        ``resilience_level`` (Estimator-only, not used here).
+        ``resilience_level`` (Estimator-only, not used here). Confirmed on
+        real hardware (2026-09-08) that Runtime rejects DD for the dynamic
+        (mid-circuit-measurement + classical-feedforward) circuits this class
+        builds, so this raises early instead of submitting a job that will
+        fail server-side.
         """
+        if self.dynamical_decoupling:
+            raise ValueError(
+                "dynamical_decoupling=True is not supported here: Runtime's "
+                "DD pass rejects circuits with mid-circuit measurement and "
+                "classical feedforward (confirmed on real hardware), which "
+                "every circuit built by this class has. Leave it False."
+            )
+
         from qiskit_ibm_runtime import SamplerV2 as Sampler
 
         sampler = Sampler(mode=backend)
-        sampler.options.dynamical_decoupling.enable = self.dynamical_decoupling
         return sampler
 
     @staticmethod
