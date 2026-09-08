@@ -279,16 +279,31 @@ class HardwareBackend(Backend):
         backend_name: str | None = None,
         shots: int = 8192,
         optimization_level: int = 3,
+        dynamical_decoupling: bool = False,
     ):
         self.service = service
         self.backend_name = backend_name
         self.shots = shots
         self.optimization_level = optimization_level
+        self.dynamical_decoupling = dynamical_decoupling
 
     def _backend(self) -> Any:
         if self.backend_name:
             return self.service.backend(self.backend_name)
         return self.service.least_busy(simulator=False, operational=True)
+
+    def _sampler(self, backend: Any) -> Any:
+        """Build a SamplerV2 with the manual DD yes/no option applied.
+
+        ``dynamical_decoupling`` is a genuine ``SamplerV2`` option
+        (``options.dynamical_decoupling.enable``), distinct from
+        ``resilience_level`` (Estimator-only, not used here).
+        """
+        from qiskit_ibm_runtime import SamplerV2 as Sampler
+
+        sampler = Sampler(mode=backend)
+        sampler.options.dynamical_decoupling.enable = self.dynamical_decoupling
+        return sampler
 
     @staticmethod
     def _fidelities_from_counts(counts: dict[str, int], N: int) -> list[float]:
@@ -303,7 +318,6 @@ class HardwareBackend(Backend):
     def run(self, config: ProtocolConfig) -> BroadcastResult:
         # Import here to avoid hard dependency when not using hardware
         from qiskit.transpiler import generate_preset_pass_manager
-        from qiskit_ibm_runtime import SamplerV2 as Sampler
 
         from .circuit import generate_qiskit_circuit
         from .fidelity import add_fidelity
@@ -332,7 +346,7 @@ class HardwareBackend(Backend):
         isa_circuit = pm.run([qc])[0]
 
         # Submit
-        sampler = Sampler(mode=backend)
+        sampler = self._sampler(backend)
         job = sampler.run([(isa_circuit,)], shots=self.shots)
         result = job.result()
 
@@ -361,6 +375,7 @@ class HardwareBackend(Backend):
                 "optimization_level": self.optimization_level,
                 "tau": config.tau,
                 "dt": getattr(getattr(backend, "target", None), "dt", None),
+                "dynamical_decoupling": self.dynamical_decoupling,
                 "timestamp": datetime.now().isoformat(),
             },
         )
@@ -374,7 +389,6 @@ class HardwareBackend(Backend):
     ) -> BroadcastResult:
         """Run a hardware tau sweep for one or more theta samples."""
         from qiskit.transpiler import generate_preset_pass_manager
-        from qiskit_ibm_runtime import SamplerV2 as Sampler
 
         from .circuit import generate_qiskit_circuit
         from .fidelity import add_fidelity
@@ -423,7 +437,7 @@ class HardwareBackend(Backend):
             optimization_level=self.optimization_level,
         )
         isa_circuits = pm.run(circuits)
-        job = Sampler(mode=backend).run(
+        job = self._sampler(backend).run(
             [(circuit,) for circuit in isa_circuits],
             shots=self.shots,
         )
@@ -469,6 +483,7 @@ class HardwareBackend(Backend):
                 "per_theta_fidelities": fid_grid if n_theta > 1 else None,
                 "counts": counts_grid,
                 "dt": getattr(getattr(backend, "target", None), "dt", None),
+                "dynamical_decoupling": self.dynamical_decoupling,
                 "timestamp": datetime.now().isoformat(),
             },
         )

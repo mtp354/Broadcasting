@@ -80,6 +80,23 @@ class TestHardwareBackend:
         assert hb.backend_name == "fake_backend"
         assert hb.shots == 1024
         assert hb.optimization_level == 1
+        assert hb.dynamical_decoupling is False
+
+    def test_dynamical_decoupling_flag_applied_to_sampler(self):
+        from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+
+        hb = HardwareBackend(service=None, dynamical_decoupling=True)
+        assert hb.dynamical_decoupling is True
+
+        sampler = hb._sampler(backend=FakeBrisbane())
+        assert sampler.options.dynamical_decoupling.enable is True
+
+    def test_dynamical_decoupling_defaults_off(self):
+        from qiskit_ibm_runtime.fake_provider import FakeBrisbane
+
+        hb = HardwareBackend(service=None)
+        sampler = hb._sampler(backend=FakeBrisbane())
+        assert sampler.options.dynamical_decoupling.enable is False
 
 
 class TestHPCBackend:

@@ -401,3 +401,116 @@ def plot_run_sweep(
         plt.tight_layout()
         plt.show()
     return fig
+
+
+# ---------------------------------------------------------------------------
+# Delay-sweep periodicity analysis (autocorrelation / periodogram)
+# ---------------------------------------------------------------------------
+
+def _tau_fidelity_trace(
+    run: dict[str, Any], *, receiver: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Extract a uniformly-spaced (tau, fidelity) trace from a loaded run.
+
+    Averages over receivers unless *receiver* selects a single one.
+    """
+    sweep = run.get("sweep", {}) or {}
+    if sweep.get("axis") != "tau":
+        raise ValueError("Periodicity analysis requires a tau-axis sweep run.")
+
+    tau = np.asarray(sweep.get("values", []), dtype=float)
+    fids = np.asarray(run["fidelities"], dtype=float)
+    if fids.ndim == 1:
+        fids = fids.reshape(-1, 1)
+
+    trace = fids[:, receiver] if receiver is not None else fids.mean(axis=1)
+
+    order = np.argsort(tau)
+    tau, trace = tau[order], trace[order]
+
+    if tau.size < 2:
+        raise ValueError("Need at least two tau points for periodicity analysis.")
+    spacing = np.diff(tau)
+    if not np.allclose(spacing, spacing[0]):
+        raise ValueError("Periodicity analysis requires uniformly spaced tau values.")
+
+    return tau, trace
+
+
+def autocorrelation_from_run(
+    run: dict[str, Any], *, receiver: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Mean-subtracted, normalized autocorrelation of a tau-sweep fidelity trace.
+
+    Returns ``(lags, autocorrelation)`` where *lags* are in the same units as
+    the saved ``tau`` sweep values and ``autocorrelation[0] == 1``.
+    """
+    tau, trace = _tau_fidelity_trace(run, receiver=receiver)
+    x = trace - trace.mean()
+    ac_full = np.correlate(x, x, mode="full")
+    ac = ac_full[ac_full.size // 2 :]
+    ac = ac / ac[0] if ac[0] != 0 else ac
+    lags = tau - tau[0]
+    return lags, ac
+
+
+def periodogram_from_run(
+    run: dict[str, Any], *, receiver: int | None = None, detrend: str = "linear"
+) -> tuple[np.ndarray, np.ndarray]:
+    """Power spectral density of a tau-sweep fidelity trace via `scipy.signal.periodogram`.
+
+    Returns ``(frequencies, power)`` where *frequencies* are in units of
+    ``1 / tau`` (i.e. cycles per unit of the saved ``tau`` sweep values).
+    """
+    from scipy import signal
+
+    tau, trace = _tau_fidelity_trace(run, receiver=receiver)
+    fs = 1.0 / (tau[1] - tau[0])
+    freqs, power = signal.periodogram(trace, fs=fs, detrend=detrend, window="hann")
+    return freqs, power
+
+
+def plot_periodicity_comparison(
+    runs: list[dict[str, Any]],
+    labels: list[str],
+    *,
+    receiver: int | None = None,
+    tau_scale: float | None = None,
+    tau_label: str = "Idle delay (dt)",
+    show: bool = True,
+) -> plt.Figure:
+    """Side-by-side autocorrelation and periodogram comparison across runs.
+
+    Intended for comparing tau-sweep fidelity traces collected with different
+    settings (e.g. dynamical decoupling on vs. off) without asserting a
+    conclusion about a shared cause.
+    """
+    if len(runs) != len(labels):
+        raise ValueError("runs and labels must be the same length.")
+
+    fig, (ax_ac, ax_psd) = plt.subplots(1, 2, figsize=(12, 5))
+    colors = plt.cm.tab10.colors
+
+    for i, (run, label) in enumerate(zip(runs, labels)):
+        color = colors[i % len(colors)]
+        lags, ac = autocorrelation_from_run(run, receiver=receiver)
+        freqs, power = periodogram_from_run(run, receiver=receiver)
+
+        lag_x = tau_scale * lags if tau_scale else lags
+        ax_ac.plot(lag_x, ac, color=color, label=label)
+        ax_psd.plot(freqs, power, color=color, label=label)
+
+    ax_ac.axhline(0.0, color="gray", linestyle=":", alpha=0.5)
+    ax_ac.set_xlabel(f"Lag ({tau_label})")
+    ax_ac.set_ylabel("Autocorrelation")
+    ax_ac.legend(loc="best", fontsize=9)
+
+    freq_unit = f"1/{tau_label.split('(')[-1].rstrip(')')}" if "(" in tau_label else "1/tau"
+    ax_psd.set_xlabel(f"Frequency ({freq_unit})")
+    ax_psd.set_ylabel("Power")
+    ax_psd.legend(loc="best", fontsize=9)
+
+    if show:
+        plt.tight_layout()
+        plt.show()
+    return fig

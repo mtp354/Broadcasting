@@ -83,12 +83,13 @@ Everything is controlled from the **Configuration** cell:
 | `p_list` | Depolarizing-probability sweep (`exact`/`sampling`/`hpc` modes) |
 | `n_samples` | Monte Carlo trajectory count (`sampling`/`hpc` modes) |
 | `tau` / `tau_values` | Delay time(s) in backend `dt` units (`hardware`/`hardware_tau_sweep`) |
-| `IBM_PROFILE`, `IBM_BACKEND`, `SHOTS`, `OPTIMIZATION_LEVEL` | Hardware execution settings |
+| `IBM_PROFILE`, `IBM_BACKEND`, `SHOTS`, `OPTIMIZATION_LEVEL` | Hardware execution settings. `IBM_BACKEND = None` picks the least-busy operational backend. |
+| `DYNAMICAL_DECOUPLING` | Manual yes/no toggle for Runtime's built-in Sampler-level dynamical decoupling (`SamplerOptions.dynamical_decoupling.enable`), used by `MODE in {"hardware", "hardware_tau_sweep"}` |
 | `HPC_MODE`, `HPC_SUBMIT`, `HPC_ARRAY`, `HPC_CONCURRENCY` | Only used when `MODE="hpc"` |
 
-Run the **Run** cell, then the **Save And Plot** cell (saves to `results/` and shows a plot). The two
-optional cells below (**Exact Vs Sampling Overlay**, **Sampling Convergence**) are for validating the
-Monte Carlo sampler and are gated behind their own `RUN_*` flags (default `False`).
+Run the **Run** cell, then the **Save And Plot** cell (saves to `results/` and shows a plot). The three
+optional cells below (**Exact Vs Sampling Overlay**, **Sampling Convergence**, **Figure 5 DD Periodicity
+Comparison**) are gated behind their own `RUN_*` flags (default `False`).
 
 ### Reproducing each manuscript figure
 
@@ -97,6 +98,7 @@ Monte Carlo sampler and are gated behind their own `RUN_*` flags (default `False
 | QEC crossover (exact vs. QEC vs. sampling) | `M=1,N=2` exact no-QEC, exact QEC, and sampled QEC `p`-sweeps | `MODE="exact"` with `use_qec=False`, then `use_qec=True`; `MODE="sampling"` with `use_qec=True`. Then run `visualizations.ipynb`'s "QEC Crossover" cell. |
 | Sampling convergence (`1/sqrt(n)` fit) | Nothing extra -- self-contained | Set `RUN_CONVERGENCE = True` in the **Optional Sampling Convergence** cell and run it. |
 | Delay-vs-fidelity (single backend, `M=1,N=2`) | One hardware tau sweep | `MODE="hardware_tau_sweep"`, `use_qec=False`. Uses `tau_values` and (optionally) multiple `theta_samples`. |
+| Delay-vs-fidelity periodicity, DD on vs. off | Two hardware tau sweeps on the same backend (`M=1,N=2`, no QEC) | Set `use_qec=False` in **Configuration**, then set `RUN_DD_COMPARISON = True` in the **Optional Figure 5 DD Periodicity Comparison** cell and run it. Produces an autocorrelation + periodogram comparison via `plot_periodicity_comparison`; does not assume DD is or isn't the cause of the drop-out feature ahead of time. |
 | `[[5,1,3]]` memory benchmark (Fig. 2) | A standalone encoded-qubit delay sweep on hardware | Use **`qec_testing.ipynb`**, not `run_broadcast.ipynb` -- set `RUN_HARDWARE = True` there. This is the standalone memory test, distinct in scope from the broadcasting circuits above. |
 | Hardware `(M,N)` scaling | One hardware point (`tau=0`) per `(M,N)` you want plotted, **on a single, consistent backend and shot count** (mixing backends/shots was a real bug fixed in Phase 3 -- see `ACTION_PLAN.md`) | For each `(M,N)`: `MODE="hardware"`, `tau=0`. Then run `visualizations.ipynb`'s "Hardware Fidelity At Tau Zero" cell, which now reports the backend/shots cohort explicitly and will warn you if points don't share a cohort. |
 | Large sweeps too slow to run locally/interactively | -- | Use `MODE="hpc"` (see below) instead of `"exact"`/`"sampling"`. |

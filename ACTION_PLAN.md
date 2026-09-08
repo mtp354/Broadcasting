@@ -384,16 +384,31 @@ New phase inserted ahead of plotting/manuscript polish, per the review's recomme
 
 ## Phase 5 — Dynamical decoupling & optimization-vs-mitigation code (corrected scope)
 
-- [Code] **Item 17 (corrected)**: Add an explicit, opt-in DD control path if DD experiments are
-  pursued (Phase 8) — build a `PassManager` with `ALAPScheduleAnalysis` + `PadDynamicalDecoupling`
-  compatible with the dynamic-circuit path actually used here (verify against the pinned
-  `qiskit`/`qiskit-ibm-runtime` versions first; Runtime's built-in DD toggle may not compose with
-  dynamic circuits — confirm before relying on it).
+- [Code] **Item 17 (corrected, superseded 2026-09-XX)** ✅: The original plan assumed a custom
+  `PassManager` (`ALAPScheduleAnalysis` + `PadDynamicalDecoupling`) would be needed and that
+  Runtime's built-in DD toggle might not exist for `SamplerV2`/might not compose with dynamic
+  circuits. **This was wrong on the first point** — confirmed against the
+  `qiskit-ibm-runtime` 0.49 docs that `SamplerOptions.dynamical_decoupling` is a genuine, supported
+  `SamplerV2` suboptions object (`enable`, `sequence_type`, `scheduling_method`,
+  `extra_slack_distribution`, `skip_reset_qubits`), distinct from `resilience_level`
+  (Estimator-only, correctly not used here). Implemented as a manual yes/no toggle:
+  `HardwareBackend(..., dynamical_decoupling: bool = False)`, applied via a new `_sampler()` helper
+  (`broadcasting/backend.py`) that sets `sampler.options.dynamical_decoupling.enable` before
+  `run()`/`run_tau_sweep()`; recorded in saved run metadata. Whether this composes cleanly with our
+  dynamic (mid-circuit-measurement + feedforward) circuits on real hardware is **still unverified
+  empirically** — the API accepts the option, but actual behavior on a dynamic circuit should be
+  checked against the first real DD-on hardware run.
 - [Code] **Item 18 (withdrawn as originally scoped)**: Do **not** add a `resilience_level` parameter
   to `HardwareBackend` — it executes via `SamplerV2`, which doesn't accept it. If error mitigation is
   ever wanted for an Estimator-based measurement, scope that separately.
 - [Code] Add an autocorrelation/periodogram helper for fidelity-vs-delay traces (Phase 4, item 19),
-  usable directly on existing delay-sweep result files — no new data required for this analysis.
+  usable directly on existing delay-sweep result files ✅: implemented as
+  `autocorrelation_from_run`/`periodogram_from_run`/`plot_periodicity_comparison` in
+  [broadcasting/plotting.py](broadcasting/plotting.py) (uses `scipy.signal.periodogram`; `scipy`
+  added to `requirements.txt`). Wired into `run_broadcast.ipynb`'s new **Optional Figure 5 DD
+  Periodicity Comparison** cell (`RUN_DD_COMPARISON`), which runs the `M=1,N=2` no-QEC tau sweep
+  twice on one fixed backend (DD off, DD on) and compares.
+
 
 ## Phase 6 — Structured hardware circuit redesign (non-data prerequisite for Phase 8) — decision made: keep generic synthesis
 
