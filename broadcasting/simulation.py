@@ -7,11 +7,15 @@ qubit encoding is needed.
 """
 
 import itertools
+import warnings
 from math import comb
 from typing import Any
 
 import numpy as np
 from qiskit.quantum_info import DensityMatrix, Pauli, Statevector, state_fidelity
+
+# [[5,1,3]] stabilizer generators, in the same qubit order used throughout this module.
+QEC513_STABILIZERS = ("XZZXI", "IXZZX", "XIXZZ", "ZXIXZ")
 
 
 # ---------------------------------------------------------------------------
@@ -511,25 +515,36 @@ def depolarizing_channels_encoded(
 
     # --- sampling ---
     trajectories: list[np.ndarray] = []
+    # Per-trajectory, per-block 5-letter Pauli-frame label (e.g. "IXIII"), so that
+    # recovery can look up the induced syndrome directly instead of re-deriving it
+    # from the state (see qec_recover_and_decode).
+    pauli_labels: list[list[str]] = []
     rho_est = np.zeros((D, D), dtype=complex) if return_density_estimate else None
     pauli_ops: list[np.ndarray | None] = [None, X, Y, Z]
+    pauli_letters = "IXYZ"
 
     for _ in range(n_samples):
         psi = psi0.copy()
+        traj_labels: list[str] = []
         for i, p in enumerate(p_list):
             probs = np.array([1 - p, p / 3, p / 3, p / 3], dtype=float)
+            block_letters: list[str] = []
             for t in range(5):
                 ax = M + 5 * i + t
                 choice = rng.choice(4, p=probs)
+                block_letters.append(pauli_letters[choice])
                 if choice != 0:
                     psi = _apply_unitary_on_subsystem(psi, pauli_ops[choice], ax)
+            traj_labels.append("".join(block_letters))
         trajectories.append(psi)
+        pauli_labels.append(traj_labels)
         if return_density_estimate:
             rho_est += np.outer(psi, psi.conj())
 
     out: dict[str, Any] = {
         "mode": "sampled",
         "trajectories": trajectories,
+        "pauli_labels": pauli_labels,
         "D": D,
         "n_samples": n_samples,
     }
@@ -542,6 +557,152 @@ def depolarizing_channels_encoded(
 # QEC recovery + decode
 # ---------------------------------------------------------------------------
 
+def pauli_label_syndrome(label: str) -> str:
+    """[[5,1,3]] syndrome of a 5-qubit Pauli error given as a label, e.g. ``"IXZII"``.
+
+    Computed directly from single-qubit (anti)commutation counting against each
+    stabilizer generator, rather than by constructing the full 32x32 operator and
+    checking commutators. Two single-qubit Paulis anticommute iff both are
+    non-identity and different; the syndrome bit for each stabilizer is the parity
+    (mod 2) of the number of anticommuting qubit positions.
+
+    This lets a Monte Carlo trajectory's actual syndrome be read off in O(1) from
+    the Pauli error that was sampled for it, instead of testing all 16 candidate
+    recovery branches and picking the most probable one (which is unnecessary --
+    and unsound for non-Pauli noise -- for exact Pauli trajectories).
+    """
+    bits = []
+    for g in QEC513_STABILIZERS:
+        parity = 0
+        for e_p, g_p in zip(label, g):
+            if e_p != "I" and g_p != "I" and e_p != g_p:
+                parity ^= 1
+        bits.append(str(parity))
+    return "".join(bits)
+
+
+def five_qubit_recovery_kraus_operators() -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
+    r"""Build the ideal [[5,1,3]] recovery-and-decode Kraus operators, by syndrome.
+
+    For syndrome *s* with Pauli representative :math:`E_s` and codespace projector
+    :math:`P_{\mathcal C}`, the correct recovery-decode map is
+    :math:`K_s = V_{\mathrm{Dec}} E_s^\dagger P_s`, where
+    :math:`P_s = E_s P_{\mathcal C} E_s^\dagger` projects onto syndrome sector *s*
+    (this is the corrected form of manuscript Eq. 36, which as written -- applying
+    :math:`V_{\mathrm{Dec}} E_s P_{\mathcal C} E_s` -- only projects onto the
+    syndrome sector without ever mapping it back into the codespace).  Because the
+    Pauli representatives used here are Hermitian and involutory
+    (:math:`E_s^\dagger = E_s`, :math:`E_s^2 = I`), this simplifies to
+    :math:`K_s = V_{\mathrm{Dec}} P_{\mathcal C} E_s`, which is exactly what is
+    computed below (``V_dec @ E_s @ Pi_s`` reduces to ``V_dec @ P_code @ E_s``).
+
+    Returns
+    -------
+    dict[str, np.ndarray]
+        Mapping from 4-bit syndrome string (e.g. ``"0000"``) to the corresponding
+        ``2 x 32`` recovery-decode Kraus operator.
+    np.ndarray
+        ``|0_L>``.
+    np.ndarray
+        ``|1_L>``.
+    """
+    I2 = np.eye(2, dtype=complex)
+    X = np.array([[0, 1], [1, 0]], dtype=complex)
+    Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+    Z = np.array([[1, 0], [0, -1]], dtype=complex)
+    pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
+
+    def _kron_all(mats: list[np.ndarray]) -> np.ndarray:
+        out = mats[0]
+        for m in mats[1:]:
+            out = np.kron(out, m)
+        return out
+
+    v0, v1 = _five_qubit_logical_basis()
+    P_code = np.outer(v0, v0.conj()) + np.outer(v1, v1.conj())
+    V_dec = np.vstack([v0.conj(), v1.conj()])
+
+    reps: dict[str, np.ndarray] = {"0000": np.eye(32, dtype=complex)}
+    for q in range(5):
+        for letter in ("X", "Y", "Z"):
+            letters = ["I"] * 5
+            letters[q] = letter
+            label = "".join(letters)
+            E = _kron_all([pauli_dict[c] for c in label])
+            reps[pauli_label_syndrome(label)] = E
+
+    K_by_syndrome: dict[str, np.ndarray] = {}
+    for s, E_s in reps.items():
+        Pi_s = E_s @ P_code @ E_s
+        K_by_syndrome[s] = V_dec @ E_s @ Pi_s
+
+    return K_by_syndrome, v0, v1
+
+
+def logical_error_polynomial(p: float) -> float:
+    r"""Exact closed-form [[5,1,3]] logical error probability.
+
+    For ideal syndrome recovery under independent single-qubit depolarizing noise
+    of strength *p* per physical qubit, direct enumeration of the weight
+    distribution of the 4**5 Pauli patterns gives
+
+    .. math::
+        p_L(p) = 10p^2 - \frac{200}{9}p^3 + \frac{160}{9}p^4 - \frac{128}{27}p^5,
+
+    with corresponding fidelity :math:`F_{\mathrm{QEC}}(p) = 1 - \tfrac{2}{3}p_L(p)`
+    and break-even point :math:`p_\star = (3-\sqrt6)/4 \approx 0.1376`. This replaces
+    the manuscript's Eq. (32)-(33), which combines the *physical* two-or-more-error
+    probability :math:`p_f \approx 10p^2` with an extra, unjustified factor of
+    :math:`\tfrac{2}{3}p_f` rather than using it as the leading term of
+    :math:`p_L(p)` itself.
+    """
+    return 10 * p**2 - (200 / 9) * p**3 + (160 / 9) * p**4 - (128 / 27) * p**5
+
+
+def logical_error_probability_bruteforce(p: float) -> float:
+    """Exact [[5,1,3]] logical error probability via brute-force enumeration.
+
+    Independently validates :func:`logical_error_polynomial` (and, through it, the
+    exact-mode fidelity from :func:`qec_recover_and_decode`) without relying on the
+    closed-form polynomial or reusing any of the recovery-map code under test:
+    every one of the ``4**5 = 1024`` five-qubit Pauli error patterns is applied
+    directly to both logical basis states, recovered via the syndrome-indexed
+    Kraus operator, and checked for whether the residual action on the code space
+    is proportional to the identity (no logical error) or not (logical X/Y/Z).
+    """
+    K_by_syndrome, v0, v1 = five_qubit_recovery_kraus_operators()
+    I2 = np.eye(2, dtype=complex)
+    X = np.array([[0, 1], [1, 0]], dtype=complex)
+    Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
+    Z = np.array([[1, 0], [0, -1]], dtype=complex)
+    pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
+    letters = "IXYZ"
+
+    total = 0.0
+    for combo in itertools.product(range(4), repeat=5):
+        label = "".join(letters[c] for c in combo)
+        n_err = sum(1 for c in combo if c != 0)
+        weight = (1 - p) ** (5 - n_err) * (p / 3) ** n_err
+        if weight == 0.0:
+            continue
+
+        E_actual = pauli_dict[label[0]]
+        for letter in label[1:]:
+            E_actual = np.kron(E_actual, pauli_dict[letter])
+
+        K = K_by_syndrome[pauli_label_syndrome(label)]
+        recovered = np.column_stack([K @ (E_actual @ v0), K @ (E_actual @ v1)])
+
+        no_logical_error = (
+            abs(recovered[0, 1]) < 1e-6
+            and abs(recovered[1, 0]) < 1e-6
+            and abs(recovered[0, 0] - recovered[1, 1]) < 1e-6
+        )
+        if not no_logical_error:
+            total += weight
+    return total
+
+
 def qec_recover_and_decode(
     hybrid_result: dict[str, Any],
     M: int,
@@ -553,6 +714,15 @@ def qec_recover_and_decode(
     Accepts the output of :func:`depolarizing_channels_encoded` and
     returns a density matrix on the reduced space
     :math:`(N+1)^M \\times 2^N`.
+
+    For ``mode == "sampled"`` trajectories that carry a ``"pauli_labels"`` entry
+    (as produced by :func:`depolarizing_channels_encoded`), the syndrome for each
+    block is computed directly from the actually-sampled Pauli error via
+    :func:`pauli_label_syndrome`, and the matching recovery Kraus operator is
+    applied deterministically -- no search over syndrome branches is needed. If
+    ``"pauli_labels"`` is absent (e.g. hand-built trajectories), this falls back to
+    selecting the highest-probability branch, which is only valid for exact Pauli
+    trajectories and is unsound for coherent or otherwise non-Pauli noise.
 
     Parameters
     ----------
@@ -571,49 +741,8 @@ def qec_recover_and_decode(
     """
     d_qudit = N + 1
 
-    I2 = np.eye(2, dtype=complex)
-    X = np.array([[0, 1], [1, 0]], dtype=complex)
-    Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
-    Z = np.array([[1, 0], [0, -1]], dtype=complex)
-    pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
-
-    def _kron_all(mats: list[np.ndarray]) -> np.ndarray:
-        out = mats[0]
-        for m in mats[1:]:
-            out = np.kron(out, m)
-        return out
-
-    v0, v1 = _five_qubit_logical_basis()
-    P_code = np.outer(v0, v0.conj()) + np.outer(v1, v1.conj())
-    V_dec = np.vstack([v0.conj(), v1.conj()])
-
-    g_labels = ["XZZXI", "IXZZX", "XIXZZ", "ZXIXZ"]
-    G = [_kron_all([pauli_dict[c] for c in lbl]) for lbl in g_labels]
-
-    def _syndrome(E: np.ndarray) -> str:
-        bits = []
-        for g in G:
-            if np.linalg.norm(E @ g - g @ E) < 1e-8:
-                bits.append("0")
-            elif np.linalg.norm(E @ g + g @ E) < 1e-8:
-                bits.append("1")
-            else:
-                raise RuntimeError("Syndrome detection failed.")
-        return "".join(bits)
-
-    reps: dict[str, np.ndarray] = {"0000": np.eye(32, dtype=complex)}
-    for q in range(5):
-        for P1 in (X, Y, Z):
-            mats = [I2] * 5
-            mats[q] = P1
-            E = _kron_all(mats)
-            reps[_syndrome(E)] = E
-
-    K_local = []
-    for s in sorted(reps.keys()):
-        E_s = reps[s]
-        Pi_s = E_s @ P_code @ E_s
-        K_local.append(V_dec @ E_s @ Pi_s)
+    K_by_syndrome, _v0, _v1 = five_qubit_recovery_kraus_operators()
+    K_local = [K_by_syndrome[s] for s in sorted(K_by_syndrome.keys())]
 
     # --- tensor helpers ---
     def _kraus_density(
@@ -635,12 +764,34 @@ def qec_recover_and_decode(
         dims_new = dims_cur[:ax] + [2] + dims_cur[ax + 1 :]
         return acc.reshape(int(np.prod(dims_new)), int(np.prod(dims_new))), dims_new
 
-    def _kraus_state(
+    def _kraus_state_by_label(
+        psi_vec: np.ndarray,
+        dims_cur: list[int],
+        ax: int,
+        label: str,
+        tol_inner: float,
+    ) -> tuple[np.ndarray, list[int]]:
+        K = K_by_syndrome[pauli_label_syndrome(label)]
+        psi_tensor = psi_vec.reshape(dims_cur)
+        tmp = np.tensordot(K, psi_tensor, axes=([1], [ax]))
+        tmp = np.moveaxis(tmp, 0, ax)
+        vec = tmp.reshape(-1)
+        p_branch = float(np.vdot(vec, vec).real)
+        if p_branch < tol_inner:
+            raise RuntimeError(
+                f"Recovery branch for the sampled Pauli frame {label!r} has ~zero "
+                "probability; the tracked Pauli label may be inconsistent with the "
+                "trajectory."
+            )
+        dims_new = dims_cur[:ax] + [2] + dims_cur[ax + 1 :]
+        return vec / np.sqrt(p_branch), dims_new
+
+    def _kraus_state_argmax(
         psi_vec: np.ndarray,
         dims_cur: list[int],
         ax: int,
         K_list: list[np.ndarray],
-        tol_inner: float = 1e-10,
+        tol_inner: float,
     ) -> tuple[np.ndarray, list[int]]:
         psi_tensor = psi_vec.reshape(dims_cur)
         best_vec = None
@@ -649,9 +800,9 @@ def qec_recover_and_decode(
             tmp = np.tensordot(K, psi_tensor, axes=([1], [ax]))
             tmp = np.moveaxis(tmp, 0, ax)
             vec = tmp.reshape(-1)
-            p = float(np.vdot(vec, vec).real)
-            if p > best_p:
-                best_p = p
+            p_branch = float(np.vdot(vec, vec).real)
+            if p_branch > best_p:
+                best_p = p_branch
                 best_vec = vec
         if best_p < tol_inner:
             raise RuntimeError("All syndrome branch probabilities ~ 0.")
@@ -679,15 +830,30 @@ def qec_recover_and_decode(
 
     # sampled
     trajs = hybrid_result["trajectories"]
+    pauli_labels = hybrid_result.get("pauli_labels")
+    if pauli_labels is None:
+        warnings.warn(
+            "depolarizing_channels_encoded output has no 'pauli_labels'; falling "
+            "back to argmax syndrome-branch selection. This is only valid for "
+            "exact Pauli trajectories and is unsound for coherent/non-Pauli noise.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+
     rho_est = np.zeros((D_out, D_out), dtype=complex)
-    for psi in trajs:
+    for idx, psi in enumerate(trajs):
         psi = np.asarray(psi, dtype=complex)
         dims_cur = dims_in[:]
         for ell in range(N):
             ax = M + ell
             dims_fused = dims_cur[:ax] + [32] + dims_cur[ax + 5 :]
             psi = psi.reshape(dims_cur).reshape(dims_fused).reshape(-1)
-            psi, dims_cur = _kraus_state(psi, dims_fused, ax, K_local, tol)
+            if pauli_labels is not None:
+                psi, dims_cur = _kraus_state_by_label(
+                    psi, dims_fused, ax, pauli_labels[idx][ell], tol
+                )
+            else:
+                psi, dims_cur = _kraus_state_argmax(psi, dims_fused, ax, K_local, tol)
         rho_est += np.outer(psi, psi.conj())
     return DensityMatrix(rho_est / len(trajs))
 

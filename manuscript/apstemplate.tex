@@ -341,19 +341,26 @@ Ideal output (noiseless case).
 
 QEC codes improve fidelity up to a certain level of noise. The fidelity for a pure input state to the depolarizing channel with depolarizing probability $p$ is given by Eq.~(\ref{fidelity_eqn}).
 
-For the $[5,1,3]$ correction code the failure probability can be estimated as the probability of 2 or more physical errors given by the binomial expansion under independence assumptions
+For the $[[5,1,3]]$ code with the minimum-weight recovery defined above (every nonzero syndrome mapped to its unique weight-one Pauli representative), the induced logical channel under independent single-qubit depolarizing noise is itself an exact depolarizing channel. Direct enumeration of all $4^5$ physical Pauli error patterns, weighted by their probability under $\mathcal D_p^{\otimes 5}$ and grouped by whether the corresponding recovery leaves a nontrivial logical Pauli, gives the exact logical error probability
 \begin{align}
-    p_{f} = 1 - (1-p)^5 - 5p(1-p)^4 \approx 10p^2 + O(p^3).
+    p_L(p)
+    &= 90\Big(\tfrac{p}{3}\Big)^{2}(1-p)^{3}
+    + 210\Big(\tfrac{p}{3}\Big)^{3}(1-p)^{2} \nonumber\\
+    &\quad+ 270\Big(\tfrac{p}{3}\Big)^{4}(1-p)
+    + 198\Big(\tfrac{p}{3}\Big)^{5} \nonumber\\
+    &= 10p^2 - \frac{200}{9}p^3 + \frac{160}{9}p^4 - \frac{128}{27}p^5,
 \end{align}
-If we treat this as roughly depolarizing then we can use this in the depolarizing formula
+so that the encoded fidelity is exactly
+\begin{align}\label{eq:pL}
+    F_{\mathrm{QEC}}(p) = 1 - \frac{2}{3}\,p_L(p).
+\end{align}
+Setting $F_{\mathrm{QEC}}(p) = F_{\mathrm{bare}}(p) = 1-\tfrac{2p}{3}$, i.e.\ $p_L(p)=p$, gives the exact break-even point
 \begin{align}
-    F \approx 1 - \frac{2}{3} 10 p_{f}^2.
+    p_\star = \frac{3-\sqrt6}{4} \approx 0.1376,
 \end{align}
-If we set this equal to the fidelity in the no error-correction code we get
-\begin{align}
-    1 - \frac{2}{3} 10 p_{f}^2 \approx 1 - \frac{2p}{3}.
-\end{align}
-This implies a crossover at $p \approx 1/10$. This is an underestimate of the crossover $p$ as not all two qubit errors will be miss-corrected, for example a double bitflip on the same qubit or two phase flip errors.
+which matches the numerically observed crossover in Fig.~\ref{qec_crossover} to within simulation precision. The cruder estimate obtained by truncating $p_L(p)$ at leading order, $p_L(p)\approx 10p^2$, and equating $1-\tfrac23(10p^2)$ to $F_{\mathrm{bare}}(p)$ gives only $p\approx 0.1$; the difference from $p_\star\approx0.1376$ comes from the $O(p^3)$ and higher terms of $p_L(p)$, not from any two-qubit errors being (mis)corrected -- for the minimum-weight decoder used here, every one of the $90$ distinct-qubit weight-two Pauli patterns already induces a nontrivial logical error and is counted correctly by $p_L(p)$. We independently verified Eq.~(\ref{eq:pL}) by brute-force enumeration in code (\texttt{logical\_error\_probability\_bruteforce} in \texttt{broadcasting/simulation.py}), which reproduces the closed form without reusing the recovery-map implementation under test.
+
+We restrict the plotted range to $p\in[0,1]$, the physically meaningful range of the channel convention used here; note that at $p=3/4$ the channel is completely depolarizing ($\eta=0$) and the encoded and unencoded fidelities coincide at $F=1/2$, visible as the second crossing in Fig.~\ref{qec_crossover}.
 %\end{region}
 
 \section{Methods}
@@ -372,7 +379,11 @@ Starting from the pure resource state $\rho_0 = \ket{\Psi^{(M,N)}}\!\bra{\Psi^{(
     \begin{align}
         \rho \mapsto (1-p_\ell)\rho + \tfrac{p_\ell}{3}\big(X_i\rho X_i + Y_i\rho Y_i + Z_i\rho Z_i\big).
     \end{align}
-    \item For the QEC pipeline, ideal recovery and decoding $\Dec\circ\mathcal{R}$ on each five-qubit block, applied as a Kraus channel built from the syndrome projectors $E_s P_{\mathcal{C}} E_s$ followed by the decoding isometry $V_{\mathrm{Dec}} = (\ket{0}\!\bra{0_L} + \ket{1}\!\bra{1_L})$. This collapses each block from dimension $32$ back to dimension $2$.
+    \item For the QEC pipeline, ideal recovery and decoding $\Dec\circ\mathcal{R}$ on each five-qubit block, applied as the Kraus channel $\rho \mapsto \sum_s K_s \rho K_s^\dagger$ with
+    \begin{align}
+        K_s = V_{\mathrm{Dec}}\, E_s^\dagger\, P_s, \qquad P_s = E_s P_{\mathcal{C}} E_s^\dagger,
+    \end{align}
+    where $P_s$ projects onto the syndrome-$s$ sector and $V_{\mathrm{Dec}} = (\ket{0}\!\bra{0_L} + \ket{1}\!\bra{1_L})$ decodes the codespace. Since the Pauli representatives $E_s$ used here are Hermitian and involutory ($E_s^\dagger=E_s$, $E_s^2=I$), this simplifies to $K_s = V_{\mathrm{Dec}} P_{\mathcal{C}} E_s$. This collapses each block from dimension $32$ back to dimension $2$.
     \item The diagonal sender unitaries $U_{a_j}(\theta_j) = \mathrm{diag}\!\left(e^{i(2k-N)\theta_j}\right)_{k=0}^{N}$ acting on each qudit.
     \item Fourier-basis measurement on each sender qudit, realized as projectors $\Pi_n^{(j)} = \ket{u_n}\!\bra{u_n}$, with the outcome $\bar n$ sampled from the Born distribution.
     \item The byproduct correction $U_{\bar n}$ applied to every receiver, followed by partial traces to obtain the single-receiver reduced density matrices $\rho^{(\ell)}$ and their fidelities $F^{(\ell)} = \bra{\psi_{\mathrm{target}}}\rho^{(\ell)}\ket{\psi_{\mathrm{target}}}$.
@@ -392,16 +403,16 @@ For larger receiver counts the $4^{5N}$ scaling of the encoded density matrix be
 \begin{enumerate}
     \item Start each trajectory from the encoded pure state $\ket{\widetilde\Psi^{(M,N)}}$ (dimension $D$, but only $O(D)$ memory because the state stays a vector).
     \item For each of the $5N$ physical receiver qubits, draw a Pauli $P\in\{I,X,Y,Z\}$ with probabilities $\{1-p,p/3,p/3,p/3\}$ and apply it to the trajectory by single-axis tensor contraction.
-    \item Apply ideal $[[5,1,3]]$ recovery and decoding to each block. Because the trajectory is pure, the syndrome distribution is concentrated on a single outcome and we project onto the most-likely syndrome branch
+    \item Apply ideal $[[5,1,3]]$ recovery and decoding to each block. Because each trajectory is generated by an explicitly sampled Pauli error acting on a stabilizer codeword (not merely because the trajectory is pure), the resulting syndrome is deterministic and can be read off directly from the sampled error pattern rather than inferred from the state: for each block we track the applied 5-qubit Pauli label $E$, compute its syndrome $s(E)$ from the stabilizer (anti)commutation relations, and apply the corresponding recovery operator
     \begin{align}
-        \ket{\psi} \mapsto \frac{V_{\mathrm{Dec}}\, E_{s^\star}\, P_{\mathcal{C}}\, E_{s^\star}\,\ket{\psi}}{\sqrt{p_{s^\star}}},
+        \ket{\psi} \;\mapsto\; \frac{K_{s(E)}\ket{\psi}}{\sqrt{\bra{\psi}K_{s(E)}^\dagger K_{s(E)}\ket{\psi}}},
     \end{align}
-    where $s^\star = \arg\max_s p_s$ and $V_{\mathrm{Dec}}$ maps each $[[5,1,3]]$ block back to a single qubit, reducing the per-trajectory state to dimension $(N{+}1)^M \cdot 2^N$.
-    \item Accumulate the empirical density matrix on the decoded space, $\hat\rho = \tfrac{1}{n_s}\sum_{s=1}^{n_s} \ket{\psi_s}\!\bra{\psi_s}$, after $n_s$ trajectories.
+    with $K_s$ as defined above. This is a direct O(1) lookup rather than a search over all 16 syndrome branches: selecting the branch with $\arg\max_s p_s$ would be unnecessary here and is in general unsound for coherent or other non-Pauli noise, where the post-measurement distribution need not concentrate on a single syndrome. $V_{\mathrm{Dec}}$ maps each $[[5,1,3]]$ block back to a single qubit, reducing the per-trajectory state to dimension $(N{+}1)^M \cdot 2^N$.
+    \item Accumulate the empirical density matrix on the decoded space, $\hat\rho = \tfrac{1}{n_s}\sum_{s=1}^{n_s} \ket{\psi_s}\!\bra{\psi_s}$, after $n_s$ trajectories (or, when only fidelity is required, accumulate the scalar per-trajectory fidelity directly and skip the density-matrix estimate entirely).
 \end{enumerate}
 The remaining protocol stages (sender phase gates, Fourier measurement, byproduct correction, and partial trace) are then applied to $\hat\rho$ exactly as in the density-matrix path. This works because all of these operations act either on the sender register or as Pauli-covariant unitaries on the receivers, and therefore commute with the linear average over trajectories.
 
-Per-trajectory cost is dominated by the $O(D)$ Pauli applications and the per-block decoding, so the overall cost of the estimator is $O(n_s \cdot N \cdot D)$ in time and $O(D)$ in memory, an improvement over the $O(D^2)$ exact storage. Because trajectories are independent, the statistical fluctuation in each scalar observable (here the per-receiver fidelity) decays as $1/\sqrt{n_s}$, and we verify this scaling in Fig.~\ref{Sampling Error Convergence} by measuring the area between the sampled and exact fidelity curves $F(p)$ for the $M{=}1$, $N{=}2$ protocol with QEC. We use $n_s$ in the range $10^2$--$10^5$ and demonstrate rapid convergence to the complete density matrix method for large samples. We see also in Fig.~4 the close fit of the Monte Carlo sampling method fidelity to the exact density matrix case with error correction for $M=1, N=2$.
+Each trajectory itself costs $O(D)$ in memory and $O(N\cdot D)$ in time for the Pauli applications and per-block recovery. However, if the empirical density matrix $\hat\rho$ is accumulated (as opposed to a scalar fidelity), its storage and the $n_s$ outer-product accumulations cost an additional $O(d_{\mathrm{dec}}^2)$ and $O(n_s\, d_{\mathrm{dec}}^2)$ respectively, where $d_{\mathrm{dec}} = (N{+}1)^M\cdot 2^N$ is the decoded dimension; this is not negligible once $\hat\rho$ is needed rather than a scalar observable, and we report it separately rather than folding it into a single asymptotic cost. In practice we measure wall-clock time and peak memory directly for the reported $(M,N)$ rather than relying on the asymptotic count alone. Because trajectories are independent, the statistical fluctuation in each scalar observable (here the per-receiver fidelity) decays as $1/\sqrt{n_s}$; we verify this scaling in Fig.~\ref{Sampling Error Convergence} by measuring the area between the sampled and exact fidelity curves $F(p)$ for the $M{=}1$, $N{=}2$ protocol with QEC and fitting the convergence exponent rather than assuming it. We use $n_s$ in the range $10^2$--$10^5$ and demonstrate rapid convergence to the complete density matrix method for large samples. We see also in Fig.~4 the close fit of the Monte Carlo sampling method fidelity to the exact density matrix case with error correction for $M=1, N=2$; the exact logical polynomial $p_L(p)$ derived above (and validated independently by brute-force enumeration) provides a ground truth for both that does not depend on either implementation.
 \\
 
 \subsection{Qiskit}
