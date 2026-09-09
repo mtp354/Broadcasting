@@ -1,0 +1,3482 @@
+{
+  "schema_version": 1,
+  "generator": "visualizations.ipynb#manuscript-figures-3-6",
+  "rc_params": {
+    "figure.dpi": 120,
+    "font.family": "DejaVu Sans",
+    "font.size": 9,
+    "axes.labelsize": 10,
+    "axes.titlesize": 10,
+    "axes.linewidth": 0.8,
+    "xtick.labelsize": 8,
+    "ytick.labelsize": 8,
+    "legend.fontsize": 8,
+    "lines.linewidth": 1.2,
+    "lines.markersize": 4,
+    "axes.spines.top": false,
+    "axes.spines.right": false
+  },
+  "export": {
+    "dpi": 300,
+    "bbox_inches": "tight",
+    "pad_inches": 0.06,
+    "facecolor": "white",
+    "transparent": false,
+    "strip_titles": true
+  },
+  "figures": {
+    "3": {
+      "settings": {
+        "filename": "figure_03_qec_crossover.png",
+        "figsize": [
+          4.4,
+          3.4
+        ],
+        "sources": [
+          "results/run_20260422_110316.json",
+          "results/run_20260426_170827.json",
+          "results/run_20260427_114317.json"
+        ],
+        "theory_p_range": [
+          0,
+          1
+        ],
+        "theory_points": 500,
+        "bare_theory": {
+          "color": "black",
+          "linestyle": "--",
+          "linewidth": 1.1,
+          "label": "Bare theory"
+        },
+        "encoded_theory": {
+          "color": "#D55E00",
+          "linestyle": "-",
+          "linewidth": 1.3,
+          "label": "Encoded theory"
+        },
+        "data_styles": [
+          {
+            "marker": "o",
+            "color": "black",
+            "label": "Exact bare"
+          },
+          {
+            "marker": "s",
+            "color": "#D55E00",
+            "label": "Exact encoded"
+          },
+          {
+            "marker": "^",
+            "color": "#7B3294",
+            "label": "Sampled encoded ($n_s={n_samples}$)"
+          }
+        ],
+        "data_common": {
+          "linestyle": "none",
+          "markersize": 3.5,
+          "alpha": 0.9
+        },
+        "show_crossover": true,
+        "crossover_style": {
+          "color": "0.5",
+          "linestyle": ":",
+          "linewidth": 1
+        },
+        "show_inset": true,
+        "inset_bounds": [
+          0.6,
+          0.54,
+          0.37,
+          0.4
+        ],
+        "inset_axes": {
+          "xlim": [
+            0,
+            0.2
+          ],
+          "ylim": [
+            0.84,
+            1.01
+          ]
+        },
+        "inset_ticks": {
+          "axis": "both",
+          "labelsize": 7
+        },
+        "axes": {
+          "xlabel": "Depolarizing probability $p$",
+          "ylabel": "Receiver fidelity $F$",
+          "xlim": [
+            0,
+            1
+          ],
+          "ylim": [
+            0.3,
+            1.02
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "grid": {
+          "visible": true,
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "lower left",
+          "fontsize": 7,
+          "frameon": true
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "results/run_20260422_110316.json",
+          "sha256": "3b96f58310938bd31046548f9a7c38a319f57917d1c41eaa59f822d64b587171",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260426_170827.json",
+          "sha256": "fc651aa3ae71938d8a25c1bb75dbee61fcba84c91e99390430672889752fd11a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260427_114317.json",
+          "sha256": "08fd8eb7b7647e7681de3bb142202c0d4640879553ed02db0f64fda232f0da48",
+          "historical_overrides": {}
+        }
+      ]
+    },
+    "4": {
+      "settings": {
+        "filename": "figure_04_delay_repeats.png",
+        "columns": 2,
+        "panel_size": [
+          3.6,
+          2.4
+        ],
+        "sharey": true,
+        "sources": [
+          "results/run_20260518_120232.json",
+          "results/run_20260908_153150_79eab41b.json",
+          "campaigns/delay_01/results/repeat_000_m1_n2.json",
+          "campaigns/delay_01/results/repeat_001_m1_n2.json",
+          "campaigns/delay_01/results/repeat_002_m1_n2.json"
+        ],
+        "receiver_colors": [
+          "#0072B2",
+          "#D55E00"
+        ],
+        "receiver_style": {
+          "marker": "o",
+          "markersize": 2,
+          "linestyle": "-",
+          "linewidth": 0.9,
+          "alpha": 0.9
+        },
+        "receiver_label": "Receiver {receiver}",
+        "show_intervals": true,
+        "confidence": 0.95,
+        "interval_style": {
+          "alpha": 0.18,
+          "linewidth": 0
+        },
+        "show_mean": true,
+        "mean_style": {
+          "color": "black",
+          "linestyle": "--",
+          "linewidth": 1,
+          "label": "Mean"
+        },
+        "baseline": 0.5,
+        "baseline_style": {
+          "color": "0.6",
+          "linestyle": ":",
+          "linewidth": 0.8
+        },
+        "xlabel": null,
+        "axes": {
+          "ylabel": "Receiver fidelity",
+          "xlim": null,
+          "ylim": [
+            0,
+            1.02
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "panel_label": "({letter}) {backend} | {identity}\n$\\theta$ = [{phases}] rad",
+        "panel_text": {
+          "x": 0,
+          "y": 1.04,
+          "fontsize": 8,
+          "va": "bottom",
+          "ha": "left"
+        },
+        "grid": {
+          "visible": true,
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "lower center",
+          "bbox_to_anchor": [
+            0.5,
+            0
+          ],
+          "ncol": 3,
+          "frameon": false,
+          "fontsize": 9
+        },
+        "layout": {
+          "pad": 1.1,
+          "h_pad": 2.2,
+          "w_pad": 1.2,
+          "rect": [
+            0,
+            0.045,
+            1,
+            1
+          ]
+        }
+      },
+      "sources": [
+        {
+          "path": "results/run_20260518_120232.json",
+          "sha256": "edc0d3e487ab5c792e9578631d4d8c422631c79cac2f9a49abc89a444b2eb1aa",
+          "historical_overrides": {
+            "dt": {
+              "value": 4e-09,
+              "evidence": "Inferred same-device/day value: 9e0adc7:qec_testing.ipynb cell 5 prints Kingston dt=4e-09 s for the May18 memory job. Original broadcasting jobs did not archive dt; conversion is explicitly historical, not job-specific verification."
+            }
+          }
+        },
+        {
+          "path": "results/run_20260908_153150_79eab41b.json",
+          "sha256": "a225306aa86f43bab1af8309c069d58c8c523c9fb6de92645ab5c56428a96866",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_01/results/repeat_000_m1_n2.json",
+          "sha256": "256a9198f820db91f580653290700d8b88ed26b88410baaa613caaf308d9b8fb",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_01/results/repeat_001_m1_n2.json",
+          "sha256": "4534478b0bbe4d9d23cb25d59750ccf7a59aa01f9c4807a5a28480193eb2474c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_01/results/repeat_002_m1_n2.json",
+          "sha256": "e49f509004413335d104cfc177a08fc986ff71303177ed433e51c2a39751e205",
+          "historical_overrides": {}
+        }
+      ]
+    },
+    "5": {
+      "settings": {
+        "filename": "figure_05_hardware_scaling.png",
+        "figsize": [
+          7.2,
+          4.5
+        ],
+        "source_dirs": [
+          "results",
+          "campaigns/scaling_01/results",
+          "campaigns/delay_01/results"
+        ],
+        "sources": null,
+        "sender_colors": {
+          "1": "#0072B2",
+          "2": "#D55E00",
+          "3": "#009E73"
+        },
+        "backend_markers": {
+          "ibm_kingston": "s",
+          "ibm_fez": "^",
+          "ibm_marrakesh": "o"
+        },
+        "fallback_colors": [
+          "#CC79A7",
+          "#E69F00",
+          "#56B4E9"
+        ],
+        "fallback_markers": [
+          "D",
+          "v",
+          "P",
+          "X"
+        ],
+        "horizontal_spread": 0.56,
+        "show_receiver_range": true,
+        "point_style": {
+          "markersize": 4.5,
+          "capsize": 2.5,
+          "linewidth": 1.1,
+          "alpha": 0.85,
+          "linestyle": "none"
+        },
+        "sender_label": "$M={sender}$",
+        "backend_label": "{backend}",
+        "backend_legend_color": "0.3",
+        "baseline": 0.5,
+        "baseline_style": {
+          "color": "0.6",
+          "linestyle": ":",
+          "linewidth": 0.8
+        },
+        "axes": {
+          "xlabel": "Number of receivers, $N$",
+          "ylabel": "Receiver fidelity at zero delay",
+          "xlim": null,
+          "ylim": [
+            0,
+            1.02
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "xticks": null,
+        "grid": {
+          "visible": true,
+          "axis": "y",
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "lower center",
+          "bbox_to_anchor": [
+            0.5,
+            1.02
+          ],
+          "ncol": 6,
+          "frameon": false,
+          "fontsize": 8
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "campaigns/delay_01/results/repeat_000_m1_n2.json",
+          "sha256": "256a9198f820db91f580653290700d8b88ed26b88410baaa613caaf308d9b8fb",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_01/results/repeat_001_m1_n2.json",
+          "sha256": "4534478b0bbe4d9d23cb25d59750ccf7a59aa01f9c4807a5a28480193eb2474c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_01/results/repeat_002_m1_n2.json",
+          "sha256": "e49f509004413335d104cfc177a08fc986ff71303177ed433e51c2a39751e205",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m1_n1.json",
+          "sha256": "0f9cee095cd90901823a2c4a20d9693b4858bdb67a988d8aec85b6c50d8fd834",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m1_n2.json",
+          "sha256": "a3e53f65d80900cd24b0c4ffab6b1d9817dab2eb21fefc429ac0ef2a4a2a5d28",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m1_n3.json",
+          "sha256": "9067ecf7bb6e16a177c0ec79e467262818e2472d073c6497d7ba53ce0a31d4e0",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m1_n4.json",
+          "sha256": "5132314e0f9707a559c5ce32347ef9c8506fc6a29f7bfa5278ae3f31a3d9a728",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m2_n1.json",
+          "sha256": "f2a32886a17262302a429b368d726a98ba62ccbab3f408c07f3192586abf677d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m2_n2.json",
+          "sha256": "5c46e37a1605eda024d03a25d335470d3755c4b411f4af6fe9904ade324893c6",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m2_n3.json",
+          "sha256": "f842e7766e4c97857e88e1f8f13fac902f75f01a66c102e6cf65f244788266b3",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m2_n4.json",
+          "sha256": "8d4fc3b1ceb2e6f66c3ffa397ea3eff897a61af243d295b30d570a1c0087f4bc",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m3_n1.json",
+          "sha256": "a9b6b66366231eebcbdebdbde8ae34125b9dc2b83b8f919e94f3ff78725ec34f",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m3_n2.json",
+          "sha256": "d522cd2cd6a592d0a9cdf542d275413c1fa8986d3ff84e3f78f358a5ad6daf0d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m3_n3.json",
+          "sha256": "d930888d985873789ff20e374aaec2c6c43dbc41bcd51c01942f8c79f27e36db",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_000_m3_n4.json",
+          "sha256": "ef01f7ccd2bd86bf451f99255d8503ebb7c41e3dcb000806e05418606697642f",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m1_n1.json",
+          "sha256": "c225ddb3918a6fe0f9ae2f1f5f4c01a3ffd0306ff7ed181dbcb7fd6b902de493",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m1_n2.json",
+          "sha256": "1c41c09d1cf1809872cee789ae9d91b577ee7ddbe059b00895ca42ffc3e2ddd6",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m1_n3.json",
+          "sha256": "33ffc726f1e47caa31a3b96476e61fb4124569a4f1fa2a79d82d7e9dc88cff21",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m1_n4.json",
+          "sha256": "47f524a35c7b0a608425efccee4ff85f947bde39f32216ea9c895c494100c656",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m2_n1.json",
+          "sha256": "dab05c8d2cfc804c0127637e1746a4298082ab6612c6fa515199fc15c3f8ca10",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m2_n2.json",
+          "sha256": "46a5e7a782a148724d8820f2146ac28994b6426ad5871b3548bf33e719acd66b",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m2_n3.json",
+          "sha256": "4976b899b1e40876fdb07d4cd7194bcb52e47e6ae3944e04e014d398eb54ac0b",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m2_n4.json",
+          "sha256": "168f8846042c4848335756545d6d4234676ac3b1e41c96a0e6f11797f0263677",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m3_n1.json",
+          "sha256": "7ed6fb24f56dc4cce1119b96672ed8a618fd0ad344e581999185bb2b984db820",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m3_n2.json",
+          "sha256": "a8306df738f3a191e8394bb4a7a178eefbca1aea89f122655baf1aa111969a8c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m3_n3.json",
+          "sha256": "701d8803d40efd2bd927bd4a31fb6a0727021f09276803bb73e8bbd3b788e3ec",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_001_m3_n4.json",
+          "sha256": "328f284a133bd6d83794e225d2a1f3dabb7d9eb69ad14b49d55324b458e65f44",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m1_n1.json",
+          "sha256": "ba2a935cf75903f90e364b034da5e1cf5fc46ce7147b322e338c40d598053d19",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m1_n2.json",
+          "sha256": "34780aea9f2d79fa04f7a6126a2f3bf3be21d1bbf304f67232f433c14dca638e",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m1_n3.json",
+          "sha256": "6c5d81432892303fa7a9d60ed660b4b9038e0e59c3028920b9c66136dbf86f33",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m1_n4.json",
+          "sha256": "664a6c4e15ae215039367a53da39083d8590e6dacbe331060a278647026ff78e",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m2_n1.json",
+          "sha256": "02b0ebed3dd067a41d1e376363afd6d6e9cfdfffdabbde91231916b3b92eb6cb",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m2_n2.json",
+          "sha256": "a2efbf0104c66380cdb393f4fcefb5ace837d91aadd46ab40b917aef074242e4",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m2_n3.json",
+          "sha256": "75820f58bddcdfc91be192726b49c575db3adc0c93eeb8c5e2ce4adee92d7b76",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m2_n4.json",
+          "sha256": "d5c409d78d264c54b2c77d34d22ccd489a436b93eebf13292411ef25b94057b5",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m3_n1.json",
+          "sha256": "94ed20162f524faaee5ed294612694ba797313038dcd8b4d228595b38d19023c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m3_n2.json",
+          "sha256": "0d9107b9df9387cedd7bad306cff1809275bd87e14d53b788afd9debfdd92d7b",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m3_n3.json",
+          "sha256": "afd5318f21998d8ec7f270c6092348a2be2c7d36260ee481bed9109ec66e13e8",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/scaling_01/results/repeat_002_m3_n4.json",
+          "sha256": "8a86f69626bb31efb4c551ad32d3324019569120150f6e2652da8ae03a0301ca",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_160814.json",
+          "sha256": "5e30374895a32ffcc39989047161271573338f0c844cd68c4606b2f84d1703fa",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_161340.json",
+          "sha256": "c05f38bd4ae05f9fc9802a36f6aaf8f9e2fce5b2dfb812e332d919a46d2b46db",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_161902.json",
+          "sha256": "5dbd94fd2a5d8c00149c8fa7b335d44a0056cc4e3e0acb80e935c97a2164f456",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_162212.json",
+          "sha256": "8f585be9fa71d35b94dccd45af3dad949024b1f88e19ae1295692956762b4281",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_162440.json",
+          "sha256": "f8988fe585651a4f5a1efdfe384d9fa61dac04fe7a5ce855c009c106413c9273",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_162906.json",
+          "sha256": "2f1117f61535061196415f073272a104ed1d1943a623ca98cf658a456c9dc284",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_163129.json",
+          "sha256": "bd0997d3ef1130cef4bda4c7478536276b7b7b424a411509abc424df594f3ba9",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260408_170544.json",
+          "sha256": "62d22dd4a8b6e49513abe21ea5bd248a91c96ead01609bf4718c571af3d72230",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260513_141704.json",
+          "sha256": "1baa8da9328886367544920a5f009aa689d07b583a948862073cd7d8b842d642",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260513_144130.json",
+          "sha256": "e2844fd5aa70bb8dabfc165c05c9147af7696be553f04776608c3ce84d955369",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260513_150433.json",
+          "sha256": "32ef8e3eee4df830d58a263a8af82cd87e5a09a8ada8c8b5d4b39ca15b6d15b5",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260518_120232.json",
+          "sha256": "edc0d3e487ab5c792e9578631d4d8c422631c79cac2f9a49abc89a444b2eb1aa",
+          "historical_overrides": {
+            "dt": {
+              "value": 4e-09,
+              "evidence": "Inferred same-device/day value: 9e0adc7:qec_testing.ipynb cell 5 prints Kingston dt=4e-09 s for the May18 memory job. Original broadcasting jobs did not archive dt; conversion is explicitly historical, not job-specific verification."
+            }
+          }
+        },
+        {
+          "path": "results/run_20260908_132728_4fc6f552.json",
+          "sha256": "8168876c8bfb224b5a8651b3b6fb49e17b63af4eac03a23e9fd00f8896e88396",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260908_132738_ef85f542.json",
+          "sha256": "12f0c9b38626ee0dffeca8d1ebc42200f2ceb123d942082fd508f9dc2c85b478",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/run_20260908_153150_79eab41b.json",
+          "sha256": "a225306aa86f43bab1af8309c069d58c8c523c9fb6de92645ab5c56428a96866",
+          "historical_overrides": {}
+        }
+      ]
+    },
+    "6": {
+      "settings": {
+        "filename": "figure_06_sampling_convergence.png",
+        "figsize": [
+          7.2,
+          4.5
+        ],
+        "archive_dir": "results/convergence",
+        "batches": [
+          "repeats_01",
+          "repeats_02"
+        ],
+        "seeds": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "show_historical": true,
+        "historical_style": {
+          "color": "black",
+          "marker": "o",
+          "markersize": 4,
+          "linewidth": 1.2,
+          "label": "Historical seed 0 (rounded summaries)"
+        },
+        "seed_colors": {
+          "1": "#0072B2",
+          "2": "#D55E00",
+          "3": "#009E73",
+          "4": "#CC79A7"
+        },
+        "seed_markers": {
+          "1": "s",
+          "2": "^",
+          "3": "D",
+          "4": "v"
+        },
+        "repeat_style": {
+          "linestyle": "-",
+          "linewidth": 1,
+          "markersize": 4,
+          "alpha": 0.9
+        },
+        "repeat_label": "Seed {seed} ({batch}){partial}",
+        "show_reference": true,
+        "reference_exponent": -0.5,
+        "reference_anchor_index": 0,
+        "reference_multiplier": 1.0,
+        "reference_style": {
+          "color": "0.5",
+          "linestyle": ":",
+          "linewidth": 1.2,
+          "label": "$n_s^{-1/2}$ reference (anchored)"
+        },
+        "axes": {
+          "xlabel": "Monte Carlo trajectories per noise probability, $n_s$",
+          "ylabel": "Integrated absolute fidelity error (sum)",
+          "xlim": null,
+          "ylim": null,
+          "xscale": "log",
+          "yscale": "log"
+        },
+        "grid": {
+          "visible": true,
+          "which": "both",
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "best",
+          "fontsize": 8,
+          "frameon": true
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "analysis/convergence/historical_summary.json",
+          "sha256": "008197ef845bb18b93f82207d8f089076547696e2dfd1ac13dd62c8ab6985c03",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/exact.json",
+          "sha256": "c2c4c8500924ee9e2de135022cfafa9a2dc0f94a80054d9ed44b38561c257b00",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n100.json",
+          "sha256": "9800534e8fd8127291ab2f13a21c8092a55723a065d6d14a731a86db65dea1b3",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n1000.json",
+          "sha256": "a66d1da2522a8ffb496d680662a2fe85bcb8a8cc10028aea7fde8af6df4da351",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n10000.json",
+          "sha256": "23c63ef476d72fa4e8559261d562bcf4301abac97d52497afede1f9a6d6a8f80",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n100000.json",
+          "sha256": "02a2ca31e04c2ddea76acf4be21e2307aa8204566529b2f1f52ed16bd51c4672",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n200.json",
+          "sha256": "438d5b2fa60bdbe0b9001cc39d81de7060a0900f7d948435eaa246371e965766",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n2000.json",
+          "sha256": "1600dfbf330e555ac40afe865cd43a53e8d62f540fd44f1285cb0576f0333dfc",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n50.json",
+          "sha256": "00daa1a8f85fa90ecf576dfab74e1728e979b138c1c5d9d7b8382aed72bb8655",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n500.json",
+          "sha256": "7abea2f029c4c25c8492f68d512a3888ebdda65830bc69d1fe7eb6651992573d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n5000.json",
+          "sha256": "9bb8db432c615e01a9e6f6a47ba5afa619fb2a757eace6389307687fc30f84a8",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n50000.json",
+          "sha256": "3da007c1a9e3bc17ec17e41af1d507864ee701ba47a6561682155b61b2fc77c9",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n100.json",
+          "sha256": "8c9be9e15051ad79be30765cec1ab2e3bc3f8943eeb1a25188273a7f33e71d9a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n1000.json",
+          "sha256": "a20e537d1da22fec70cbc90e69596873e294b720f6ae42e4eca8fea5de2b6c00",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n10000.json",
+          "sha256": "8fac0291d643ac05ecc773fa2248b9db8f8970e295a19e1ec1a4ff9946e20594",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n100000.json",
+          "sha256": "0705be19b7a45a15fa30dd4d9bcc914e891ebc7c8fa19906d96ef52f60e025bf",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n200.json",
+          "sha256": "52ed0dfa573eaf7d7ac40bd4727b38f301267dbb5396a858d9b9ac5447d21b0e",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n2000.json",
+          "sha256": "d716ee4afb92a45918d1d3a3b522eefb9a52ef2eec6b929911a4725779ca92de",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n50.json",
+          "sha256": "02efebba3f3bf583a777f82c1dcf4094e3ef212eb8041541ecd0c313869f7979",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n500.json",
+          "sha256": "687978e95e6c92240d9c2104b50ae01d911b84f4aaf0ba47ad71b455bad1ba46",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n5000.json",
+          "sha256": "722191a4be7ed219c493c2058be3b41f6a4be2904f46c2a79e6d530f0add4b1c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n50000.json",
+          "sha256": "929dcc645019d5f1d8f4823ec5d2ccd650789892cb963ee90067ab4d3b63c97a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/study.json",
+          "sha256": "9930d84a25093f209dd205b18ec6148768e97f7d9763b944d2e0e3d4f3d54aef",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/exact.json",
+          "sha256": "433ffd40bc2ef43c16b473a55585d18857e3e3260325e91727ad56360c0d6da8",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n100.json",
+          "sha256": "1e8619378fbfc98a491c13679015c63cf50ddcc8fc0a385eb7f3bb6372f7079d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n1000.json",
+          "sha256": "39bf6818476338b5fda893398073f2665f94138149e23e55d98855c7c8d0986a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n10000.json",
+          "sha256": "c7910bf35144503fd3f66b98e9bb06b446271bfcc7f27178ea98323581f2f7f6",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n100000.json",
+          "sha256": "1a2f6de58b7d318fd05d85a3dbf6adca788f043491d9faf51f6303a7d230bc15",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n200.json",
+          "sha256": "72ab42f7f794ddc607991b7d43b5c5d6c994a32d8c342287321ac652812d9b8c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n2000.json",
+          "sha256": "2d751ef037ccc7c827a9a05d0e82e7a01c3fc60136612aa8c55f3dfbe92faa1b",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n50.json",
+          "sha256": "722ad24de1b6ca914a87a2272bbb9f40cff01209f5acf9fbe21cb10f4b666155",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n500.json",
+          "sha256": "04d3844ba23212bd518cbbff7866bb104a479f2d405278f6d6f2fa9fad248328",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n5000.json",
+          "sha256": "fb21f18786242f53a7a57a82bbd1de2a02e25ab4969de3ff691e48bacb9c73d6",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n50000.json",
+          "sha256": "4b985d7809a6861b9fa79b765925c88c93decbd1d829dce5bc842ba0eba142a3",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n100.json",
+          "sha256": "e8dc4f32cc1a62c76c40a36115856df55d5fe090be18d48505354b319eefe11f",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n1000.json",
+          "sha256": "b69f06dc91f97d55de48310283e0954494adef8ec803e8b7220c717be4f1897f",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n10000.json",
+          "sha256": "e8da473d7e507641ab09a2a060803235e1df143d68de9b00bacef82735899848",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n100000.json",
+          "sha256": "186d359f1ea563582b025aea0a578001879f3764de5a93d30575503b023cc31a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n200.json",
+          "sha256": "3e83327285c7c4a16dd0add9eb380861bcf06b741b256d9f40fcee6dd4216692",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n2000.json",
+          "sha256": "838b2cdcbde597b5bd46f733fb0cad48730a45a875572744d1c328a2febe53b5",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n50.json",
+          "sha256": "26cee59e82d720d330fb6d24b1171a8013661d7c0189a71c7327a1d08cfc0abf",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n500.json",
+          "sha256": "d2268237d4f3209df1a0f696a7b9fa0f96458c2957981968adcea0d178b57ff8",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n5000.json",
+          "sha256": "f859eb0467fbc237248ce96d138b3d0f170d93043d193213005aaff4c0e0ba07",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n50000.json",
+          "sha256": "e1bf22122195239747d74723cf466570f4741411e2002c6f3a00e04da522163d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/study.json",
+          "sha256": "d728cec5ddf913eaa9ad7eef42fa29ea53cc04e972a3be976895a2eb5797bb7b",
+          "historical_overrides": {}
+        }
+      ]
+    }
+  },
+  "scaling_points": [
+    {
+      "M": 1,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m1_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          2
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965
+          ]
+        ],
+        "case_index": 0,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.9649658203125,
+      "minimum": 0.9649658203125,
+      "maximum": 0.9649658203125,
+      "x": 0.72
+    },
+    {
+      "M": 1,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m1_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          0
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163
+          ]
+        ],
+        "case_index": 0,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.9654541015625,
+      "minimum": 0.9654541015625,
+      "maximum": 0.9654541015625,
+      "x": 0.79
+    },
+    {
+      "M": 1,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m1_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          8
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159
+          ]
+        ],
+        "case_index": 0,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.968017578125,
+      "minimum": 0.968017578125,
+      "maximum": 0.968017578125,
+      "x": 0.86
+    },
+    {
+      "M": 2,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m2_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          3
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288
+          ]
+        ],
+        "case_index": 4,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.883056640625,
+      "minimum": 0.883056640625,
+      "maximum": 0.883056640625,
+      "x": 0.9299999999999999
+    },
+    {
+      "M": 2,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m2_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          5
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338
+          ]
+        ],
+        "case_index": 4,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.9041748046875,
+      "minimum": 0.9041748046875,
+      "maximum": 0.9041748046875,
+      "x": 1.0
+    },
+    {
+      "M": 2,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m2_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          11
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213
+          ]
+        ],
+        "case_index": 4,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.9111328125,
+      "minimum": 0.9111328125,
+      "maximum": 0.9111328125,
+      "x": 1.07
+    },
+    {
+      "M": 3,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m3_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          4
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288,
+            6.155375327284596
+          ]
+        ],
+        "case_index": 8,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.9041748046875,
+      "minimum": 0.9041748046875,
+      "maximum": 0.9041748046875,
+      "x": 1.1400000000000001
+    },
+    {
+      "M": 3,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m3_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          9
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338,
+            1.819154064837716
+          ]
+        ],
+        "case_index": 8,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.88623046875,
+      "minimum": 0.88623046875,
+      "maximum": 0.88623046875,
+      "x": 1.21
+    },
+    {
+      "M": 3,
+      "N": 1,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m3_n1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n1",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1
+        ],
+        "submitted_pub_indices": [
+          5
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213,
+            5.317016709091439
+          ]
+        ],
+        "case_index": 8,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.8878173828125,
+      "minimum": 0.8878173828125,
+      "maximum": 0.8878173828125,
+      "x": 1.28
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_fez",
+      "timestamp": "2026-04-08T17:05:44.584495",
+      "job_id": "d7bc3ab0g7hs73dpd27g",
+      "filename": "run_20260408_170544.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.92218017578125,
+      "minimum": 0.9052734375,
+      "maximum": 0.9390869140625,
+      "x": 1.72
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_fez",
+      "timestamp": "2026-04-08T17:05:44.584495",
+      "job_id": "d7bc3ab0g7hs73dpd27g",
+      "filename": "run_20260408_170544.json",
+      "shots": 8192,
+      "theta_index": 1,
+      "thetas": [
+        2.757554564287996
+      ],
+      "campaign": {},
+      "mean": 0.91546630859375,
+      "minimum": 0.9056396484375,
+      "maximum": 0.92529296875,
+      "x": 1.7443478260869565
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_fez",
+      "timestamp": "2026-05-13T15:04:33.077150",
+      "job_id": "d82ch8foha1c73bldjig",
+      "filename": "run_20260513_150433.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.098517143286439
+      ],
+      "campaign": {},
+      "mean": 0.854248046875,
+      "minimum": 0.8233642578125,
+      "maximum": 0.8851318359375,
+      "x": 1.768695652173913
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_kingston",
+      "timestamp": "2026-04-08T16:08:14.227830",
+      "job_id": "d7bba5jklj2c73ev1oe0",
+      "filename": "run_20260408_160814.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.936767578125,
+      "minimum": 0.932861328125,
+      "maximum": 0.940673828125,
+      "x": 1.7930434782608695
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_kingston",
+      "timestamp": "2026-05-18T12:02:32.315741",
+      "job_id": "d85jcso0bvlc73d5mdf0",
+      "filename": "run_20260518_120232.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        4.098517143286439
+      ],
+      "campaign": {},
+      "mean": 0.9099,
+      "minimum": 0.8941,
+      "maximum": 0.9257000000000001,
+      "x": 1.817391304347826
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-05-13T14:17:04.298172",
+      "job_id": "d82btog0bvlc73d240pg",
+      "filename": "run_20260513_141704.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        5.92814419967864
+      ],
+      "campaign": {},
+      "mean": 0.88427734375,
+      "minimum": 0.8695068359375,
+      "maximum": 0.8990478515625,
+      "x": 1.8417391304347825
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-05-13T14:41:30.186253",
+      "job_id": "d82c0k6gbeec73aljrq0",
+      "filename": "run_20260513_144130.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.84698486328125,
+      "minimum": 0.767578125,
+      "maximum": 0.9263916015625,
+      "x": 1.866086956521739
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-08T13:27:28.443042",
+      "job_id": "dag49mni3e6s738lteu0",
+      "filename": "run_20260908_132728_4fc6f552.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.865478515625,
+      "minimum": 0.821533203125,
+      "maximum": 0.909423828125,
+      "x": 1.8904347826086956
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-08T13:27:38.171052",
+      "job_id": "dag4b0hhvn6c73cq3k80",
+      "filename": "run_20260908_132738_ef85f542.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.8330078125,
+      "minimum": 0.793701171875,
+      "maximum": 0.872314453125,
+      "x": 1.914782608695652
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-08T15:31:50.541704",
+      "job_id": "dag61romhr3c73e4n2rg",
+      "filename": "run_20260908_153150_79eab41b.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.847412109375,
+      "minimum": 0.8349609375,
+      "maximum": 0.85986328125,
+      "x": 1.9391304347826086
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T01:50:50.948719+00:00",
+      "job_id": "dagbmuhhvn6c73cqci1g",
+      "filename": "repeat_000_m1_n2.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        3.132976794564699
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-delay-01",
+        "run_id": "132048dd9bb34e83b92f8bd556a82d39",
+        "repeat_index": 0,
+        "case_id": "m1_n2",
+        "config_sha256": "bccc880393291eb0b0643aae294d2686ca2bcb3e4ea540861e570a05c55e3706",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          115,
+          92,
+          79,
+          35,
+          12,
+          11,
+          26,
+          17,
+          23,
+          64,
+          20,
+          50,
+          29,
+          91,
+          118,
+          33,
+          18,
+          88,
+          82,
+          98,
+          96,
+          65,
+          119,
+          41,
+          57,
+          36,
+          49,
+          104,
+          22,
+          86,
+          110,
+          67,
+          94,
+          21,
+          32,
+          2,
+          74,
+          16,
+          46,
+          45,
+          4,
+          27,
+          101,
+          19,
+          83,
+          63,
+          73,
+          44,
+          51,
+          108,
+          43,
+          117,
+          62,
+          6,
+          112,
+          84,
+          89,
+          61,
+          105,
+          78,
+          85,
+          47,
+          102,
+          59,
+          10,
+          103,
+          13,
+          9,
+          5,
+          30,
+          87,
+          28,
+          38,
+          107,
+          25,
+          68,
+          109,
+          70,
+          80,
+          99,
+          113,
+          69,
+          116,
+          0,
+          37,
+          53,
+          40,
+          56,
+          90,
+          39,
+          24,
+          31,
+          77,
+          75,
+          54,
+          93,
+          15,
+          81,
+          106,
+          72,
+          114,
+          42,
+          97,
+          58,
+          100,
+          8,
+          14,
+          76,
+          3,
+          52,
+          66,
+          95,
+          60,
+          55,
+          111,
+          71,
+          1,
+          120,
+          34,
+          48,
+          7
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20261909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20261909,
+        "theta_samples": [
+          [
+            3.132976794564699
+          ]
+        ],
+        "case_index": 0,
+        "job_id": "dagbmuhhvn6c73cqci1g"
+      },
+      "mean": 0.9023000000000001,
+      "minimum": 0.876,
+      "maximum": 0.9286000000000001,
+      "x": 1.9634782608695653
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T01:50:52.587309+00:00",
+      "job_id": "dagbmv7i3e6s738m6esg",
+      "filename": "repeat_001_m1_n2.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        2.293790565223654
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-delay-01",
+        "run_id": "132048dd9bb34e83b92f8bd556a82d39",
+        "repeat_index": 1,
+        "case_id": "m1_n2",
+        "config_sha256": "bccc880393291eb0b0643aae294d2686ca2bcb3e4ea540861e570a05c55e3706",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          88,
+          113,
+          31,
+          84,
+          47,
+          25,
+          0,
+          32,
+          76,
+          98,
+          53,
+          39,
+          62,
+          102,
+          16,
+          83,
+          28,
+          110,
+          111,
+          108,
+          42,
+          56,
+          99,
+          105,
+          94,
+          43,
+          38,
+          95,
+          118,
+          116,
+          36,
+          70,
+          14,
+          101,
+          34,
+          77,
+          24,
+          51,
+          27,
+          112,
+          19,
+          71,
+          93,
+          3,
+          8,
+          58,
+          114,
+          104,
+          12,
+          80,
+          86,
+          48,
+          68,
+          23,
+          49,
+          7,
+          4,
+          18,
+          65,
+          50,
+          96,
+          120,
+          109,
+          33,
+          11,
+          9,
+          2,
+          90,
+          29,
+          45,
+          40,
+          17,
+          44,
+          41,
+          81,
+          64,
+          6,
+          52,
+          78,
+          115,
+          15,
+          26,
+          73,
+          92,
+          54,
+          75,
+          13,
+          57,
+          85,
+          69,
+          79,
+          21,
+          61,
+          82,
+          67,
+          66,
+          30,
+          119,
+          10,
+          74,
+          59,
+          35,
+          91,
+          55,
+          1,
+          97,
+          37,
+          63,
+          5,
+          100,
+          106,
+          72,
+          103,
+          20,
+          107,
+          22,
+          46,
+          60,
+          87,
+          89,
+          117
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20261909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20261909,
+        "theta_samples": [
+          [
+            2.293790565223654
+          ]
+        ],
+        "case_index": 0,
+        "job_id": "dagbmv7i3e6s738m6esg"
+      },
+      "mean": 0.89645,
+      "minimum": 0.8687,
+      "maximum": 0.9241999999999999,
+      "x": 1.9878260869565216
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T01:50:53.920437+00:00",
+      "job_id": "dagbmvfi3e6s738m6eu0",
+      "filename": "repeat_002_m1_n2.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        4.54138916939283
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-delay-01",
+        "run_id": "132048dd9bb34e83b92f8bd556a82d39",
+        "repeat_index": 2,
+        "case_id": "m1_n2",
+        "config_sha256": "bccc880393291eb0b0643aae294d2686ca2bcb3e4ea540861e570a05c55e3706",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          89,
+          116,
+          58,
+          88,
+          43,
+          82,
+          119,
+          84,
+          5,
+          12,
+          71,
+          65,
+          39,
+          38,
+          107,
+          36,
+          62,
+          74,
+          23,
+          113,
+          34,
+          78,
+          91,
+          6,
+          114,
+          104,
+          53,
+          83,
+          101,
+          111,
+          1,
+          28,
+          0,
+          77,
+          85,
+          26,
+          118,
+          68,
+          29,
+          81,
+          112,
+          52,
+          69,
+          106,
+          64,
+          109,
+          9,
+          72,
+          32,
+          24,
+          27,
+          55,
+          10,
+          51,
+          105,
+          17,
+          35,
+          11,
+          75,
+          49,
+          30,
+          56,
+          76,
+          25,
+          115,
+          48,
+          73,
+          16,
+          47,
+          79,
+          45,
+          61,
+          42,
+          86,
+          21,
+          22,
+          31,
+          87,
+          97,
+          110,
+          33,
+          14,
+          59,
+          37,
+          18,
+          94,
+          99,
+          102,
+          40,
+          120,
+          80,
+          60,
+          7,
+          98,
+          93,
+          108,
+          100,
+          66,
+          15,
+          8,
+          19,
+          41,
+          4,
+          63,
+          96,
+          44,
+          67,
+          117,
+          57,
+          3,
+          50,
+          70,
+          54,
+          2,
+          20,
+          46,
+          92,
+          13,
+          103,
+          90,
+          95
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20261909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20261909,
+        "theta_samples": [
+          [
+            4.54138916939283
+          ]
+        ],
+        "case_index": 0,
+        "job_id": "dagbmvfi3e6s738m6eu0"
+      },
+      "mean": 0.90865,
+      "minimum": 0.8998,
+      "maximum": 0.9175,
+      "x": 2.0121739130434784
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m1_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          0
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965
+          ]
+        ],
+        "case_index": 1,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.8509521484375,
+      "minimum": 0.81689453125,
+      "maximum": 0.885009765625,
+      "x": 2.0365217391304347
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m1_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          10
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163
+          ]
+        ],
+        "case_index": 1,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.86920166015625,
+      "minimum": 0.8375244140625,
+      "maximum": 0.90087890625,
+      "x": 2.0608695652173914
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m1_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          9
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159
+          ]
+        ],
+        "case_index": 1,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.87652587890625,
+      "minimum": 0.84423828125,
+      "maximum": 0.9088134765625,
+      "x": 2.0852173913043477
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:22:12.799839",
+      "job_id": "d7bbh8p5a5qc73dn9a60",
+      "filename": "run_20260408_162212.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996
+      ],
+      "campaign": {},
+      "mean": 0.659912109375,
+      "minimum": 0.613037109375,
+      "maximum": 0.706787109375,
+      "x": 2.1095652173913044
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m2_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          9
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288
+          ]
+        ],
+        "case_index": 5,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.64312744140625,
+      "minimum": 0.5977783203125,
+      "maximum": 0.6884765625,
+      "x": 2.1339130434782607
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m2_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          3
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338
+          ]
+        ],
+        "case_index": 5,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.6370849609375,
+      "minimum": 0.608642578125,
+      "maximum": 0.66552734375,
+      "x": 2.1582608695652175
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m2_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          6
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213
+          ]
+        ],
+        "case_index": 5,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.61956787109375,
+      "minimum": 0.6014404296875,
+      "maximum": 0.6376953125,
+      "x": 2.182608695652174
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:31:29.775024",
+      "job_id": "d7bblg3klj2c73ev272g",
+      "filename": "run_20260408_163129.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996,
+        5.3947298351621535
+      ],
+      "campaign": {},
+      "mean": 0.504150390625,
+      "minimum": 0.501708984375,
+      "maximum": 0.506591796875,
+      "x": 2.2069565217391305
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m3_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          6
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288,
+            6.155375327284596
+          ]
+        ],
+        "case_index": 9,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.49432373046875,
+      "minimum": 0.490478515625,
+      "maximum": 0.4981689453125,
+      "x": 2.2313043478260868
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m3_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          6
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338,
+            1.819154064837716
+          ]
+        ],
+        "case_index": 9,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.49755859375,
+      "minimum": 0.4873046875,
+      "maximum": 0.5078125,
+      "x": 2.2556521739130435
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m3_n2.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n2",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          1
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213,
+            5.317016709091439
+          ]
+        ],
+        "case_index": 9,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.501953125,
+      "minimum": 0.5015869140625,
+      "maximum": 0.5023193359375,
+      "x": 2.2800000000000002
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:13:40.384396",
+      "job_id": "d7bbd4h5a5qc73dn9570",
+      "filename": "run_20260408_161340.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.8477376302083334,
+      "minimum": 0.703125,
+      "maximum": 0.92919921875,
+      "x": 2.7199999999999998
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m1_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          8
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965
+          ]
+        ],
+        "case_index": 2,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.8601481119791666,
+      "minimum": 0.8204345703125,
+      "maximum": 0.88330078125,
+      "x": 2.776
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m1_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          1
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163
+          ]
+        ],
+        "case_index": 2,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.8618977864583334,
+      "minimum": 0.8231201171875,
+      "maximum": 0.8885498046875,
+      "x": 2.832
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m1_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          4
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159
+          ]
+        ],
+        "case_index": 2,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.8543294270833334,
+      "minimum": 0.8072509765625,
+      "maximum": 0.8858642578125,
+      "x": 2.888
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:24:40.701526",
+      "job_id": "d7bbibb0g7hs73dpcb6g",
+      "filename": "run_20260408_162440.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996
+      ],
+      "campaign": {},
+      "mean": 0.550048828125,
+      "minimum": 0.49951171875,
+      "maximum": 0.576416015625,
+      "x": 2.944
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m2_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          1
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288
+          ]
+        ],
+        "case_index": 6,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.5571695963541666,
+      "minimum": 0.5252685546875,
+      "maximum": 0.587646484375,
+      "x": 3.0
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m2_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          7
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338
+          ]
+        ],
+        "case_index": 6,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.5527750651041666,
+      "minimum": 0.51611328125,
+      "maximum": 0.6036376953125,
+      "x": 3.056
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m2_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          10
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213
+          ]
+        ],
+        "case_index": 6,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.5402018229166666,
+      "minimum": 0.49951171875,
+      "maximum": 0.5943603515625,
+      "x": 3.112
+    },
+    {
+      "M": 3,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m3_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          7
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288,
+            6.155375327284596
+          ]
+        ],
+        "case_index": 10,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.4960123697916667,
+      "minimum": 0.4937744140625,
+      "maximum": 0.4984130859375,
+      "x": 3.168
+    },
+    {
+      "M": 3,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m3_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          4
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338,
+            1.819154064837716
+          ]
+        ],
+        "case_index": 10,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.4940999348958333,
+      "minimum": 0.4913330078125,
+      "maximum": 0.496337890625,
+      "x": 3.224
+    },
+    {
+      "M": 3,
+      "N": 3,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m3_n3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n3",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          7
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213,
+            5.317016709091439
+          ]
+        ],
+        "case_index": 10,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.4990641276041667,
+      "minimum": 0.49169921875,
+      "maximum": 0.5072021484375,
+      "x": 3.2800000000000002
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:19:02.379498",
+      "job_id": "d7bbfhb0g7hs73dpc7og",
+      "filename": "run_20260408_161902.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "campaign": {},
+      "mean": 0.5838623046875,
+      "minimum": 0.439208984375,
+      "maximum": 0.651611328125,
+      "x": 3.7199999999999998
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m1_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          11
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965
+          ]
+        ],
+        "case_index": 3,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.553802490234375,
+      "minimum": 0.4344482421875,
+      "maximum": 0.63623046875,
+      "x": 3.776
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m1_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          8
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163
+          ]
+        ],
+        "case_index": 3,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.547943115234375,
+      "minimum": 0.413818359375,
+      "maximum": 0.6368408203125,
+      "x": 3.832
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m1_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          3
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159
+          ]
+        ],
+        "case_index": 3,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.559722900390625,
+      "minimum": 0.428955078125,
+      "maximum": 0.6480712890625,
+      "x": 3.888
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "backend": "ibm_fez",
+      "timestamp": "2026-04-08T16:29:06.887416",
+      "job_id": "d7bbjsbklj2c73ev24jg",
+      "filename": "run_20260408_162906.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996
+      ],
+      "campaign": {},
+      "mean": 0.50091552734375,
+      "minimum": 0.4990234375,
+      "maximum": 0.5029296875,
+      "x": 3.944
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m2_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          5
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288
+          ]
+        ],
+        "case_index": 7,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.50250244140625,
+      "minimum": 0.4912109375,
+      "maximum": 0.5142822265625,
+      "x": 4.0
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m2_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          11
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338
+          ]
+        ],
+        "case_index": 7,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.502685546875,
+      "minimum": 0.49560546875,
+      "maximum": 0.5107421875,
+      "x": 4.056
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m2_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          2
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213
+          ]
+        ],
+        "case_index": 7,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.505706787109375,
+      "minimum": 0.4937744140625,
+      "maximum": 0.513916015625,
+      "x": 4.112
+    },
+    {
+      "M": 3,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "repeat_000_m3_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          10
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            0.5690915206200965,
+            1.0080913138265288,
+            6.155375327284596
+          ]
+        ],
+        "case_index": 11,
+        "job_id": "dagc3m0mhr3c73e4uee0"
+      },
+      "mean": 0.510894775390625,
+      "minimum": 0.502197265625,
+      "maximum": 0.5205078125,
+      "x": 4.168
+    },
+    {
+      "M": 3,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "repeat_001_m3_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          2
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            3.4107044217677163,
+            2.969412252119338,
+            1.819154064837716
+          ]
+        ],
+        "case_index": 11,
+        "job_id": "dagc3momhr3c73e4uefg"
+      },
+      "mean": 0.512298583984375,
+      "minimum": 0.5029296875,
+      "maximum": 0.5198974609375,
+      "x": 4.224
+    },
+    {
+      "M": 3,
+      "N": 4,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "repeat_002_m3_n4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "campaign": {
+        "campaign_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n4",
+        "config_sha256": "33d87d683078b3e20e1125d7756655d784ed117a766b03101a55babf80b2db6b",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "submitted_pub_indices": [
+          0
+        ],
+        "phase_design": {
+          "kind": "seeded_random",
+          "seed": 20260909,
+          "samples_per_repeat": 1,
+          "low": 0.0,
+          "high": 6.283185307179586
+        },
+        "phase_seed": 20260909,
+        "theta_samples": [
+          [
+            4.427359405477159,
+            1.494680332920213,
+            5.317016709091439
+          ]
+        ],
+        "case_index": 11,
+        "job_id": "dagc3nfi3e6s738m6u50"
+      },
+      "mean": 0.509307861328125,
+      "minimum": 0.495361328125,
+      "maximum": 0.52734375,
+      "x": 4.28
+    }
+  ]
+}

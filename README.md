@@ -4,8 +4,10 @@ Simulation, dynamic circuits, and IBM Quantum experiments for the M-sender,
 N-receiver broadcasting protocol with optional `[[5,1,3]]` error correction.
 This is the single working reference. Superseded reviews and plans remain in Git
 history; the [manuscript](manuscript/apstemplate.tex),
-[derived hardware report](analysis/hardware/report.md), and
-[figure source manifest](figures/sources.json) retain the scientific evidence.
+[derived hardware report](analysis/hardware/report.md),
+[historical figure source manifest](figures/sources.json), and
+[manuscript figure source manifest](figures/manuscript_sources.json) retain the
+scientific evidence.
 
 Start with [run_broadcast.ipynb](run_broadcast.ipynb). It controls hardware campaigns,
 displays existing results, and runs the restored Monte Carlo convergence study.
@@ -203,13 +205,37 @@ phase designs and old schema-v1 configurations/prepared bundles remain supported
 campaign records together. Receipts and analysis JSON are excluded. Separate jobs,
 cases, and angles remain separate; duplicate saves of the same observation are removed.
 
-The campaign notebook exports to `figures/campaigns/`:
+For the manuscript, open [visualizations.ipynb](visualizations.ipynb) and run the
+self-contained **Manuscript Figures 3–6** cell near the top. It imports its own
+dependencies and reads saved inputs, so earlier cells need not be executed. Edit
+`PLOT_RC`, `EXPORT`, and the `FIGURE_3`, `FIGURE_4`, `FIGURE_5`, and `FIGURE_6`
+dictionaries in that cell to adjust shared styling, source selection, and each
+figure's plotting controls, including sizes, colours, markers, lines, axes, labels,
+and legends. Rerun the cell to preview changes.
+
+`SAVE_MANUSCRIPT_FIGURES=True` writes the following PNGs into both `manuscript/`
+and `figures/`, matching the manuscript's figure references:
+
+| Figure | PNG | Default saved evidence |
+|---|---|---|
+| 3 | `figure_03_qec_crossover.png` | Pinned QEC crossover simulation sources |
+| 4 | `figure_04_delay_repeats.png` | Latest two historical 121-point, opt3, M=1/N=2 delay sweeps and all three `delay_01` campaign repeats |
+| 5 | `figure_05_hardware_scaling.png` | All 55 qualifying opt3, zero-delay observations, combining historical jobs and the saved scaling campaign |
+| 6 | `figure_06_sampling_convergence.png` | Recovered historical seed 0 and four complete new seed curves, 1–4 |
+
+The cell writes `figures/manuscript_sources.json` with input paths, SHA-256 hashes,
+and plotting settings for these exports. Set `SAVE_MANUSCRIPT_FIGURES=False` to
+preview without replacing the exported assets. These dedicated filenames keep
+the historical `scripts/generate_figures.py` exports from overwriting the selected
+manuscript figures. No hardware jobs or new simulations are launched by this cell.
+
+The campaign notebook also exports exploratory plots to `figures/campaigns/`:
 
 | PNG | Meaning | Manuscript use |
 |---|---|---|
-| `hardware_scaling_opt3.png` | Fidelity y, receiver count N x, sender count M colour; opt3/tau0 only. Points are receiver means; vertical bars span receiver min–max. | Candidates for Figure 5 |
-| `receiver_fidelity_vs_time_repeats.png` | Separate receiver curves for each repeat/angle, recorded time units, and Wilson shot intervals; latest two historical sweeps plus the selected campaign. | Candidates for Figure 4 |
-| `mc_sampling_convergence.png` | Restored historical curve plus compatible new seed curves, on log–log axes. | Figure 6 convergence analysis |
+| `hardware_scaling_opt3.png` | Fidelity y, receiver count N x, sender count M colour; opt3/tau0 only. Points are receiver means; vertical bars span receiver min–max. | Figure 5 supporting analysis |
+| `receiver_fidelity_vs_time_repeats.png` | Separate receiver curves for each repeat/angle, recorded time units, and Wilson shot intervals; latest two historical sweeps plus the selected campaign. | Figure 4 supporting analysis |
+| `mc_sampling_convergence.png` | Restored historical curve plus compatible new seed curves, on log–log axes. | Figure 6 supporting analysis |
 
 Receiver-range bars describe receiver variation, not confidence intervals. Historical
 backend/date/shot differences remain visible or archived in plotted-point metadata.
@@ -239,12 +265,11 @@ python scripts/analyze_saved_hardware.py
 python scripts/generate_figures.py
 ```
 
-Hardware/memory publication sources remain explicitly pinned by the 25-record SHA-256
-manifest. Convergence uses the recovered historical summary and overlays compatible
-saved repetitions. Review new data, select hardware sources, and revise captions and
-claims before the final manuscript update. The hardware campaigns do not regenerate
-Figure 1's separate QEC memory benchmark, Figure 2's circuit diagram, or Figure 3's
-QEC crossover simulation evidence.
+The historical generator's hardware/memory sources remain explicitly pinned by its
+25-record SHA-256 manifest. Use the **Manuscript Figures 3–6** cell for the selected
+combined historical/campaign figures and their separate manifest. The hardware
+campaigns do not regenerate Figure 1's separate QEC memory benchmark, Figure 2's
+circuit diagram, or Figure 3's QEC crossover simulation evidence.
 
 The manuscript embeds PNGs. All 15 existing generated PDF figures were removed;
 external reference papers and the complete compiled manuscript PDF are retained.
@@ -346,7 +371,7 @@ Incomplete or mixed groups fail before any output is written.
 | `tests/` | Offline numerical, circuit, notebook, provenance and execution regressions |
 | `hpc/` | Optional simulation CLI and cluster/archive tools |
 | `run_broadcast.ipynb` | Main hardware campaign and convergence workflow |
-| `visualizations.ipynb` | Additional saved-result exploration |
+| `visualizations.ipynb` | Configurable manuscript Figures 3–6 and additional saved-result exploration |
 | `qec_testing.ipynb` | Separate encoded/bare memory benchmark; hardware defaults off |
 | `results/`, `campaigns/*/results/` | Historical raw evidence and new immutable records |
 | `analysis/`, `figures/` | Derived outputs and explicit source provenance |
@@ -368,12 +393,13 @@ QEC evidence is a separate memory benchmark; full QEC-enhanced broadcasting has 
 been demonstrated. Phase-independent classical transcripts are not a general
 security proof.
 
-**No new experimental datasets or IBM/SLURM jobs were collected/submitted during
-this revision.** Validation uses saved data, small local regression calculations,
-Aer/fake targets, and notebook execution with acquisition disabled. Live target
-compatibility and cluster execution remain unverified.
+Saved scaling and delay campaigns now contain all three requested repeats, and
+four complete new Monte Carlo seed curves are available alongside the historical
+seed-0 summary. The manuscript figure workflow integrates those saved results with
+historical observations. This integration reads existing data and does not submit
+IBM/SLURM jobs or collect new experiments.
 
-Validation on 2026-09-08: **327 tests passed**. Both main notebooks executed in a
+Earlier validation on 2026-09-08: **327 tests passed**. Both main notebooks executed in a
 real Jupyter kernel with acquisition disabled (30 and 18 cells, zero errors).
 The manuscript builds to 12 pages without warnings; all rendered pages were
 inspected. The 819 historical histogram summaries retain their earlier statistics
@@ -382,16 +408,13 @@ hashes. Dependency and diff checks pass.
 
 Remaining work:
 
-1. Select the backend; prepare and inspect the notebook's scaling and delay campaigns,
-   then submit and collect the requested repetitions.
-2. Run the two matching local Monte Carlo repetitions on a sufficiently large machine.
-3. Assess size/layout effects, receiver asymmetry, phase dependence, and run variation.
+1. Assess size/layout effects, receiver asymmetry, phase dependence, and run variation.
    Preserve negative or inconclusive results. Additional controls or delay ablations
    should follow the evidence.
-4. Select and pin the new hardware sources; review convergence overlays and statistical
-   claims; regenerate PNGs and update the manuscript captions/text. Conditional shot
-   intervals do not replace repetition-based uncertainty.
-5. Finalize author/affiliation details, archive deposit/DOI, and release checks.
+2. Review the selected Figures 3–6, convergence overlays, captions, and statistical
+   claims for release. Tune their exposed notebook settings and regenerate the PNGs
+   as needed. Conditional shot intervals do not replace repetition-based uncertainty.
+3. Finalize author/affiliation details, archive deposit/DOI, and release checks.
 
 Generic resource preparation and Gram–Schmidt decoding remain the selected methods.
 Structured synthesis/decoding, streaming simulation tiers, and dynamical-decoupling

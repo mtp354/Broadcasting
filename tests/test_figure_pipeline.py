@@ -1,4 +1,5 @@
 """Pinned inputs, safe defaults and optional notebook path execution."""
+import ast
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -106,3 +107,69 @@ def test_qec_saved_comparison_and_disabled_hardware_cells_execute(monkeypatch):
     exec(_notebook_cell("qec_testing.ipynb", 13), namespace)
     assert len(namespace["saved"]) == 5
     plt.close("all")
+
+
+def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch):
+    """Optional saved-campaign integration check, including log-axis autoscaling."""
+    campaign_inputs = [
+        ROOT / "campaigns/delay_01/results" / f"repeat_{repeat:03d}_m1_n2.json"
+        for repeat in range(3)
+    ] + [
+        ROOT / "campaigns/scaling_01/results" / f"repeat_{repeat:03d}_m{m}_n{n}.json"
+        for repeat in range(3) for m in range(1, 4) for n in range(1, 5)
+    ]
+    if not all(path.is_file() for path in campaign_inputs):
+        pytest.skip("The manuscript integration check needs the locally saved, gitignored campaigns.")
+
+    notebook = json.loads((ROOT / "visualizations.ipynb").read_text())
+    cell = next(cell for cell in notebook["cells"] if cell.get("id") == "manuscript-figures-3-6")
+    tree = ast.parse("".join(cell["source"]))
+    save_settings = [
+        node for node in tree.body if isinstance(node, ast.Assign)
+        and any(isinstance(target, ast.Name) and target.id == "SAVE_MANUSCRIPT_FIGURES"
+                for target in node.targets)
+    ]
+    assert len(save_settings) == 1
+    save_settings[0].value = ast.Constant(value=False)
+    ast.fix_missing_locations(tree)
+    monkeypatch.chdir(ROOT)
+    monkeypatch.setattr("IPython.display.display", lambda *args, **kwargs: None)
+    monkeypatch.setattr("broadcasting.plotting.save_figure",
+                        lambda *args, **kwargs: pytest.fail("Preview attempted to save a figure"))
+    namespace = {}
+    try:
+        exec(compile(tree, "visualizations.ipynb:manuscript-figures-3-6", "exec"), namespace)
+        rendered = namespace["manuscript_figures"]
+        assert set(rendered) == {3, 4, 5, 6}
+        assert [len(line.get_xdata()) for line in rendered[3].axes[0].lines[2:5]] == [5, 50, 50]
+
+        delay_axes = [ax for ax in rendered[4].axes if ax.get_visible()]
+        assert len(delay_axes) == 5
+        for ax, (run, _theta_index, histograms) in zip(delay_axes, namespace["traces"]):
+            order = np.argsort(run["sweep"]["values"])
+            expected = np.array([
+                [sum(weight for bits, weight in histograms[index].items() if bits[-receiver - 1] == "0")
+                 / sum(histograms[index].values()) for receiver in range(run["N"])]
+                for index in order
+            ])
+            for receiver in range(2):
+                line = ax.lines[receiver]
+                assert len(line.get_xdata()) == 121
+                np.testing.assert_allclose(line.get_ydata(), expected[:, receiver])
+            np.testing.assert_allclose(ax.lines[2].get_ydata(), expected.mean(axis=1))
+            assert len(ax.collections) == 2  # Both receivers have Wilson confidence bands.
+
+        assert len(namespace["scaling_points"]) == 55
+        np.testing.assert_array_equal(rendered[5].axes[0].get_xticks(), [1, 2, 3, 4])
+
+        convergence_ax = rendered[6].axes[0]
+        assert convergence_ax.get_xscale() == convergence_ax.get_yscale() == "log"
+        assert len(convergence_ax.lines) == 6  # Historical + four seeds + anchored reference.
+        assert all(len(line.get_xdata()) == 10 for line in convergence_ax.lines)
+        for limits, getter in [(convergence_ax.get_xlim(), "get_xdata"),
+                               (convergence_ax.get_ylim(), "get_ydata")]:
+            values = np.concatenate([np.asarray(getattr(line, getter)()) for line in convergence_ax.lines])
+            assert 0 < limits[0] <= values.min() <= values.max() <= limits[1]
+    finally:
+        for fig in namespace.get("manuscript_figures", {}).values():
+            plt.close(fig)
