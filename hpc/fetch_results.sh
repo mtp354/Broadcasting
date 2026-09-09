@@ -1,39 +1,16 @@
-#!/bin/bash
-# --------------------------------------------------------------------------
-# fetch_results.sh — run on your LOCAL machine
-#
-# Pulls results from Arrow /global storage to your local project folder.
-# Uses chizen as a jump host (standard CUNY HPC access).
-#
-# Usage:
-#   bash hpc/fetch_results.sh
-#
-# Run from the root of your local Broadcasting/ project directory.
-# --------------------------------------------------------------------------
-
+#!/usr/bin/env bash
+# Run locally. Fetch completed archives without replacing existing local evidence.
 set -euo pipefail
 
-USERID=prest-hc-13
-JUMP_HOST=chizen.csi.cuny.edu
-ARROW_HOST=arrow
-REMOTE_DIR=/global/u/${USERID}/Broadcasting/results
-LOCAL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/results"
-
-echo "=========================================="
-echo "Fetching results from Arrow → local"
-echo "Remote: ${REMOTE_DIR}/"
-echo "Local:  ${LOCAL_DIR}/"
-echo "=========================================="
+USERID="${BROADCAST_SSH_USER:-prest-hc-13}"
+JUMP_HOST="${BROADCAST_JUMP_HOST:-chizen.csi.cuny.edu}"
+ARROW_HOST="${BROADCAST_CLUSTER_HOST:-arrow}"
+REMOTE_DIR="${BROADCAST_REMOTE_RESULTS:-/global/u/${USERID}/Broadcasting/results}"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+LOCAL_DIR="${BROADCAST_LOCAL_RESULTS:-${PROJECT_DIR}/results}"
 
 mkdir -p "${LOCAL_DIR}"
-
-rsync -avz --progress \
+rsync -avz --ignore-existing --protect-args \
     -e "ssh -J ${USERID}@${JUMP_HOST}" \
-    "${USERID}@${ARROW_HOST}:${REMOTE_DIR}/" \
-    "${LOCAL_DIR}/"
-
-echo ""
-echo "=========================================="
-echo "Done. Files in local results/:"
-ls -lh "${LOCAL_DIR}/"
-echo "=========================================="
+    "${USERID}@${ARROW_HOST}:${REMOTE_DIR}/" "${LOCAL_DIR}/"
+echo "Fetched results to ${LOCAL_DIR}; existing local files were preserved."

@@ -44,7 +44,7 @@ mkdir -p "${SUBMISSION_DIR}" "${RESULT_DIR}" "${SCRATCH_DIR}/slurm_logs"
         trap 'rm -rf "${STAGING_DIR}"' EXIT
         rsync -a --exclude='.git' --exclude='.venv' --exclude='__pycache__' \
               --exclude='*.pyc' --exclude='results' --exclude='slurm_logs' \
-              --exclude='submissions' "${GLOBAL_DIR}/" "${STAGING_DIR}/"
+              --exclude='submissions' --exclude='campaigns' "${GLOBAL_DIR}/" "${STAGING_DIR}/"
         REVISION="$(git -C "${GLOBAL_DIR}" rev-parse HEAD 2>/dev/null || true)"
         printf '{"submission_id":"%s","code_revision":"%s"}\n' \
                "${SUBMISSION_ID}" "${REVISION}" > "${STAGING_DIR}/source_snapshot.json"
@@ -60,10 +60,13 @@ mkdir -p "${SUBMISSION_DIR}" "${RESULT_DIR}" "${SCRATCH_DIR}/slurm_logs"
 ) 200>"${SUBMISSION_DIR}/.snapshot.lock"
 
 module purge
-module load Compilers/Python/3.12.13
+module load "${BROADCAST_PYTHON_MODULE:-Compilers/Python/3.12.13}"
 cd "${CODE_DIR}"
 if [ -f "${SCRATCH_DIR}/.venv/bin/activate" ]; then
     source "${SCRATCH_DIR}/.venv/bin/activate"
+else
+    echo "Missing ${SCRATCH_DIR}/.venv; run hpc/setup_scratch.sh first." >&2
+    exit 1
 fi
 export PYTHONDONTWRITEBYTECODE=1
 
@@ -95,5 +98,5 @@ if [ -n "${SEED:-}" ]; then ARGS+=(--seed "${SEED}"); fi
 python -m hpc.run_experiment "${ARGS[@]}"
 
 # Preserve submission identity in persistent storage as well as in each JSON.
-rsync -a --include='run_*.json' --exclude='*' "${RESULT_DIR}/" "${ARCHIVE_DIR}/"
+rsync -a --ignore-existing --include='run_*.json' --exclude='*' "${RESULT_DIR}/" "${ARCHIVE_DIR}/"
 echo "Done: ${SUBMISSION_ID}"

@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 def test_convergence_refuses_implicit_collection():
     with pytest.raises(ValueError, match="explicit collection"):
-        figures.generate_figure_1_convergence([])
+        figures.collect_sampling_convergence([])
 
 
 def test_convergence_sets_effective_seed_and_count_and_archives_measurements(monkeypatch, tmp_path):
@@ -39,7 +39,7 @@ def test_convergence_sets_effective_seed_and_count_and_archives_measurements(mon
 
     monkeypatch.setattr(figures, "ExactBackend", Exact)
     monkeypatch.setattr(figures, "SamplingBackend", Sampled)
-    path = figures.generate_figure_1_convergence([], collect=True, quick=True, archive_dir=tmp_path)
+    path = figures.collect_sampling_convergence([], collect=True, quick=True, archive_dir=tmp_path)
     archive = json.loads(path.read_text())
     assert observed == [(seed, n) for seed in [0, 1, 2] for n in [50, 100, 200, 500, 1000]]
     assert len(archive["measurements"]) == len(observed)
@@ -52,12 +52,13 @@ def test_convergence_sets_effective_seed_and_count_and_archives_measurements(mon
 
 def test_default_figure_cli_never_collects(monkeypatch):
     monkeypatch.setattr("sys.argv", ["generate_figures.py", "--all"])
-    monkeypatch.setattr(figures, "generate_figure_1_convergence", lambda *a, **k: pytest.fail("Implicit collection"))
+    monkeypatch.setattr(figures, "collect_sampling_convergence", lambda *a, **k: pytest.fail("Implicit collection"))
     calls = []
-    for number, name in [(2, "qec_memory"), (4, "qec_crossover"), (5, "delay_sweeps"), (6, "scaling")]:
-        monkeypatch.setattr(figures, f"generate_figure_{number}_{name}", lambda *a, n=number, **k: calls.append(n))
+    names = ["qec_memory", "qec_crossover", "delay_sweeps", "hardware_tau0"]
+    for name in names:
+        monkeypatch.setattr(figures, f"generate_{name}", lambda *a, n=name, **k: calls.append(n))
     figures.main()
-    assert calls == [2, 4, 5, 6]
+    assert calls == names
 
 
 def test_manifest_sources_are_intact_and_qec_attributions_are_explicit():
@@ -91,7 +92,7 @@ def test_source_overlay_fills_null_but_rejects_conflicting_record(monkeypatch, t
 
 
 def test_crossover_uses_each_native_grid_and_returns_inset():
-    fig = figures.generate_figure_4_qec_crossover([])
+    fig = figures.generate_qec_crossover([])
     ax = fig.axes[0]
     assert len(ax.child_axes) == 1
     # The historical bare grid has five points, encoded curves have fifty.
@@ -127,7 +128,7 @@ def test_optional_periodicity_cell_loads_existing_flat_schema(monkeypatch):
 
 def test_optional_convergence_notebook_delegates_to_explicit_collection(monkeypatch):
     calls = []
-    monkeypatch.setattr(figures, "generate_figure_1_convergence", lambda *args, **kwargs: calls.append(kwargs))
+    monkeypatch.setattr(figures, "collect_sampling_convergence", lambda *args, **kwargs: calls.append(kwargs))
     code = _notebook_cell("run_broadcast.ipynb", 11).replace("RUN_CONVERGENCE = False", "RUN_CONVERGENCE = True")
     exec(code, {"SAVE_FIGURES": False})
     assert calls == [{"quick": False, "collect": True}]

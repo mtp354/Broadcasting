@@ -1,5 +1,6 @@
 """Utility functions for sender qubit encoding."""
 
+from collections.abc import Iterable
 from math import ceil, log2
 
 
@@ -8,10 +9,10 @@ def sender_encoding_qubits(N: int) -> int:
     return int(ceil(log2(N + 1)))
 
 
-def packed_sender_value(outcomes, nq):
+def packed_sender_value(outcomes: Iterable[int], nq: int) -> int:
     """Pack sender outcomes into a single little-endian classical integer."""
     packed = 0
-    for j, outcome in enumerate(outcomes):
-        for bit in range(nq):
-            packed |= ((outcome >> bit) & 1) << (j * nq + bit)
+    mask = (1 << nq) - 1
+    for sender, outcome in enumerate(outcomes):
+        packed |= (outcome & mask) << (sender * nq)
     return packed

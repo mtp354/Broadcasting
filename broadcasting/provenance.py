@@ -14,6 +14,32 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
+def _code_revision() -> str | None:
+    """Read checkout identity without launching a process during offline planning."""
+    git_dir = ROOT / ".git"
+    if git_dir.is_file():
+        git_dir = (ROOT / git_dir.read_text().strip().removeprefix("gitdir: ")).resolve()
+    head = git_dir / "HEAD"
+    if not head.exists():
+        return None
+    reference = head.read_text().strip()
+    if not reference.startswith("ref: "):
+        return reference  # Detached HEAD.
+    reference = reference.removeprefix("ref: ")
+    common_dir_file = git_dir / "commondir"
+    common_dir = ((git_dir / common_dir_file.read_text().strip()).resolve()
+                  if common_dir_file.exists() else git_dir)
+    loose_ref = common_dir / reference
+    if loose_ref.exists():
+        return loose_ref.read_text().strip()
+    packed_refs = common_dir / "packed-refs"
+    if packed_refs.exists():
+        for line in packed_refs.read_text().splitlines():
+            if line.endswith(" " + reference):
+                return line.split()[0]
+    return None
+
+
 def software_provenance() -> dict:
     """Identify installed dependencies and the exact checked-out source bytes."""
     paths = sorted({p for folder in ("broadcasting", "hpc", "scripts")
@@ -25,21 +51,7 @@ def software_provenance() -> dict:
             versions[name] = importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:
             versions[name] = None
-    revision = None
-    git_dir = ROOT / ".git"
-    if git_dir.is_file():
-        git_dir = (ROOT / git_dir.read_text().strip().removeprefix("gitdir: ")).resolve()
-    head = git_dir / "HEAD"
-    if head.exists():
-        revision = head.read_text().strip()
-        if revision.startswith("ref: "):
-            ref = revision[5:]
-            ref_file = git_dir / ref
-            revision = ref_file.read_text().strip() if ref_file.exists() else None
-            packed = git_dir / "packed-refs"
-            if revision is None and packed.exists():
-                revision = next((line.split()[0] for line in packed.read_text().splitlines()
-                                 if line.endswith(" " + ref)), None)
+    revision = _code_revision()
     # Cluster snapshots have no .git; the submission manifest preserves revision.
     manifest = ROOT / "source_snapshot.json"
     snapshot = json.loads(manifest.read_text()) if manifest.exists() else None
@@ -74,20 +86,22 @@ def circuit_provenance(circuit, target=None) -> dict:
             # Dynamic control flow and unbound durations have no reliable scalar
             # estimate. Preserve why instead of silently inventing a duration.
             duration_note = f"Unavailable: {type(exc).__name__}: {exc}"
-    def count_operations(current):
-        counts = Counter()
-        for instruction in current.data:
-            counts[instruction.operation.name] += 1
-            for block in getattr(instruction.operation, "blocks", ()):
-                counts.update(count_operations(block))
-        return counts
-
     return {"qpy_base64": base64.b64encode(payload).decode("ascii"),
             "sha256": hashlib.sha256(payload).hexdigest(), "layout": layout_data,
             "num_qubits": circuit.num_qubits, "num_clbits": circuit.num_clbits,
-            "depth": circuit.depth(), "operation_counts": dict(count_operations(circuit)),
+            "depth": circuit.depth(), "operation_counts": dict(_count_operations(circuit)),
             "parameters": sorted(p.name for p in circuit.parameters),
             "duration_seconds": duration, "duration_note": duration_note}
+
+
+def _count_operations(circuit) -> Counter:
+    """Include operations inside dynamic control-flow blocks."""
+    counts = Counter()
+    for instruction in circuit.data:
+        counts[instruction.operation.name] += 1
+        for block in getattr(instruction.operation, "blocks", ()):
+            counts.update(_count_operations(block))
+    return counts
 
 
 def calibration_provenance(backend, circuits) -> dict:

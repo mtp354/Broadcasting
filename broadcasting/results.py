@@ -1,9 +1,8 @@
 """JSON I/O for broadcasting experiment results.
 
-All files use a single unified schema regardless of whether they come
-from exact / sampling simulations or real hardware runs.  ``load_run``
-also populates a few legacy keys (``entries``, ``nt`` …) so older
-plotting helpers keep working unchanged.
+New runs share one schema for simulations and hardware. ``load_run`` adds
+convenience views (``entries``, ``nt`` …) for plotting; it does not migrate
+or rewrite historical source formats.
 """
 
 from __future__ import annotations
@@ -76,9 +75,11 @@ def save_run(
     mode recorded in ``result.metadata["mode"]``:
 
     - ``exact`` / ``sampled (...)``  -> simulation, p sweep
-    - ``hardware (...)``              -> hardware, single fidelity point
-      (tau-sweep hardware runs typically save the JSON directly from
-      the submission notebook, not through this helper).
+    - ``hardware (...)``              -> hardware, single point or delay sweep
+    - ``hpc (...)``                   -> submission receipt, without measurements
+
+    Executed metadata takes precedence over configuration defaults. Existing
+    paths are never replaced, including an explicitly supplied ``filepath``.
     """
     results_dir = Path(results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -213,7 +214,8 @@ def load_run(filepath: str | Path) -> dict[str, Any]:
     if "experiment_type" not in raw or "sweep" not in raw:
         raise ValueError(
             f"{filepath} is not in the unified schema. "
-            "Run scripts/migrate_results.py to convert legacy files."
+            "Use its matching unified record or an explicit read-only analysis "
+            "adapter; historical source files must remain unchanged."
         )
 
     proto = raw["protocol"]
@@ -280,7 +282,7 @@ def load_run(filepath: str | Path) -> dict[str, Any]:
 
 
 def list_runs(results_dir: str | Path = RESULTS_DIR) -> list[dict[str, Any]]:
-    """List all run files under *results_dir*, skipping unreadable ones."""
+    """List immediate ``run_*.json`` files, skipping unreadable records."""
     results_dir = Path(results_dir)
     runs = []
     for f in sorted(results_dir.glob("run_*.json")):

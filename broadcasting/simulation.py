@@ -8,13 +8,30 @@ qubit encoding is needed.
 
 import itertools
 import warnings
-from math import comb
 from typing import Any
 
 import numpy as np
 from qiskit.quantum_info import DensityMatrix, Pauli, Statevector, state_fidelity
 
-from .qec_513 import QEC513_STABILIZERS
+from .qec_513 import five_qubit_logical_basis, pauli_label_syndrome
+
+
+def _apply_state_operator(
+    state_tensor: np.ndarray, operator: np.ndarray, axis: int
+) -> np.ndarray:
+    """Apply a local operator, retaining the position of its tensor axis."""
+    result = np.tensordot(operator, state_tensor, axes=([1], [axis]))
+    return np.moveaxis(result, 0, axis)
+
+
+def _apply_density_operator(
+    density_tensor: np.ndarray, operator: np.ndarray, axis: int
+) -> np.ndarray:
+    """Apply ``operator @ rho @ operator†`` on one subsystem's ket/bra axes."""
+    bra_axis = density_tensor.ndim // 2 + axis
+    result = _apply_state_operator(density_tensor, operator, axis)
+    result = np.tensordot(result, operator.conj().T, axes=([bra_axis], [0]))
+    return np.moveaxis(result, -1, bra_axis)
 
 
 # ---------------------------------------------------------------------------
@@ -65,7 +82,7 @@ def partial_trace_np(
 def get_initial_state(
     M: int,
     N: int,
-    alpha: float = 1 / np.sqrt(2),
+    alpha: complex = 1 / np.sqrt(2),
 ) -> Statevector:
     r"""Construct the broadcast resource state :math:`|\Psi^{(M,N)}\rangle`.
 
@@ -79,7 +96,7 @@ def get_initial_state(
         Number of sender qudits.
     N : int
         Number of receiver qubits.
-    alpha : float
+    alpha : complex
         Amplitude parameter (|alpha| <= 1).
 
     Returns
@@ -93,28 +110,17 @@ def get_initial_state(
 
     state = np.zeros(dim_total, dtype=complex)
 
-    def qudit_index(k: int) -> int:
-        idx = 0
-        for _ in range(M):
-            idx = idx * d_qudit + k
-        return idx
-
-    def qubit_index(bitstring: list[int]) -> int:
-        idx = 0
-        for b in bitstring:
-            idx = (idx << 1) | b
-        return idx
-
+    # Every sender carries the same qudit value k in each resource-state term.
+    sender_stride = sum(d_qudit**sender for sender in range(M))
     for k in range(N + 1):
-        coeff = (alpha ** k) * (beta ** (N - k)) * np.sqrt(comb(N, k))
-        qd_idx = qudit_index(k)
+        amplitude = alpha**k * beta ** (N - k)
+        sender_index = k * sender_stride
 
         for zeros in itertools.combinations(range(N), k):
-            bits = [1] * N
-            for z in zeros:
-                bits[z] = 0
-            qb_idx = qubit_index(bits)
-            state[qd_idx * dim_qubits + qb_idx] += coeff / np.sqrt(comb(N, k))
+            receiver_index = (1 << N) - 1
+            for receiver in zeros:
+                receiver_index &= ~(1 << (N - 1 - receiver))
+            state[sender_index * dim_qubits + receiver_index] = amplitude
 
     return Statevector(state)
 
@@ -320,17 +326,6 @@ def apply_corrections(
 # [[5,1,3]] QEC encoding
 # ---------------------------------------------------------------------------
 
-def _five_qubit_logical_basis() -> tuple[np.ndarray, np.ndarray]:
-    """Return ``(|0_L>, |1_L>)`` for the [[5,1,3]] code.
-
-    Delegates to :func:`broadcasting.qec_513.five_qubit_logical_basis` to maintain
-    a single authoritative definition of the logical basis across the codebase.
-    """
-    from .qec_513 import five_qubit_logical_basis
-
-    return five_qubit_logical_basis()
-
-
 def encode_initial_state(
     state: Statevector,
     M: int,
@@ -366,27 +361,25 @@ def encode_initial_state(
             f"Dimension mismatch: got {vec.size}, expected {expected_dim}"
         )
 
-    v0, v1 = _five_qubit_logical_basis()
+    v0, v1 = five_qubit_logical_basis()
 
-    # Encoding isometry tensor  E[b1,b2,b3,b4,b5, q]
-    E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
-    E[..., 0] = v0.reshape(2, 2, 2, 2, 2)
-    E[..., 1] = v1.reshape(2, 2, 2, 2, 2)
+    # Native-qudit tensors use C order, unlike the Qiskit binary embedding.
+    encoding = np.column_stack([v0, v1]).reshape((2,) * 6)
+    state_tensor = vec.reshape((d,) * M + (2,) * N)
 
-    psi = vec.reshape((d,) * M + (2,) * N)
-
-    for ell in range(N):
-        ax = M + 5 * ell
-        R = psi.ndim
-        psi = np.tensordot(E, psi, axes=([5], [ax]))
-        perm = (
-            list(range(5, 5 + ax))
-            + list(range(0, 5))
-            + list(range(5 + ax, 5 + (R - 1)))
+    for receiver in range(N):
+        axis = M + 5 * receiver
+        previous_ndim = state_tensor.ndim
+        state_tensor = np.tensordot(encoding, state_tensor, axes=([5], [axis]))
+        # Return the five physical axes to the logical receiver's position.
+        permutation = (
+            list(range(5, 5 + axis))
+            + list(range(5))
+            + list(range(5 + axis, previous_ndim + 4))
         )
-        psi = np.transpose(psi, perm)
+        state_tensor = np.transpose(state_tensor, permutation)
 
-    encoded_vec = psi.reshape(-1)
+    encoded_vec = state_tensor.reshape(-1)
     expected_encoded_dim = (d ** M) * (2 ** (5 * N))
     if encoded_vec.size != expected_encoded_dim:
         raise RuntimeError(
@@ -413,9 +406,8 @@ def depolarizing_channels_encoded(
 ) -> dict[str, Any]:
     """Depolarizing noise on [[5,1,3]]-encoded receiver blocks.
 
-    For small Hilbert spaces (D <= *exact_dim_max*) or when *mode* is
-    ``"exact"``, the channel is applied via full density-matrix evolution.
-    Otherwise Monte Carlo Pauli trajectories are sampled.
+    ``"exact"`` uses a full density matrix and ``"sampling"`` uses Pauli
+    trajectories. Any other mode selects between them using *exact_dim_max*.
 
     Parameters
     ----------
@@ -428,9 +420,9 @@ def depolarizing_channels_encoded(
     p_list : list[float]
         Depolarizing probability per receiver block (applied to each of
         its 5 physical qubits independently).
-    mode : ``"exact"`` or ``"sampling"``
-        Force a specific simulation mode.  When ``"exact"`` the full
-        density matrix is used regardless of dimension.
+    mode : str
+        ``"exact"`` or ``"sampling"`` forces that mode; ``"auto"`` selects
+        exact evolution when the dimension is at most *exact_dim_max*.
     exact_dim_max : int
         Automatic threshold: use exact mode when D <= this value and
         *mode* is not explicitly ``"sampling"``.
@@ -462,25 +454,10 @@ def depolarizing_channels_encoded(
         )
 
     dims = [d_qudit] * M + [2] * (5 * N)
-    L = len(dims)
 
-    X = Pauli("X").to_matrix().astype(complex)
-    Y = Pauli("Y").to_matrix().astype(complex)
-    Z = Pauli("Z").to_matrix().astype(complex)
-
-    # --- helpers ---
-    def _apply_unitary_on_subsystem(vec: np.ndarray, U: np.ndarray, ax: int) -> np.ndarray:
-        psi = vec.reshape(dims)
-        tmp = np.tensordot(U, psi, axes=([1], [ax]))
-        tmp = np.moveaxis(tmp, 0, ax)
-        return tmp.reshape(-1)
-
-    def _conjugate_density(rho_tensor: np.ndarray, U: np.ndarray, ax: int) -> np.ndarray:
-        tmp = np.tensordot(U, rho_tensor, axes=([1], [ax]))
-        tmp = np.moveaxis(tmp, 0, ax)
-        bra_ax = L + ax
-        tmp2 = np.tensordot(tmp, U.conj().T, axes=([bra_ax], [0]))
-        return np.moveaxis(tmp2, -1, bra_ax)
+    X = Pauli("X").to_matrix()
+    Y = Pauli("Y").to_matrix()
+    Z = Pauli("Z").to_matrix()
 
     # --- exact ---
     use_exact = mode == "exact" or (mode != "sampling" and D <= exact_dim_max)
@@ -490,9 +467,9 @@ def depolarizing_channels_encoded(
             for t in range(5):
                 ax = M + 5 * i + t
                 rho_tensor = rho_out.reshape(dims + dims)
-                XrX = _conjugate_density(rho_tensor, X, ax)
-                YrY = _conjugate_density(rho_tensor, Y, ax)
-                ZrZ = _conjugate_density(rho_tensor, Z, ax)
+                XrX = _apply_density_operator(rho_tensor, X, ax)
+                YrY = _apply_density_operator(rho_tensor, Y, ax)
+                ZrZ = _apply_density_operator(rho_tensor, Z, ax)
                 rho_tensor = (1 - p) * rho_tensor + (p / 3) * (XrX + YrY + ZrZ)
                 rho_out = rho_tensor.reshape(D, D)
         return {"mode": "exact", "rho": rho_out, "D": D}
@@ -518,7 +495,9 @@ def depolarizing_channels_encoded(
                 choice = rng.choice(4, p=probs)
                 block_letters.append(pauli_letters[choice])
                 if choice != 0:
-                    psi = _apply_unitary_on_subsystem(psi, pauli_ops[choice], ax)
+                    psi = _apply_state_operator(
+                        psi.reshape(dims), pauli_ops[choice], ax
+                    ).reshape(-1)
             traj_labels.append("".join(block_letters))
         trajectories.append(psi)
         pauli_labels.append(traj_labels)
@@ -541,41 +520,16 @@ def depolarizing_channels_encoded(
 # QEC recovery + decode
 # ---------------------------------------------------------------------------
 
-def pauli_label_syndrome(label: str) -> str:
-    """[[5,1,3]] syndrome of a 5-qubit Pauli error given as a label, e.g. ``"IXZII"``.
-
-    Computed directly from single-qubit (anti)commutation counting against each
-    stabilizer generator, rather than by constructing the full 32x32 operator and
-    checking commutators. Two single-qubit Paulis anticommute iff both are
-    non-identity and different; the syndrome bit for each stabilizer is the parity
-    (mod 2) of the number of anticommuting qubit positions.
-
-    This lets a Monte Carlo trajectory's actual syndrome be read off in O(1) from
-    the Pauli error that was sampled for it, instead of testing all 16 candidate
-    recovery branches and picking the most probable one (which is unnecessary --
-    and unsound for non-Pauli noise -- for exact Pauli trajectories).
-    """
-    bits = []
-    for g in QEC513_STABILIZERS:
-        parity = 0
-        for e_p, g_p in zip(label, g):
-            if e_p != "I" and g_p != "I" and e_p != g_p:
-                parity ^= 1
-        bits.append(str(parity))
-    return "".join(bits)
-
-
-def five_qubit_recovery_kraus_operators() -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
+def five_qubit_recovery_kraus_operators() -> tuple[
+    dict[str, np.ndarray], np.ndarray, np.ndarray
+]:
     r"""Build the ideal [[5,1,3]] recovery-and-decode Kraus operators, by syndrome.
 
     For syndrome *s* with Pauli representative :math:`E_s` and codespace projector
     :math:`P_{\mathcal C}`, the correct recovery-decode map is
     :math:`K_s = V_{\mathrm{Dec}} E_s^\dagger P_s`, where
-    :math:`P_s = E_s P_{\mathcal C} E_s^\dagger` projects onto syndrome sector *s*
-    (this is the corrected form of manuscript Eq. 36, which as written -- applying
-    :math:`V_{\mathrm{Dec}} E_s P_{\mathcal C} E_s` -- only projects onto the
-    syndrome sector without ever mapping it back into the codespace).  Because the
-    Pauli representatives used here are Hermitian and involutory
+    :math:`P_s = E_s P_{\mathcal C} E_s^\dagger` projects onto syndrome sector *s*.
+    Because the Pauli representatives are Hermitian and involutory
     (:math:`E_s^\dagger = E_s`, :math:`E_s^2 = I`), this simplifies to
     :math:`K_s = V_{\mathrm{Dec}} P_{\mathcal C} E_s`, which is exactly what is
     computed below (``V_dec @ E_s @ Pi_s`` reduces to ``V_dec @ P_code @ E_s``).
@@ -590,19 +544,7 @@ def five_qubit_recovery_kraus_operators() -> tuple[dict[str, np.ndarray], np.nda
     np.ndarray
         ``|1_L>``.
     """
-    I2 = np.eye(2, dtype=complex)
-    X = np.array([[0, 1], [1, 0]], dtype=complex)
-    Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
-    Z = np.array([[1, 0], [0, -1]], dtype=complex)
-    pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
-
-    def _kron_all(mats: list[np.ndarray]) -> np.ndarray:
-        out = mats[0]
-        for m in mats[1:]:
-            out = np.kron(out, m)
-        return out
-
-    v0, v1 = _five_qubit_logical_basis()
+    v0, v1 = five_qubit_logical_basis()
     P_code = np.outer(v0, v0.conj()) + np.outer(v1, v1.conj())
     V_dec = np.vstack([v0.conj(), v1.conj()])
 
@@ -612,8 +554,7 @@ def five_qubit_recovery_kraus_operators() -> tuple[dict[str, np.ndarray], np.nda
             letters = ["I"] * 5
             letters[q] = letter
             label = "".join(letters)
-            E = _kron_all([pauli_dict[c] for c in label])
-            reps[pauli_label_syndrome(label)] = E
+            reps[pauli_label_syndrome(label)] = Pauli(label).to_matrix()
 
     K_by_syndrome: dict[str, np.ndarray] = {}
     for s, E_s in reps.items():
@@ -655,11 +596,6 @@ def logical_error_probability_bruteforce(p: float) -> float:
     is proportional to the identity (no logical error) or not (logical X/Y/Z).
     """
     K_by_syndrome, v0, v1 = five_qubit_recovery_kraus_operators()
-    I2 = np.eye(2, dtype=complex)
-    X = np.array([[0, 1], [1, 0]], dtype=complex)
-    Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
-    Z = np.array([[1, 0], [0, -1]], dtype=complex)
-    pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
     letters = "IXYZ"
 
     total = 0.0
@@ -670,9 +606,7 @@ def logical_error_probability_bruteforce(p: float) -> float:
         if weight == 0.0:
             continue
 
-        E_actual = pauli_dict[label[0]]
-        for letter in label[1:]:
-            E_actual = np.kron(E_actual, pauli_dict[letter])
+        E_actual = Pauli(label).to_matrix()
 
         K = K_by_syndrome[pauli_label_syndrome(label)]
         recovered = np.column_stack([K @ (E_actual @ v0), K @ (E_actual @ v1)])
@@ -699,7 +633,7 @@ def qec_recover_and_decode(
     returns a density matrix on the reduced space
     :math:`(N+1)^M \\times 2^N`.
 
-    For ``mode == "sampling"`` trajectories that carry a ``"pauli_labels"`` entry
+    For ``mode == "sampled"`` trajectories that carry a ``"pauli_labels"`` entry
     (as produced by :func:`depolarizing_channels_encoded`), the syndrome for each
     block is computed directly from the actually-sampled Pauli error via
     :func:`pauli_label_syndrome`, and the matching recovery Kraus operator is
@@ -728,7 +662,7 @@ def qec_recover_and_decode(
     d_qudit = N + 1
 
     K_by_syndrome, _v0, _v1 = five_qubit_recovery_kraus_operators()
-    K_local = [K_by_syndrome[s] for s in sorted(K_by_syndrome.keys())]
+    K_local = [K_by_syndrome[s] for s in sorted(K_by_syndrome)]
 
     # --- tensor helpers ---
     def _kraus_density(
@@ -737,16 +671,11 @@ def qec_recover_and_decode(
         ax: int,
         K_list: list[np.ndarray],
     ) -> tuple[np.ndarray, list[int]]:
-        L_cur = len(dims_cur)
         rho_tensor = rho_mat.reshape(dims_cur + dims_cur)
         acc = None
         for K in K_list:
-            tmp = np.tensordot(K, rho_tensor, axes=([1], [ax]))
-            tmp = np.moveaxis(tmp, 0, ax)
-            bra_ax = L_cur + ax
-            tmp2 = np.tensordot(tmp, K.conj().T, axes=([bra_ax], [0]))
-            tmp2 = np.moveaxis(tmp2, -1, bra_ax)
-            acc = tmp2 if acc is None else (acc + tmp2)
+            branch = _apply_density_operator(rho_tensor, K, ax)
+            acc = branch if acc is None else acc + branch
         dims_new = dims_cur[:ax] + [2] + dims_cur[ax + 1 :]
         return acc.reshape(int(np.prod(dims_new)), int(np.prod(dims_new))), dims_new
 
@@ -758,10 +687,7 @@ def qec_recover_and_decode(
         tol_inner: float,
     ) -> tuple[np.ndarray, list[int]]:
         K = K_by_syndrome[pauli_label_syndrome(label)]
-        psi_tensor = psi_vec.reshape(dims_cur)
-        tmp = np.tensordot(K, psi_tensor, axes=([1], [ax]))
-        tmp = np.moveaxis(tmp, 0, ax)
-        vec = tmp.reshape(-1)
+        vec = _apply_state_operator(psi_vec.reshape(dims_cur), K, ax).reshape(-1)
         p_branch = float(np.vdot(vec, vec).real)
         if p_branch < tol_inner:
             raise RuntimeError(
@@ -789,9 +715,7 @@ def qec_recover_and_decode(
         best_vec = None
         best_p = -1.0
         for K in K_list:
-            tmp = np.tensordot(K, psi_tensor, axes=([1], [ax]))
-            tmp = np.moveaxis(tmp, 0, ax)
-            vec = tmp.reshape(-1)
+            vec = _apply_state_operator(psi_tensor, K, ax).reshape(-1)
             p_branch = float(np.vdot(vec, vec).real)
             if p_branch > best_p:
                 best_p = p_branch
@@ -819,10 +743,6 @@ def qec_recover_and_decode(
         for ell in range(N):
             ax = M + ell
             dims_fused = dims_cur[:ax] + [32] + dims_cur[ax + 5 :]
-            D_fused = int(np.prod(dims_fused))
-            rho = rho.reshape(dims_cur + dims_cur)
-            rho = rho.reshape(dims_fused + dims_fused)
-            rho = rho.reshape(D_fused, D_fused)
             rho, dims_cur = _kraus_density(rho, dims_fused, ax, K_local)
         return DensityMatrix(rho)
 
@@ -845,7 +765,6 @@ def qec_recover_and_decode(
         for ell in range(N):
             ax = M + ell
             dims_fused = dims_cur[:ax] + [32] + dims_cur[ax + 5 :]
-            psi = psi.reshape(dims_cur).reshape(dims_fused).reshape(-1)
             if pauli_labels is not None:
                 psi, dims_cur = _kraus_state_by_label(
                     psi, dims_fused, ax, pauli_labels[idx][ell], tol
@@ -862,25 +781,17 @@ def qec_recover_and_decode(
 # High-level orchestrators
 # ---------------------------------------------------------------------------
 
-def run_broadcast_no_qec(
+
+def _measure_and_score_receivers(
+    rho: DensityMatrix,
     M: int,
     N: int,
     alpha: float,
     theta_list: list[float],
-    p_list: list[float],
-    outcomes_list: list[int] | None = None,
-    seed: int | None = None,
+    outcomes_list: list[int] | None,
+    seed: int | None,
 ) -> tuple[list[float], Statevector, list[DensityMatrix]]:
-    """Full broadcasting pipeline *without* QEC.
-
-    Returns
-    -------
-    fidelities : list[float]
-    target_state : Statevector
-    reduced_states : list[DensityMatrix]
-    """
-    rho = DensityMatrix(get_initial_state(M=M, N=N, alpha=alpha))
-    rho = depolarizing_channels(M, N, rho, p_list)
+    """Complete sender control and score the bare or decoded receiver states."""
     rho = apply_alice_unitaries(M, N, rho, theta_list)
     rho, outcomes = measure_alices(M, N, rho, outcomes_list, seed=seed)
     rho = apply_corrections(M, N, rho, outcomes)
@@ -896,10 +807,29 @@ def run_broadcast_no_qec(
     target_state = Statevector(
         [alpha * np.exp(1j * theta_total), beta * np.exp(-1j * theta_total)]
     )
-    fidelities = [
-        state_fidelity(rs, DensityMatrix(target_state)) for rs in reduced_states
-    ]
+    target_density = DensityMatrix(target_state)
+    fidelities = [state_fidelity(state, target_density) for state in reduced_states]
     return fidelities, target_state, reduced_states
+
+
+def run_broadcast_no_qec(
+    M: int,
+    N: int,
+    alpha: float,
+    theta_list: list[float],
+    p_list: list[float],
+    outcomes_list: list[int] | None = None,
+    seed: int | None = None,
+) -> tuple[list[float], Statevector, list[DensityMatrix]]:
+    """Run bare broadcasting; return fidelities, target, and receiver states.
+
+    ``p_list`` contains one depolarizing probability per receiver.
+    """
+    rho = DensityMatrix(get_initial_state(M=M, N=N, alpha=alpha))
+    rho = depolarizing_channels(M, N, rho, p_list)
+    return _measure_and_score_receivers(
+        rho, M, N, alpha, theta_list, outcomes_list, seed
+    )
 
 
 def run_broadcast_qec(
@@ -934,22 +864,6 @@ def run_broadcast_qec(
         M, N, encoded, p_list, mode=mode, n_samples=n_samples, seed=seed,
     )
     rho = qec_recover_and_decode(noisy, M=M, N=N)
-    rho = apply_alice_unitaries(M, N, rho, theta_list)
-    rho, outcomes = measure_alices(M, N, rho, outcomes_list, seed=seed)
-    rho = apply_corrections(M, N, rho, outcomes)
-
-    dims = ((N + 1) ** M,) + (2,) * N
-    reduced_states = [
-        DensityMatrix(partial_trace_np(rho, dims, [i + 1]))
-        for i in range(N)
-    ]
-
-    beta = np.sqrt(1 - alpha ** 2)
-    theta_total = np.sum(theta_list)
-    target_state = Statevector(
-        [alpha * np.exp(1j * theta_total), beta * np.exp(-1j * theta_total)]
+    return _measure_and_score_receivers(
+        rho, M, N, alpha, theta_list, outcomes_list, seed
     )
-    fidelities = [
-        state_fidelity(rs, DensityMatrix(target_state)) for rs in reduced_states
-    ]
-    return fidelities, target_state, reduced_states

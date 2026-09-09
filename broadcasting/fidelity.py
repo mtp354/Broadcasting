@@ -12,12 +12,8 @@ def add_fidelity(circuit, N, thetas, alpha=1 / np.sqrt(2), receiver_qubits=None)
         |psi_target> = alpha*exp(i*Phi)|0> + beta*exp(-i*Phi)|1>,
         Phi = sum(thetas), beta = sqrt(1 - alpha**2).
 
-    The inverse rotation is built directly from the Bloch angle of the target
-    state, ``Rz(2*Phi)`` then ``Ry(-2*arccos(alpha))``, which reduces to the
-    circuit's previous hardcoded equatorial rotation (``Rz(-phi)`` then ``H``)
-    up to an irrelevant global phase when ``alpha = 1/sqrt(2)``. For other
-    values of `alpha` the old hardcoded rotation silently measured proximity to
-    the equatorial state |+> instead of the true target and is no longer used.
+    Apply ``Rz(2*Phi)`` then ``Ry(-2*arccos(alpha))`` to rotate the target
+    onto ``|0>``. This handles every real amplitude in ``[-1, 1]``.
 
     Parameters
     ----------
@@ -72,7 +68,7 @@ def add_fidelity(circuit, N, thetas, alpha=1 / np.sqrt(2), receiver_qubits=None)
         raise ValueError("receiver_qubits contains an out-of-range qubit index.")
 
     phi = float(np.mod(np.sum(thetas), 2 * np.pi))
-    theta_bloch = 2.0 * np.arccos(np.clip(alpha, -1.0, 1.0))
+    theta_bloch = 2.0 * np.arccos(alpha)
 
     existing_names = {creg.name for creg in circuit.cregs}
     base_name = "fid"

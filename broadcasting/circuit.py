@@ -7,7 +7,7 @@ from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate
 
-from .helpers import sender_encoding_qubits, packed_sender_value
+from .helpers import packed_sender_value, sender_encoding_qubits
 from .qec_513 import decode_qec_513
 from .state_preparation import build_initial_statevector, build_initial_statevector_qec_513
 
@@ -32,14 +32,11 @@ def fourier_measurement_rotation(N: int, nq: int) -> UnitaryGate:
     dim = 2**nq
     omega = np.exp(2j * np.pi / d)
 
-    F = np.zeros((d, d), dtype=complex)
-    for n in range(d):
-        for k in range(d):
-            F[n, k] = omega ** (n * k) / np.sqrt(d)
-
-    U = np.eye(dim, dtype=complex)
-    U[:d, :d] = F.conj().T
-    return UnitaryGate(U, label="Fdg")
+    indices = np.arange(d)
+    fourier = omega ** np.outer(indices, indices) / np.sqrt(d)
+    rotation = np.eye(dim, dtype=complex)
+    rotation[:d, :d] = fourier.conj().T
+    return UnitaryGate(rotation, label="Fdg")
 
 
 def generate_qiskit_circuit(
@@ -51,6 +48,7 @@ def generate_qiskit_circuit(
     delay_unit="dt",
     use_receiver_qec_513=False,
     linear_feedforward=True,
+    receiver_delay_factors=None,
 ):
     """
     Construct a dynamic Qiskit circuit for the M-sender, N-receiver protocol.
@@ -77,6 +75,10 @@ def generate_qiskit_circuit(
         `tau` so it can be swept over a range of values.
     delay_unit : str, optional
         Unit used by Qiskit's delay instruction (default "dt").
+    receiver_delay_factors : sequence of int | None, optional
+        Nonnegative multipliers of tau for each logical receiver. Defaults to
+        one for every receiver. For example, [1, 0] delays only receiver zero.
+        With QEC, the multiplier applies to all five physical block qubits.
     use_receiver_qec_513 : bool, optional
         If True, encode each receiver qubit into a [[5,1,3]] block.
     linear_feedforward : bool, optional
@@ -86,10 +88,8 @@ def generate_qiskit_circuit(
         for every *valid* sender outcome (phase corrections add linearly bit by
         bit); for an *invalid* outcome (register value > N, only possible when
         N+1 is not a power of two) it applies the same linear phase formula
-        rather than skipping correction — see :func:`generate_qiskit_circuit`
-        module docstring / ACTION_PLAN.md item 25 for this documented behavior
-        change. Set False to reproduce the old exact (no-correction-on-invalid)
-        behavior for direct comparison.
+        rather than skipping correction. Set False to enumerate only valid
+        outcomes and apply no correction for invalid register values.
 
     Returns
     -------
@@ -98,6 +98,12 @@ def generate_qiskit_circuit(
     """
     if len(thetas) != M:
         raise ValueError(f"Expected {M} theta values, got {len(thetas)}.")
+    delay_factors = [1] * N if receiver_delay_factors is None else list(receiver_delay_factors)
+    if len(delay_factors) != N or any(
+        isinstance(value, bool) or not isinstance(value, (int, np.integer)) or value < 0
+        for value in delay_factors
+    ) or not any(delay_factors):
+        raise ValueError("receiver_delay_factors must contain N nonnegative integers, at least one positive.")
 
     nq = sender_encoding_qubits(N)
     n_sender_qubits = M * nq
@@ -116,8 +122,10 @@ def generate_qiskit_circuit(
     qc.initialize(init_state, list(senders) + list(receivers))  # type: ignore
 
     tau_param = Parameter("tau") if tau is None else tau
-    for qb in receivers:
-        qc.delay(tau_param, qb, unit=delay_unit)
+    for index, qb in enumerate(receivers):
+        receiver_index = index // 5 if use_receiver_qec_513 else index
+        factor = delay_factors[receiver_index]
+        qc.delay(tau_param * factor if factor else 0, qb, unit=delay_unit)
 
     active_receivers = list(receivers)
     if use_receiver_qec_513:
@@ -133,11 +141,11 @@ def generate_qiskit_circuit(
         qslice = [senders[j * nq + b] for b in range(nq)]
         qc.append(sender_phase_gate(theta=float(theta), N=N, nq=nq), qslice)
 
-    Fdg = fourier_measurement_rotation(N=N, nq=nq)
+    fourier_rotation = fourier_measurement_rotation(N=N, nq=nq)
     for j in range(M):
         qslice = [senders[j * nq + b] for b in range(nq)]
         cslice = [c_senders[j * nq + b] for b in range(nq)]
-        qc.append(Fdg, qslice)
+        qc.append(fourier_rotation, qslice)
         qc.measure(qslice, cslice)
 
     d = N + 1

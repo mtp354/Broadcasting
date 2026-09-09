@@ -53,3 +53,16 @@ class TestDedupeByJob:
     def test_runs_without_job_id_all_kept(self):
         runs = [_run(job_id=None), _run(job_id=None)]
         assert len(dedupe_by_job(runs)) == 2
+
+
+def test_campaign_cases_in_shared_job_are_retained_but_duplicate_saves_are_dropped():
+    runs = []
+    for case_id, filename in [("all", "all.json"), ("receiver0", "r0.json"), ("all", "copy.json")]:
+        run = _run(job_id="shared", filename=filename)
+        run["metadata"] = {"campaign": {
+            "run_id": "campaign-run", "repeat_index": 0, "case_id": case_id,
+        }}
+        runs.append(run)
+    assert [run["filename"] for run in dedupe_by_job(runs)] == ["all.json", "r0.json"]
+    duplicates = find_duplicate_jobs(runs)
+    assert list(duplicates.values()) == [["all.json", "copy.json"]]

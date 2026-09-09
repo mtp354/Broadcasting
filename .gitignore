@@ -1,5 +1,11 @@
 __pycache__/
 .pytest_cache/
+.venv/
+# Local campaign bundles contain compiled circuits, receipts, and raw readouts.
+# Archive the complete directory before release; do not commit credentials.
+campaigns/
+configs/*.local.json
+slurm_logs/
 
 # LaTeX build output
 *.aux

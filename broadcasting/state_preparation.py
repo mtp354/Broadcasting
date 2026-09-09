@@ -28,7 +28,7 @@ def build_initial_statevector(M: int, N: int, alpha: complex) -> np.ndarray:
 
         sender_bits = 0
         for j in range(M):
-            sender_bits |= (k << (j * nq))
+            sender_bits |= k << (j * nq)
 
         for zeros in itertools.combinations(range(N), k):
             receiver_bits = (1 << N) - 1
@@ -66,26 +66,30 @@ def build_initial_statevector_qec_513(M: int, N: int, alpha: complex) -> np.ndar
             f"Logical state dimension mismatch: got {logical.size}, expected {expected_dim}."
         )
 
-    # Encoding tensor E[b1,b2,b3,b4,b5,q], where q is one logical receiver qubit.
+    # Encoding tensor [b1,b2,b3,b4,b5,q], where q is one logical receiver qubit.
     # Use Fortran order so that axis j corresponds to qubit j (bit j of the
     # state-vector index), matching Qiskit's little-endian convention.
-    E = np.zeros((2, 2, 2, 2, 2, 2), dtype=complex)
-    E[..., 0] = v0.reshape(2, 2, 2, 2, 2, order="F")
-    E[..., 1] = v1.reshape(2, 2, 2, 2, 2, order="F")
+    encoding = np.column_stack([v0, v1]).reshape((2,) * 6, order="F")
 
     # Tensor axes: sender qubits first, then receiver logical qubits.
     # Fortran order ensures axis j = qubit j (little-endian).
-    psi = logical.reshape((2,) * (n_sender_qubits + N), order="F")
+    state_tensor = logical.reshape((2,) * (n_sender_qubits + N), order="F")
 
     # Encode receiver qubits left-to-right, preserving sender qubits exactly.
-    for ell in range(N):
-        ax = n_sender_qubits + 5 * ell
-        R = psi.ndim
-        psi = np.tensordot(E, psi, axes=([5], [ax]))
-        perm = list(range(5, 5 + ax)) + list(range(0, 5)) + list(range(5 + ax, 5 + (R - 1)))
-        psi = np.transpose(psi, perm)
+    for receiver in range(N):
+        axis = n_sender_qubits + 5 * receiver
+        previous_ndim = state_tensor.ndim
+        state_tensor = np.tensordot(encoding, state_tensor, axes=([5], [axis]))
+        # The contraction places the five physical axes first; move the block
+        # back to the position previously occupied by the logical receiver.
+        permutation = (
+            list(range(5, 5 + axis))
+            + list(range(5))
+            + list(range(5 + axis, previous_ndim + 4))
+        )
+        state_tensor = np.transpose(state_tensor, permutation)
 
-    encoded = psi.reshape(-1, order="F")
+    encoded = state_tensor.reshape(-1, order="F")
     expected_encoded_dim = 2 ** (n_sender_qubits + 5 * N)
     if encoded.size != expected_encoded_dim:
         raise RuntimeError(

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "campaign_id": "broadcasting-receiver-scaling",
+  "runtime_account": "EDIT_ME",
+  "backend": "EDIT_ME",
+  "shots": 4096,
+  "repeats": 3,
+  "seed": 20260908,
+  "seed_transpiler": 20260908,
+  "optimization_level": 3,
+  "alpha": 0.7071067811865476,
+  "theta_samples": [[0.7853981633974483], [1.5707963267948966]],
+  "tau_values_dt": [0],
+  "cases": [
+    {"id": "n1", "M": 1, "N": 1, "receiver_delay_factors": [1], "initial_layout": null},
+    {"id": "n2", "M": 1, "N": 2, "receiver_delay_factors": [1, 1], "initial_layout": null},
+    {"id": "n3", "M": 1, "N": 3, "receiver_delay_factors": [1, 1, 1], "initial_layout": null}
+  ]
+}

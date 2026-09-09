@@ -14,11 +14,10 @@ SLURM array sweep over noise values (1 value per task)::
     sbatch --array=0-9 hpc/slurm_broadcast.sh
 
 When ``SLURM_ARRAY_TASK_ID`` is set the script selects one noise value
-from the sweep controlled by ``--p-min``, ``--p-max``, ``--p-steps``.
+from ``--p-values`` or the evenly spaced ``--p-min/--p-max/--p-steps`` grid.
 """
 
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
@@ -62,16 +61,17 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Phase angles for each sender (space-separated).",
     )
     p.add_argument("--use-qec", action="store_true", help="Enable [[5,1,3]] QEC.")
-    p.add_argument(
+    outcomes = p.add_mutually_exclusive_group()
+    outcomes.add_argument(
         "--outcomes",
         type=int,
         nargs="+",
         default=None,
-        help="Alice measurement outcomes (space-separated).",
+        help="Fixed sender measurement outcomes (space-separated).",
     )
 
     p.add_argument("--linear-feedforward", type=int, choices=[0, 1], default=1)
-    p.add_argument("--random-outcomes", action="store_true", help="Sample sender outcomes (default when --outcomes is absent).")
+    outcomes.add_argument("--random-outcomes", action="store_true", help="Sample sender outcomes (default when --outcomes is absent).")
     p.add_argument("--experiment-id", default=None, help="Submission/campaign identity shared by array tasks.")
 
     # Noise sweep
@@ -128,10 +128,6 @@ def main(argv: list[str] | None = None) -> None:
     else:
         thetas = [np.pi / 4] * args.M
 
-    if args.random_outcomes and args.outcomes is not None:
-        raise ValueError("--random-outcomes and --outcomes are mutually exclusive.")
-    outcomes = args.outcomes
-
     config = ProtocolConfig(
         M=args.M,
         N=args.N,
@@ -139,7 +135,7 @@ def main(argv: list[str] | None = None) -> None:
         thetas=thetas,
         p_list=p_list,
         use_qec=args.use_qec,
-        outcomes_list=outcomes,
+        outcomes_list=args.outcomes,
         n_samples=args.n_samples if args.mode == "sampling" else None,
         seed=args.seed,
         linear_feedforward=bool(args.linear_feedforward),

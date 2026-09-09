@@ -19,19 +19,37 @@ from broadcasting.results import load_run, write_run_json
 
 
 def _fingerprint(run: dict[str, Any]) -> str:
+    """Include every setting that must match across independently saved tasks."""
     metadata = run.get("metadata") or {}
-    protocol = run.get("protocol") or {key: run.get(key) for key in
-        ("M", "N", "alpha", "use_qec", "theta_samples", "linear_feedforward", "outcomes_list")}
+    protocol_fields = ("M", "N", "alpha", "use_qec", "theta_samples",
+                       "linear_feedforward", "outcomes_list")
+    protocol = run.get("protocol") or {key: run.get(key) for key in protocol_fields}
     software = metadata.get("software") or {}
-    identity = {key: run.get(key) for key in
-                ("experiment_type", "backend", "n_samples", "seed", "optimization_level", "shots")}
-    identity.update(protocol=protocol, sweep_axis=run["sweep"]["axis"],
-                    experiment_id=metadata.get("experiment_id"),
-                    requested_sweep_values=metadata.get("requested_sweep_values"),
-                    code_revision=software.get("code_revision"),
-                    source_sha256=software.get("source_sha256"),
-                    dependencies=software.get("dependencies"))
+    run_fields = ("experiment_type", "backend", "n_samples", "seed",
+                  "optimization_level", "shots")
+    identity = {
+        **{key: run.get(key) for key in run_fields},
+        "protocol": protocol,
+        "sweep_axis": run["sweep"]["axis"],
+        "experiment_id": metadata.get("experiment_id"),
+        "requested_sweep_values": metadata.get("requested_sweep_values"),
+        "code_revision": software.get("code_revision"),
+        "source_sha256": software.get("source_sha256"),
+        "dependencies": software.get("dependencies"),
+    }
     return json.dumps(identity, sort_keys=True, separators=(",", ":"))
+
+
+def _requested_grid(run, expected_values):
+    planned = (run.get("metadata") or {}).get("requested_sweep_values")
+    if expected_values is not None:
+        if planned is not None and list(expected_values) != planned:
+            raise ValueError("Expected grid disagrees with the recorded requested sweep.")
+        planned = list(expected_values)
+    if not planned or len(set(planned)) != len(planned):
+        raise ValueError("A nonempty unique intended sweep is required; "
+                         "supply --expected-p-values for historical records.")
+    return planned
 
 
 def _merge_group(paths: list[Path], expected_values: list[float] | None = None) -> dict[str, Any]:
@@ -44,13 +62,7 @@ def _merge_group(paths: list[Path], expected_values: list[float] | None = None) 
     base = raws[0]
     if base["experiment_type"] != "simulation" or base["sweep"]["axis"] != "p":
         raise ValueError("Only p-sweep simulation records can be merged.")
-    planned = (base.get("metadata") or {}).get("requested_sweep_values")
-    if expected_values is not None:
-        if planned is not None and list(expected_values) != planned:
-            raise ValueError("Expected grid disagrees with the recorded requested sweep.")
-        planned = list(expected_values)
-    if not planned or len(set(planned)) != len(planned):
-        raise ValueError("A nonempty unique intended sweep is required; supply --expected-p-values for historical records.")
+    planned = _requested_grid(base, expected_values)
     points = {}
     for raw, path in zip(raws, paths):
         values, fids = raw["sweep"]["values"], raw["fidelities"]
@@ -73,15 +85,20 @@ def _merge_group(paths: list[Path], expected_values: list[float] | None = None) 
     if missing:
         raise ValueError(f"Incomplete sweep; missing requested values: {missing}")
     merged = dict(base)
-    merged.update(sweep={"axis": "p", "values": planned},
-                  fidelities=[points[value][0] for value in planned],
-                  timestamp=datetime.now().isoformat())
+    merged.update(
+        sweep={"axis": "p", "values": planned},
+        fidelities=[points[value][0] for value in planned],
+        timestamp=datetime.now().isoformat(),
+    )
     merged["metadata"] = dict(base.get("metadata") or {})
     merged["metadata"].pop("sweep_task_index", None)
     merged["metadata"].pop("slurm_job_id", None)
-    merged["metadata"].update(merged_from=[points[value][1] for value in planned],
-                              requested_sweep_values=planned, sweep_complete=True,
-                              task_metadata=[points[value][2] for value in planned])
+    merged["metadata"].update(
+        merged_from=[points[value][1] for value in planned],
+        requested_sweep_values=planned,
+        sweep_complete=True,
+        task_metadata=[points[value][2] for value in planned],
+    )
     return merged
 
 

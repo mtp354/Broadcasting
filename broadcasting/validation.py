@@ -11,27 +11,26 @@ from collections import defaultdict
 from typing import Any, Hashable
 
 
+def _record_identity(run: dict[str, Any]) -> str | None:
+    """A Runtime job may contain several separately saved campaign cases."""
+    job_id = run.get("job_id")
+    if not job_id:
+        return None
+    campaign = (run.get("metadata") or {}).get("campaign")
+    if campaign:
+        return (f"{job_id} / {campaign['run_id']} / repeat {campaign['repeat_index']} / "
+                f"{campaign['case_id']}")
+    return job_id
+
+
 def find_duplicate_jobs(runs: list[dict[str, Any]]) -> dict[str, list[str]]:
-    """Group run records that share the same non-null ``job_id``.
-
-    Parameters
-    ----------
-    runs : list[dict]
-        Loaded run records (e.g. from :func:`broadcasting.results.list_runs`).
-
-    Returns
-    -------
-    dict[str, list[str]]
-        Mapping from ``job_id`` to the list of filenames sharing it, restricted
-        to job IDs that appear more than once (a real duplicate save, not an
-        independent repetition).
-    """
-    by_job: dict[str, list[str]] = defaultdict(list)
+    """Find repeated saves of one job/case; retain distinct cases in shared jobs."""
+    by_record: dict[str, list[str]] = defaultdict(list)
     for run in runs:
-        job_id = run.get("job_id")
-        if job_id:
-            by_job[job_id].append(run.get("filename", run.get("filepath", "?")))
-    return {job_id: files for job_id, files in by_job.items() if len(files) > 1}
+        identity = _record_identity(run)
+        if identity:
+            by_record[identity].append(run.get("filename", run.get("filepath", "?")))
+    return {identity: files for identity, files in by_record.items() if len(files) > 1}
 
 
 def group_by_cohort(
@@ -52,7 +51,10 @@ def group_by_cohort(
 
 
 def dedupe_by_job(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Return *runs* with duplicate-``job_id`` entries dropped (first kept).
+    """Drop duplicate saves of the same job/case, keeping the first record.
+
+    Separate campaign cases can share a job; retaining them does not make them
+    independent job repetitions.
 
     Never deletes or modifies the underlying files -- only filters the
     in-memory list used for an analysis or figure.
@@ -60,10 +62,10 @@ def dedupe_by_job(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     seen: set[str] = set()
     kept: list[dict[str, Any]] = []
     for run in runs:
-        job_id = run.get("job_id")
-        if job_id and job_id in seen:
+        identity = _record_identity(run)
+        if identity and identity in seen:
             continue
-        if job_id:
-            seen.add(job_id)
+        if identity:
+            seen.add(identity)
         kept.append(run)
     return kept

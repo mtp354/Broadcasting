@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -50,7 +50,7 @@ class ProtocolConfig:
     use_qec: bool = False
     outcomes_list: list[int] | None = None
     tau: float | None = None
-    n_samples: Optional[int] = None
+    n_samples: int | None = None
     seed: int | None = None
     linear_feedforward: bool = True
 
@@ -78,6 +78,5 @@ class BroadcastResult:
     reduced_states: list[Any] | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
-        if "timestamp" not in self.metadata:
-            self.metadata["timestamp"] = datetime.now().isoformat()
+    def __post_init__(self) -> None:
+        self.metadata.setdefault("timestamp", datetime.now().isoformat())

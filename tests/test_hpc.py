@@ -85,3 +85,41 @@ def test_slurm_script_isolates_submissions_without_slurm_or_network(tmp_path):
         for path in tree.rglob("*"):
             if path.is_dir():
                 path.chmod(path.stat().st_mode | 0o700)
+
+
+@pytest.mark.skipif(shutil.which("rsync") is None or shutil.which("flock") is None,
+                    reason="Archive recovery harness requires rsync and flock")
+def test_backup_recovers_failed_source_copy_and_preserves_results(tmp_path):
+    root = Path(__file__).resolve().parent.parent
+    scratch, archive = tmp_path / "scratch", tmp_path / "global"
+    submission = scratch / "submissions/123"
+    destination = archive / "results/submissions/123"
+    for directory in (submission / "source", submission / "results", destination):
+        directory.mkdir(parents=True)
+    (submission / "source/code.py").write_text("complete source")
+    (submission / "results/run_existing.json").write_text("different scratch bytes")
+    (destination / "run_existing.json").write_text("original archived evidence")
+    (submission / "results/run_new.json").write_text("new evidence")
+    env = dict(os.environ, BROADCAST_GLOBAL_DIR=str(archive),
+               BROADCAST_SCRATCH_DIR=str(scratch))
+    # Fail only the source copy, after writing part of its output.
+    stub = tmp_path / "bin"
+    stub.mkdir()
+    rsync = stub / "rsync"
+    rsync.write_text(
+        "#!/bin/bash\n"
+        'if [[ "${@: -2:1}" == */source/ ]]; then\n'
+        '  touch "${@: -1}/partial"\n  exit 23\nfi\n'
+        f'exec {shutil.which("rsync")} "$@"\n'
+    )
+    rsync.chmod(0o755)
+    script = ["bash", str(root / "hpc/backup_results.sh")]
+    failed = subprocess.run(script, env=dict(env, PATH=f"{stub}:{env['PATH']}"),
+                            capture_output=True, text=True)
+    assert failed.returncode == 23
+    assert not (destination / "source").exists()
+    assert not list(destination.glob(".source.*"))
+    subprocess.run(script, env=env, capture_output=True, text=True, check=True)
+    assert (destination / "source/code.py").read_text() == "complete source"
+    assert (destination / "run_existing.json").read_text() == "original archived evidence"
+    assert (destination / "run_new.json").read_text() == "new evidence"

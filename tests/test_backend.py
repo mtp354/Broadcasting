@@ -134,7 +134,7 @@ class TestHardwareBackend:
                 return _FakeJob(len(pubs))
 
         fake_sampler = _FakeSampler()
-        hb = HardwareBackend(service=None, backend_name="fake_backend")
+        hb = HardwareBackend(service=None, backend_name="fake_backend", shots=100)
         monkeypatch.setattr(hb, "_sampler", lambda backend: fake_sampler)
         monkeypatch.setattr(
             hb,
@@ -307,3 +307,32 @@ def test_hpc_command_roundtrips_shell_and_preserves_nonuniform_points():
 def test_all_execution_backends_reject_invalid_real_amplitudes(alpha, backend):
     with pytest.raises(ValueError, match="alpha must be real"):
         backend.run(_base_config(alpha=alpha, use_qec=True))
+
+
+def test_legacy_hardware_sweep_resolves_backend_only_once(monkeypatch):
+    """A least-busy lookup must not switch the device after compilation."""
+    from qiskit_aer import AerSimulator
+    from qiskit_aer.primitives import SamplerV2
+    backend = HardwareBackend(None, shots=8, optimization_level=0)
+    calls = []
+    target = AerSimulator()
+    def resolve():
+        calls.append(target)
+        if len(calls) > 1:
+            pytest.fail("A second least-busy lookup can select a different device")
+        return target
+    monkeypatch.setattr(backend, "_backend", resolve)
+    monkeypatch.setattr(backend, "_sampler", lambda chosen: SamplerV2(seed=42))
+    backend.run_tau_sweep(_base_config(N=1), [0])
+    assert calls == [target]
+
+
+def test_automatic_layout_does_not_leak_between_hardware_configurations():
+    from qiskit.providers.fake_provider import GenericBackendV2
+    target = GenericBackendV2(6, control_flow=True, seed=1)
+    hardware = HardwareBackend(None, shots=8, optimization_level=0, seed_transpiler=42)
+    first = hardware.prepare_tau_sweep(_base_config(N=1), [0], backend=target)
+    second = hardware.prepare_tau_sweep(_base_config(N=2), [0], backend=target)
+    assert len(first["metadata"]["initial_layout"]) == 2
+    assert len(second["metadata"]["initial_layout"]) == 4
+    assert hardware.initial_layout is None

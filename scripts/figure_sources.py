@@ -1,7 +1,6 @@
 """Pinned manuscript inputs and explicitly documented historical overlays."""
 from __future__ import annotations
 
-from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
@@ -12,11 +11,12 @@ ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_PATH = ROOT / "figures" / "sources.json"
 
 
-def source_manifest():
+def source_manifest() -> dict:
     return json.loads(MANIFEST_PATH.read_text())
 
 
-def load_source(relative_path, *, manifest=None):
+def load_source(relative_path: str, *, manifest: dict | None = None) -> dict:
+    """Read a verified source, filling only explicitly documented missing fields."""
     manifest = source_manifest() if manifest is None else manifest
     spec = manifest["runs"][relative_path]
     path = ROOT / relative_path
@@ -27,12 +27,12 @@ def load_source(relative_path, *, manifest=None):
         run.update(filename=path.name, filepath=str(path))
     else:
         run = load_run(path)
-    run = deepcopy(run)
     for field, override in spec.get("historical_overrides", {}).items():
         if not override.get("evidence"):
             raise ValueError(f"Historical {field} override has no source evidence: {relative_path}")
         if field == "dt":
-            target = run.setdefault("metadata", {})
+            run["metadata"] = run.get("metadata") or {}
+            target = run["metadata"]
         else:
             target = run
         if target.get(field) is None:
@@ -43,6 +43,6 @@ def load_source(relative_path, *, manifest=None):
     return run
 
 
-def figure_runs(key):
+def figure_runs(key: str) -> list[dict]:
     manifest = source_manifest()
     return [load_source(path, manifest=manifest) for path in manifest["figures"][key]["sources"]]

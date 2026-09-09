@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 from dataclasses import asdict, replace
 from datetime import datetime, timezone
-import json
 from pathlib import Path
 import sys
 import uuid
@@ -47,7 +46,7 @@ def _save(fig, key, out_dirs, formats):
     return fig
 
 
-def generate_figure_1_convergence(out_dirs, *, quick=False, formats=("png", "pdf"), collect=False, archive_dir=None):
+def collect_sampling_convergence(out_dirs, *, quick=False, formats=("png", "pdf"), collect=False, archive_dir=None):
     """Explicitly collect, archive, and plot independent Monte Carlo repetitions.
 
     This function is deliberately gated: ordinary figure regeneration is read-only
@@ -64,16 +63,16 @@ def generate_figure_1_convergence(out_dirs, *, quick=False, formats=("png", "pdf
     seeds = [0, 1, 2] if quick else [0, 1, 2, 3, 4]
     errors = np.zeros((len(seeds), len(n_sweep)))
     measurements = []
-    for si, seed in enumerate(seeds):
-        for ni, samples in enumerate(n_sweep):
+    for seed_index, seed in enumerate(seeds):
+        for sample_index, samples in enumerate(n_sweep):
             effective = replace(config, seed=seed, n_samples=samples)
             sampled = SamplingBackend().run(effective)
             fids = np.asarray(sampled.fidelities)
-            errors[si, ni] = np.trapezoid(np.abs(fids - exact), p_arr, axis=0).sum()
+            errors[seed_index, sample_index] = np.trapezoid(np.abs(fids - exact), p_arr, axis=0).sum()
             measurements.append({"seed": seed, "n_samples": samples,
                                  "execution_metadata": sampled.metadata,
                                  "fidelities": fids.tolist(),
-                                 "error_area": float(errors[si, ni])})
+                                 "error_area": float(errors[seed_index, sample_index])})
     archive_dir = Path(archive_dir) if archive_dir else ROOT / "results" / "convergence"
     archive_dir.mkdir(parents=True, exist_ok=True)
     archive = archive_dir / f"convergence_{uuid.uuid4().hex}.json"
@@ -101,7 +100,7 @@ def generate_figure_1_convergence(out_dirs, *, quick=False, formats=("png", "pdf
     return archive
 
 
-def generate_figure_2_qec_memory(out_dirs, formats=("png", "pdf")):
+def generate_qec_memory(out_dirs, formats=("png", "pdf")):
     """Four historical Kingston memory curves with explicit encoded/bare provenance."""
     runs = figure_runs("qec_memory")
     ref = runs[0]
@@ -121,10 +120,10 @@ def generate_figure_2_qec_memory(out_dirs, formats=("png", "pdf")):
     ax.grid(alpha=0.25)
     ax.legend(fontsize=8)
     fig.tight_layout()
-    _save(fig, "qec_memory", out_dirs, formats)
+    return _save(fig, "qec_memory", out_dirs, formats)
 
 
-def generate_figure_4_qec_crossover(out_dirs, formats=("png", "pdf")):
+def generate_qec_crossover(out_dirs, formats=("png", "pdf")):
     """Exact and sampled curves on their own saved grids with a small-p inset."""
     runs = figure_runs("qec_crossover")
     for run in runs:
@@ -156,7 +155,7 @@ def generate_figure_4_qec_crossover(out_dirs, formats=("png", "pdf")):
     return _save(fig, "qec_crossover", out_dirs, formats)
 
 
-def generate_figure_5_delay_sweeps(out_dirs, formats=("png", "pdf")):
+def generate_delay_sweeps(out_dirs, formats=("png", "pdf")):
     for key in ["delay_opt3", "delay_opt0"]:
         run = figure_runs(key)[0]
         scale, unit = delay_axis(run)
@@ -202,8 +201,13 @@ def plot_hardware_tau0(runs):
                    label=backend if backend not in seen else "_nolegend_")
         ax.scatter(stats["worst_receiver"]["estimate"], y, color=color, marker="|", s=90)
         seen.add(backend)
-        labels.append(f"{run['timestamp'][5:10]} {run['timestamp'][11:19]}  M{run['M']} N{run['N']}  "
-                      f"opt{run['optimization_level']}  {stats['shots']} shots  θ{theta}")
+        label = (f"{run['timestamp'][5:10]} {run['timestamp'][11:19]}  M{run['M']} N{run['N']}  "
+                 f"opt{run['optimization_level']}  {stats['shots']} shots  θ{theta}")
+        campaign = (run.get("metadata") or {}).get("campaign")
+        if campaign:
+            label = (f"repeat {campaign['repeat_index']} / {campaign['case_id']}  "
+                     f"M{run['M']} N{run['N']}  θ{theta}")
+        labels.append(label)
     ax.set_yticks(range(len(points)), labels, fontsize=8)
     ax.invert_yaxis()
     ax.axvline(0.5, color="gray", linestyle=":", alpha=0.5)
@@ -214,9 +218,9 @@ def plot_hardware_tau0(runs):
     return fig
 
 
-def generate_figure_6_scaling(out_dirs, formats=("png", "pdf")):
+def generate_hardware_tau0(out_dirs, formats=("png", "pdf")):
     fig = plot_hardware_tau0(figure_runs("hardware_tau0"))
-    _save(fig, "hardware_tau0", out_dirs, formats)
+    return _save(fig, "hardware_tau0", out_dirs, formats)
 
 
 def main():
@@ -231,13 +235,13 @@ def main():
     formats = tuple(f.strip() for f in args.formats.split(","))
     out_dirs = [ROOT / "manuscript", ROOT / "figures"]
     if args.collect_convergence:
-        generate_figure_1_convergence(out_dirs, quick=args.quick, formats=formats, collect=True)
+        collect_sampling_convergence(out_dirs, quick=args.quick, formats=formats, collect=True)
     else:
         print("Convergence figure withdrawn: no independent saved measurements; collection is disabled.")
-    generate_figure_2_qec_memory(out_dirs, formats)
-    generate_figure_4_qec_crossover(out_dirs, formats)
-    generate_figure_5_delay_sweeps(out_dirs, formats)
-    generate_figure_6_scaling(out_dirs, formats)
+    generate_qec_memory(out_dirs, formats)
+    generate_qec_crossover(out_dirs, formats)
+    generate_delay_sweeps(out_dirs, formats)
+    generate_hardware_tau0(out_dirs, formats)
 
 
 if __name__ == "__main__":

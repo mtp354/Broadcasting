@@ -1,41 +1,7 @@
-%\begin{region}
-%% ****** Start of file apstemplate.tex ****** %
-%%
-%%
 %%   This file is part of the APS files in the REVTeX 4.2 distribution.%%
 %%   Copyright (c) 2024 The American Physical Society.
-%%
 %%   See the REVTeX 4 README file for restrictions and more information.
-%%
-%
-% This is a template for producing manuscripts for use with REVTEX 4.2
-% Copy this file to another name and then work on that file.
-% That way, you always have this original template file to use.
-%
-% Group addresses by affiliation; use superscriptaddress for long
-% author lists, or if there are many overlapping affiliations.
-%  N.B. The groupedaddress option will reorder the author list based
-%  on the order in which affiliations appear. Please be sure to check the author
-%  order. You can also use the unsortedaddress(?) option instead to prevent that
-%  behavior.
-% For Phys. Rev. appearance, change preprint to twocolumn.
-% Choose physrev, prl, or rmp for journal
-%  N.B. physrev is appropriate for all APS journals except prl and rmp
-%  Add 'draft' option to mark overfull boxes with black boxes
-%  Add 'showkeys' option to make keywords appear
 \documentclass[aps,physrev,10pt,twocolumn,superscriptaddress,floatfix]{revtex4-2}
-%\documentclass[aps,physrev,preprint,superscriptaddress]{revtex4-2}
-%\documentclass[aps,prl,preprint,superscriptaddress]{revtex4-2}
-%\documentclass[aps,prl,reprint,groupedaddress]{revtex4-2}
-%\documentclass[aps,rmp,preprint,superscriptaddress]{revtex4-2}
-%\documentclass[aps,rmp,reprint,groupedaddress]{revtex4-2}
-
-% You should use BibTeX and apsrev.bst for references
-% Choosing a journal automatically selects the correct APS
-% BibTeX style file (bst file), so only uncomment the line
-% below if necessary.
-%\bibliographystyle{apsrev4-2}
-
 
 \usepackage{graphicx}
 \graphicspath{{./}{manuscript/}{../figures/}{figures/}}
@@ -46,51 +12,17 @@
 \DeclareMathOperator{\Enc}{Enc}
 \DeclareMathOperator{\Dec}{Dec}
 
-%\end{region}
-
 \begin{document}
-%\begin{region}
-% Use the \preprint command to place your local institutional report
-% number in the upper righthand corner of the title page in preprint mode.
-% Multiple \preprint commands are allowed.
-% Use the 'preprintnumbers' class option to override journal defaults
-% to display numbers if necessary
-%\preprint{}
 
-%Title of paper
 \title{Noisy Quantum Broadcasting}
 
-% repeat the \author .. \affiliation  etc. as needed
-% \email, \thanks, \homepage, \altaffiliation all apply to the current
-% author. Explanatory text should go in the []'s, actual e-mail
-% address or url should go in the {}'s for \email and \homepage.
-% Please use the appropriate macro foreach each type of information
-
-% \affiliation command applies to all authors since the last
-% \affiliation command. The \affiliation command should follow the
-% other information
-% \affiliation can be followed by \email, \homepage, \thanks as well.
 \author{Matthew Prest}
 \email[]{mprest@gradcenter.cuny.edu}
-%\homepage[]{Your web page}
-%\thanks{}
 \affiliation{Graduate Center of the City University of New York, 365 Fifth Avenue, New York, NY 10016, USA}
 \affiliation{Department of Physics and Astronomy, Hunter College of the City
 University of New York, 695 Park Avenue, New York, NY 10065, USA}
 
 % AUTHORSHIP: confirm the complete author list before submission.
-% \email[]{}
-%\homepage[]{Your web page}
-%\thanks{}
-% \affiliation{Graduate Center of the City University of New York, 365 Fifth Avenue, New York, NY 10016, USA}
-
-
-%Collaboration name if desired (requires use of superscriptaddress
-%option in \documentclass). \noaffiliation is required (may also be
-%used with the \author command).
-%\collaboration can be followed by \email, \homepage, \thanks as well.
-%\collaboration{}
-%\noaffiliation
 
 \date{\today}
 
@@ -98,15 +30,9 @@ University of New York, 695 Park Avenue, New York, NY 10065, USA}
 We study entanglement-assisted broadcasting of a restricted, sender-known family of qubit states through noisy receiver channels. For arbitrary numbers of senders and receivers, we prove that independent phase-covariant channels give a product receiver output, independent of the sender measurement branch. Under depolarizing noise we obtain exact local and global fidelities, and identify the low-noise fidelity advantage of ideal $[[5,1,3]]$ error correction. Density-matrix and Pauli-trajectory simulations provide numerical checks. Existing IBM Quantum experiments characterize unencoded broadcasting and a separate encoded-memory benchmark; these data show substantial implementation overhead and heterogeneous receiver performance, but do not identify a correlated physical-noise mechanism. We distinguish these exploratory hardware observations from the ideal channel model and state the controlled measurements still needed to assess scalability.
 \end{abstract}
 
-% insert suggested keywords - APS authors don't need to do this
-%\keywords{}
-
-%\maketitle must follow title, authors, abstract, and keywords
 \maketitle
-%\end{region}
 
 \section{Introduction \label{Introduction}}
-%\begin{region}
 Pioneering work in quantum information produced famous impossibility results such as the no-cloning theorem \cite{wootters2009no} and the no-broadcasting theorem \cite{barnum1996noncommuting,barnum2007generalized}. These results have been fundamental in shaping our understanding of the limitations of quantum information and have had profound implications for quantum communication and cryptography \cite{vsupic2020self}. The no-cloning theorem forbids copying arbitrary unknown states, and the no-broadcasting theorem forbids broadcasting a noncommuting family from an unknown input. Prior shared entanglement does not remove either restriction. Preparing states from a \emph{restricted, sender-known} family is a different task. In related protocols, given shared prior entanglement and a sender who knows which state (from a restricted family) is being distributed, new broadcasting-like protocols become possible without violating or circumventing the no-cloning or no-broadcasting theorems -- their hypotheses simply do not apply to this restricted task \cite{larasati2025towards,zhang2025efficient,sukeno2025quantum,andronikos2023one}. In this paper, we explore the concept of restricted broadcasting, where a quantum state can be broadcast to multiple receivers under specific constraints using shared prior entanglement \cite{PhysRevA.105.042611}.
 
 A closely related line of work makes the same observation explicit: known-state broadcasting is, properly understood, a form of multiparty remote state preparation rather than a violation of the no-broadcasting theorem, and recent work in this vein has both modeled noise and reported a proof-of-principle IBM-hardware realization for an optimal-resource broadcasting scheme \cite{kumar2024multiparty}. That work uses a different resource construction than the Sukeno--Hillery $M$-sender/$N$-receiver Dicke-state resource studied here; here we analyze an exact factorization result for the noise channel through this specific resource and protocol (Sec.~\ref{sec:factorization}), the exact $[[5,1,3]]$ logical-error polynomial and break-even point, and a dynamic-circuit implementation of block-level QEC integrated with the broadcasting protocol.
@@ -116,10 +42,8 @@ Broadcasting channels are a key resource in many classical networking protocols~
 We begin with the M-sender N-receiver broadcasting protocol introduced in \cite{sukeno2023broadcasting}, where parties share an initial entangled state from which single qubits are distributed to the receivers. The senders then apply local unitaries to their systems, which add a phase on the receivers' qubits. By measuring in a Fourier basis and broadcasting the classical outcomes, the receivers can apply byproduct corrections to recover the desired state without revealing the sender's choice of phase. This protocol does not violate or circumvent the no-cloning or no-broadcasting theorems: it falls outside their scope, since the broadcast state is drawn from a restricted, sender-known family and the parties share prior entanglement, rather than broadcasting an arbitrary unknown state from scratch.
 
 In this work, we extend the M-sender N-receiver broadcasting protocol to account for noisy distribution channels to each receiver. We analyze the impact of noise on the protocol's performance and explore how quantum error correction can be integrated to mitigate the effects of noise \cite{knill1997theory}. By encoding the receivers' qubits using a quantum error-correcting code, we can protect the transmitted information from errors introduced by the noisy channels, thereby enhancing the robustness of the broadcasting protocol. We then implement the noisy broadcasting protocol using numerical simulations where we compare exact and approximate methods, and finally on quantum hardware through IBM's Qiskit platform.
-%\end{region}
 
 \section{Broadcasting Protocol \label{sec:broadcasting_protocol}}
-%\begin{region}
 We first review the M-sender N-receiver broadcasting protocol from \cite{sukeno2023broadcasting} in the ideal, noiseless case. The protocol involves a resource state shared between the senders and receivers, local private unitaries applied by the senders to add phases, and measurements in a Fourier basis to enable byproduct corrections at each receiver. The protocol uses a classical broadcasting channel to send correction information from the senders to the receivers, but does not require any quantum communication after the initial resource state distribution. Additionally, correction steps do not require revealing the sender's choice of phase, which can be delayed until after the resource state is distributed. In the ideal protocol, every classical outcome tuple is uniformly distributed, independently of all sender phases (proved below). The receivers' quantum states encode the aggregate phase $\Phi=\sum_j\theta_j$; the classical correction transcript alone carries no phase information. This limited statement is not a general cryptographic security guarantee.
 For this protocol, the $M$ senders (Alices) possess an $N+1$-dimensional qudit each, while the $N$ receivers possess a single qubit each. The initial resource state is an entangled superposition of symmetric states, where each sender's system is in a state corresponding to the number of receivers in the $\ket{0}$ or $\ket{1}$ state. This is given by
 \begin{align}
@@ -169,10 +93,7 @@ n_q = \lceil \log_2(N+1) \rceil
 \end{align}
 qubits using a binary encoding: the computational basis state $\ket{k}_{a_j}$ ($0\le k\le N$) is stored as the $n_q$-bit binary representation of $k$. This allows for direct implementation on qubit-based hardware.
 
-%\end{region}
-
 \section{Noisy Channels}
-%\begin{region}
 
 In a realistic scenario, the distribution of qubits to the receivers may be subject to noise~\cite{schumacher1996sending, bergou2021quantum}. We model this noise using a depolarizing channel, which acts independently on each qubit sent to the receivers~\cite{dur2005standard}. This is applied after the initial resource state is prepared but before each sender applies their local unitary. The depolarizing channel with depolarizing probability $p$ is defined as
 \begin{align}
@@ -275,10 +196,7 @@ The fidelity with the target state is then
 \end{align}
 which is independent of the sender angle $\theta$ and reproduces the depolarizing-channel fidelity bound used later in Sec.~\ref{sec:qec}. The $\theta$-independence follows from the fact that $\mathcal{D}_p$ contracts the Bloch vector isotropically, so every equatorial target state is degraded by the same amount.
 
-%\end{region}
-
 \section{QEC Enhanced Protocol\label{sec:qec}}
-%\begin{region}
 There are many possible ways to incorporate error correction into the protocol. We choose to encode each receiver's qubit using the five-qubit $[[5,1,3]]$ code, which corrects any single-qubit Pauli error~\cite{laflamme1996perfect,knill1997theory}. This code is defined by its stabilizer generators and logical basis states \cite{gottesman1997stabilizer,calderbank1998quantum}, and it allows us to protect the transmitted information from errors introduced by the depolarizing channels \cite{devitt2013qec}. The encoding and decoding processes involve applying specific unitaries to map between the logical qubits and the physical qubits, as well as performing syndrome measurements to identify and correct errors. By integrating this error correction scheme into the broadcasting protocol, we can enhance the robustness of the communication and improve the fidelity of the output states at the receivers in the presence of noise.
 
 Let $X,Y,Z$ be the single-qubit Pauli operators and $I$ the identity.
@@ -325,13 +243,7 @@ and (for single-qubit errors) $E_{s(P)}=P$ for each weight-1 Pauli $P\in\{X_i,Y_
 \end{align}
 where $\operatorname{Tr}_{1,2,3,4}$ traces out the first four (leftmost) tensor factors, retaining the rightmost factor. This is the least-significant qubit in the Qiskit state-vector convention used for the hardware decoder.
 
-
-
-
-
-
 \subsection{Encoded broadcasting protocol}
-
 
 Fix integers $M\ge 1$ and $N\ge 1$. Let $\alpha,\beta\in\mathbb{C}$ satisfy $|\alpha|^2+|\beta|^2=1$. For each sender $j\in\{1,\dots,M\}$, let $a_j$ be a $(N{+}1)$-dimensional Hilbert space with computational basis $\{\ket{k}_{a_j}\}_{k=0}^N$. For each receiver $\ell\in\{1,\dots,N\}$, let $q_\ell$ be a qubit Hilbert space with computational basis $\{\ket{0}_\ell,\ket{1}_\ell\}$.
 
@@ -359,7 +271,6 @@ Fix integers $M\ge 1$ and $N\ge 1$. Let $\alpha,\beta\in\mathbb{C}$ satisfy $|\a
 
     \item \textbf{Byproduct correction.} Each receiver $\ell$ applies $U_{\bar n}$ to $\rho^{(\ell)}$.
 \end{enumerate}
-
 
 Ideal output (noiseless case).
 \begin{align}
@@ -391,10 +302,8 @@ which marks the low-noise crossing in Fig.~\ref{qec_crossover}. The cruder estim
 Because ideal encoding, independent physical noise, recovery, and decoding define the product logical channel $\bigotimes_\ell\mathcal D_{p_L(p_\ell)}$, Eq.~\eqref{eq:factorization} applies to the encoded protocol as well. Every sender branch has $F_\ell=1-2p_L(p_\ell)/3$ and $F_{\mathrm{joint}}=\prod_\ell[1-2p_L(p_\ell)/3]$.
 
 The full channel convention permits $p\in[0,1]$. At $p=3/4$ both physical and logical channels are completely depolarizing and $F=1/2$. For $p>3/4$ the physical Bloch factor $\eta=1-4p/3$ is negative: the output points opposite the target Bloch vector. The logical factor is $\eta_L=(5\eta^3-3\eta^5)/2$, which is also negative in this range. Although encoding raises the fidelity relative to the bare inverted output, neither exceeds $1/2$; this is not the usual low-noise error-correction advantage. At $p=1$, $p_L=22/27$, $F_{\mathrm{bare}}=1/3$, and $F_{\mathrm{QEC}}=37/81$.
-%\end{region}
 
 \section{Methods}
-%\begin{region}
 \subsection{Exact Density Matrix}
 The exact method simulates the protocol by propagating the full joint density matrix of the sender and receiver registers. The Hilbert space dimension is
 \begin{align}
@@ -460,7 +369,6 @@ Figure~\ref{QEC Fidelity} uses a separate single-qubit memory benchmark. It prep
     \label{QEC Fidelity}
 \end{figure}
 
-
 When QEC is enabled, each receiver qubit is replaced by a five-qubit $[[5,1,3]]$ block using the encoding tensor $E_{b_1 b_2 b_3 b_4 b_5, q}$, defined by $E[\ldots,0] = \ket{0_L}$ and $E[\ldots,1] = \ket{1_L}$.
 
 \begin{figure*}[!t]
@@ -496,8 +404,6 @@ followed by a computational-basis measurement. This is equivalent to measuring i
 \end{enumerate}
 
 For valid sender values $0\le n_j\le N$, bitwise and exhaustive feedforward are equivalent. Hardware errors may populate unused binary values $n_j>N$. The default applies the same linear phase formula to those values, whereas the legacy exhaustive circuit skips correction if any value is invalid. Reported fidelities include all shots; invalid sender outcomes are not postselected. This behavior is a circuit-history distinction when comparing old and new data. Sender outcomes are recorded in register \texttt{m}; fidelity outcomes are recorded separately in \texttt{fid}. Separate histograms do not preserve sender--receiver shot correspondence, so conditional diagnostics require aligned records.
-
-
 
 The $[[5,1,3]]$ error correction is implemented in the circuit using four shared ancilla qubits and Qiskit's dynamic-circuit primitives. In the gate-construction description below, Pauli-label characters are paired with qubits in their block-list order. Converting such a label into a Qiskit tensor-product matrix reverses the character order. Reversal preserves this code's stabilizer group, but the syndrome order must still follow the measured generators. For each five-qubit block the circuit appends three stages, described below.
 
@@ -554,10 +460,7 @@ Local and joint confidence intervals use 95\% Wilson scores. Worst-receiver boun
 
 For uniformly spaced delay traces with at least eight points, we compute a linearly detrended Hann-window periodogram separately for each receiver and the receiver mean at each angle tuple. We record its largest nonzero-frequency peak, frequency-bin spacing, and the variance explained by a sinusoid at that selected frequency after removing a linear trend. Peaks are descriptive: selection on the observed data is not a significance test, and ordered delay acquisition can confound delay with elapsed execution time.
 
-%\end{region}
-
 \section{Results}
-%\begin{region}
 
 \begin{figure*}[!t]
 \begin{minipage}[t]{0.48\textwidth}
@@ -595,25 +498,15 @@ Figure~\ref{protocol_scale} places the available zero-added-delay hardware obser
 
 The library implements a complete QEC-enhanced broadcasting circuit, validated in simulation. The reported hardware QEC data in Fig.~\ref{QEC Fidelity} are the standalone encoded-memory benchmark; a complete QEC-enhanced broadcasting hardware experiment has not been established by the archived data.
 
-
-
-%\end{region}
-
 \section{Conclusion}
-%\begin{region}
 Independent phase-covariant receiver channels produce the same product output in every sender branch of the restricted protocol for arbitrary $M,N$. The local and joint depolarizing fidelities then follow directly, including the exact $[[5,1,3]]$ logical-error polynomial and low-noise break-even probability. The classical sender outcomes are uniformly distributed independently of all phases; only the receivers' quantum states encode their sum. This statement concerns the ideal protocol and receiver-only noise, not cryptographic security against arbitrary devices or adversaries.
 
 The existing hardware records show substantial circuit overhead, receiver asymmetry, and delay-dependent structure. The standalone encoded-memory benchmark does not demonstrate an encoded fidelity advantage for its sampled settings, and the heterogeneous broadcasting observations cannot isolate a noise mechanism or establish a controlled scaling law. Reanalysis recovers joint fidelity, worst-receiver performance, success covariance, paired asymmetry, and descriptive delay spectra. These statistics establish features of the recorded readouts; attribution to a physical noise mechanism requires matched circuit models and controlled repeats with preserved calibration, compiled circuits, and aligned shot records. No new experimental data were collected for this reanalysis.
 
-%\end{region}
-
 \section{Acknowledgements}
-%\begin{region}
 This research was supported by the National Science Foundation under the grant Collaborative Research: NeTS: Medium 2504622. Additionally it was supported in part, by a grant of computer time from the City University of New York High Performance Computing Center under NSF Grants CNS-0855217, CNS-0958379 and ACI-1126113. A public archival identifier for the code and data remains to be assigned before submission. Additionally we are grateful for the feedback and advice of IBM's Dr. Olivia Lanes and Dr. Nick Bronn regarding our hardware fidelity results.
-%\end{region}
 
 \bibliography{apssamp}
 
 \end{document}
 %
-% ****** End of file apstemplate.tex ******

@@ -20,7 +20,7 @@ endianness bugs.
 """
 
 import numpy as np
-from qiskit import ClassicalRegister, QuantumRegister
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import UnitaryGate
 
@@ -34,23 +34,17 @@ def five_qubit_logical_basis() -> tuple[np.ndarray, np.ndarray]:
     """Return |0_L>, |1_L> for the [[5,1,3]] code (computational basis order)."""
     v0 = np.zeros(32, dtype=complex)
     plus_terms = ["00000", "10010", "01001", "10100", "01010", "00101"]
-    minus_terms = ["11011","00110","11000","11101","00011","11110","01111","10001","01100","10111"]
+    minus_terms = [
+        "11011", "00110", "11000", "11101", "00011",
+        "11110", "01111", "10001", "01100", "10111",
+    ]
+    for bitstring in plus_terms:
+        v0[int(bitstring, 2)] = 0.25
+    for bitstring in minus_terms:
+        v0[int(bitstring, 2)] = -0.25
 
-    def bits_to_index(bitstr: str) -> int:
-        idx = 0
-        for ch in bitstr:
-            idx = (idx << 1) | int(ch)
-        return idx
-
-    for s in plus_terms:
-        v0[bits_to_index(s)] += 0.25
-    for s in minus_terms:
-        v0[bits_to_index(s)] -= 0.25
-
-    v1 = np.zeros(32, dtype=complex)
-    for idx, amp in enumerate(v0):
-        if amp != 0:
-            v1[idx ^ 0b11111] = amp
+    # Logical X flips all five physical bits: index i becomes 31 - i.
+    v1 = v0[::-1].copy()
     return v0, v1
 
 
@@ -66,69 +60,52 @@ def five_qubit_decode_gate() -> UnitaryGate:
     Qiskit qubit list for each 5-qubit block (little-endian convention).
     """
     v0, v1 = five_qubit_logical_basis()
-    cols: list[np.ndarray] = [v0 / np.linalg.norm(v0), v1 / np.linalg.norm(v1)]
-    eye = np.eye(32, dtype=complex)
-    for cand in eye.T:
-        w = cand.astype(complex)
-        for c in cols:
-            w = w - np.vdot(c, w) * c
-        nrm = np.linalg.norm(w)
-        if nrm > 1e-10:
-            cols.append(w / nrm)
-        if len(cols) == 32:
+    basis = [v0 / np.linalg.norm(v0), v1 / np.linalg.norm(v1)]
+    # Complete the two logical columns with Gram–Schmidt in computational order.
+    for candidate in np.eye(32, dtype=complex).T:
+        residual = candidate.copy()
+        for column in basis:
+            residual -= np.vdot(column, residual) * column
+        norm = np.linalg.norm(residual)
+        if norm > 1e-10:
+            basis.append(residual / norm)
+        if len(basis) == 32:
             break
 
-    if len(cols) != 32:
+    if len(basis) != 32:
         raise RuntimeError("Failed to construct a full decode basis for [[5,1,3]].")
 
-    W = np.column_stack(cols)
-    U = W.conj().T
-    return UnitaryGate(U, label="dec513")
+    return UnitaryGate(np.column_stack(basis).conj().T, label="dec513")
+
+
+def pauli_label_syndrome(label: str) -> str:
+    """Return the four syndrome bits of a Pauli label, in stabilizer order.
+
+    Two single-qubit Paulis anticommute exactly when both are nonidentity
+    and different. A generator's syndrome bit is the parity of these positions.
+    Label positions follow the tensor-factor order used by the stabilizers.
+    """
+    bits = []
+    for stabilizer in QEC513_STABILIZERS:
+        anticommutes = sum(
+            error != "I" and generator != "I" and error != generator
+            for error, generator in zip(label, stabilizer)
+        )
+        bits.append(str(anticommutes % 2))
+    return "".join(bits)
 
 
 def five_qubit_syndrome_corrections() -> dict[int, tuple[str, int] | None]:
     """Map 4-bit syndrome value to correction (Pauli, qubit index), or None for identity."""
-    I2 = np.eye(2, dtype=complex)
-    X = np.array([[0, 1], [1, 0]], dtype=complex)
-    Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
-    Z = np.array([[1, 0], [0, -1]], dtype=complex)
-    pauli_dict = {"I": I2, "X": X, "Y": Y, "Z": Z}
-    g_labels = QEC513_STABILIZERS
-
-    def kron_all(mats):
-        out = mats[0]
-        for m in mats[1:]:
-            out = np.kron(out, m)
-        return out
-
-    G = [kron_all([pauli_dict[c] for c in lbl]) for lbl in g_labels]
-
-    def syndrome_of(E):
-        bits = []
-        for g in G:
-            comm = E @ g - g @ E
-            anticomm = E @ g + g @ E
-            if np.linalg.norm(comm) < 1e-8:
-                bits.append("0")
-            elif np.linalg.norm(anticomm) < 1e-8:
-                bits.append("1")
-            else:
-                raise RuntimeError("Syndrome detection failed.")
-
-            # Qiskit interprets a ClassicalRegister condition as little-endian:
-            # register[0] is the least significant bit of the integer value.
-            # Syndromes are generated in stabilizer order (s0,s1,s2,s3), so we
-            # reverse before converting to the integer used in `if_test`.
-        return int("".join(bits[::-1]), 2)
-
-    corr: dict[int, tuple[str, int] | None] = {0: None}
-    for q in range(5):
-        for p in ("X", "Y", "Z"):
-            mats = [I2] * 5
-            mats[q] = pauli_dict[p]
-            s = syndrome_of(kron_all(mats))
-            corr[s] = (p, q)
-    return corr
+    corrections: dict[int, tuple[str, int] | None] = {0: None}
+    for qubit in range(5):
+        for pauli in "XYZ":
+            label = "I" * qubit + pauli + "I" * (4 - qubit)
+            bits = pauli_label_syndrome(label)
+            # Register bit 0 is the least significant bit of an if_test integer.
+            syndrome = int(bits[::-1], 2)
+            corrections[syndrome] = (pauli, qubit)
+    return corrections
 
 
 def decode_qec_513(qc, encoded_blocks, ancilla_qubits=None):
@@ -239,13 +216,11 @@ def qec_513_delay_benchmark_circuit(
 ):
     """Build a parametric delay-fidelity benchmark circuit.
 
-    The circuit prepares ``Ry(theta) Rz(phi)|0>``, applies a symbolic
+    The circuit prepares ``Rz(phi) Ry(theta)|0>``, applies a symbolic
     delay named ``tau``, reverses the state preparation, and measures
     ``P(0)`` as the fidelity.  With ``use_qec=True`` the prepared qubit is
     first encoded into the [[5,1,3]] block and decoded after the delay.
     """
-    from qiskit import QuantumCircuit
-
     tau = Parameter("tau")
     fid = ClassicalRegister(1, "fid_qec")
 

@@ -55,20 +55,22 @@ def joint_success_statistics(counts: dict[str, int], n_receivers: int) -> dict[s
     total = int(sum(counts.values()))
     if total == 0:
         raise ValueError("Counts contain no shots.")
-    x = np.array([[bit == "0" for bit in bits[::-1]] for bits in counts], dtype=float)
+    # Columns follow receiver indices, so reverse Qiskit's displayed bit order.
+    success = np.array([[bit == "0" for bit in bits[::-1]] for bits in counts], dtype=float)
     weights = np.array(list(counts.values()), dtype=float)
     probabilities = weights / total
-    local = probabilities @ x
-    centered = x - local
-    all_success = x.prod(axis=1)
+    local = probabilities @ success
+    centered = success - local
+    all_success = success.prod(axis=1)
     global_fidelity = float(probabilities @ all_success)
     product = float(local.prod())
 
-    def smooth(value, influence, bounds=None):
+    def smooth(value, influence, bounds):
+        """Estimate and delta-method interval under this empirical histogram."""
         se = float(np.sqrt(max(0.0, probabilities @ (influence ** 2)) / total))
-        ci = [float(value - 1.959963984540054 * se), float(value + 1.959963984540054 * se)]
-        if bounds is not None:
-            ci = [max(bounds[0], ci[0]), min(bounds[1], ci[1])]
+        half_width = NormalDist().inv_cdf(0.975) * se
+        ci = [max(bounds[0], float(value - half_width)),
+              min(bounds[1], float(value + half_width))]
         return {"estimate": float(value), "se": se, "ci95": ci}
 
     simultaneous = [wilson_interval(f * total, total, 1 - 0.05 / n_receivers) for f in local]
@@ -105,6 +107,77 @@ def joint_success_statistics(counts: dict[str, int], n_receivers: int) -> dict[s
     }
 
 
+def _tau_fidelity_trace(
+    run: dict[str, Any], *, receiver: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Extract a uniformly-spaced (tau, fidelity) trace from a loaded run.
+
+    Averages over receivers unless *receiver* selects a single one.
+    """
+    sweep = run.get("sweep", {}) or {}
+    if sweep.get("axis") != "tau":
+        raise ValueError("Periodicity analysis requires a tau-axis sweep run.")
+
+    tau = np.asarray(sweep.get("values", []), dtype=float)
+    fids = np.asarray(run["fidelities"], dtype=float)
+    if fids.ndim == 1:
+        fids = fids.reshape(-1, 1)
+
+    if tau.ndim != 1 or fids.ndim != 2 or len(tau) != len(fids):
+        raise ValueError("Tau grid and fidelity array must have matching lengths.")
+    if not np.all(np.isfinite(tau)) or not np.all(np.isfinite(fids)):
+        raise ValueError("Tau grid and fidelities must be finite.")
+    if receiver is not None and not 0 <= receiver < fids.shape[1]:
+        raise ValueError("Receiver index is outside the fidelity array.")
+
+    trace = fids[:, receiver] if receiver is not None else fids.mean(axis=1)
+
+    order = np.argsort(tau)
+    tau, trace = tau[order], trace[order]
+
+    if tau.size < 2:
+        raise ValueError("Need at least two tau points for periodicity analysis.")
+    spacing = np.diff(tau)
+    if np.any(spacing <= 0) or not np.allclose(spacing, spacing[0]):
+        raise ValueError("Periodicity analysis requires uniformly spaced tau values.")
+
+    return tau, trace
+
+
+def autocorrelation_from_run(
+    run: dict[str, Any], *, receiver: int | None = None
+) -> tuple[np.ndarray, np.ndarray]:
+    """Mean-subtracted, normalized autocorrelation of a tau-sweep fidelity trace.
+
+    Returns ``(lags, autocorrelation)`` where *lags* are in the same units as
+    the saved ``tau`` sweep values. Nonconstant traces have ``autocorrelation[0] == 1``;
+    an exactly constant trace returns zeros.
+    """
+    tau, trace = _tau_fidelity_trace(run, receiver=receiver)
+    x = trace - trace.mean()
+    ac_full = np.correlate(x, x, mode="full")
+    ac = ac_full[ac_full.size // 2 :]
+    ac = ac / ac[0] if ac[0] != 0 else ac
+    lags = tau - tau[0]
+    return lags, ac
+
+
+def periodogram_from_run(
+    run: dict[str, Any], *, receiver: int | None = None, detrend: str = "linear"
+) -> tuple[np.ndarray, np.ndarray]:
+    """Power spectral density of a tau-sweep fidelity trace via `scipy.signal.periodogram`.
+
+    Returns ``(frequencies, power)`` where *frequencies* are in units of
+    ``1 / tau`` (i.e. cycles per unit of the saved ``tau`` sweep values).
+    """
+    from scipy import signal
+
+    tau, trace = _tau_fidelity_trace(run, receiver=receiver)
+    fs = 1.0 / (tau[1] - tau[0])
+    freqs, power = signal.periodogram(trace, fs=fs, detrend=detrend, window="hann")
+    return freqs, power
+
+
 def periodicity_summary(run: dict[str, Any], *, receiver: int | None = None) -> dict[str, Any]:
     """Exploratory dominant spectral peak with resolution and trend caveats.
 
@@ -114,7 +187,6 @@ def periodicity_summary(run: dict[str, Any], *, receiver: int | None = None) -> 
     are reported as unavailable rather than assigned a period.
     """
     from scipy.signal import find_peaks
-    from .plotting import _tau_fidelity_trace, autocorrelation_from_run, periodogram_from_run
 
     try:
         tau, trace = _tau_fidelity_trace(run, receiver=receiver)
@@ -126,7 +198,8 @@ def periodicity_summary(run: dict[str, Any], *, receiver: int | None = None) -> 
     trend = np.column_stack([np.ones(tau.size), trend_x])
     trend_resid = trace - trend @ np.linalg.lstsq(trend, trace, rcond=None)[0]
     baseline_sse = float(trend_resid @ trend_resid)
-    numerical_floor = 1000 * np.finfo(float).eps ** 2 * tau.size * max(1.0, float(np.max(np.abs(trace)))) ** 2
+    trace_scale = max(1.0, float(np.max(np.abs(trace))))
+    numerical_floor = 1000 * np.finfo(float).eps ** 2 * tau.size * trace_scale ** 2
     if baseline_sse <= numerical_floor:
         return {"status": "unavailable", "reason": "No resolved variance beyond a linear trend."}
     freqs, power = periodogram_from_run(run, receiver=receiver)
@@ -138,7 +211,8 @@ def periodicity_summary(run: dict[str, Any], *, receiver: int | None = None) -> 
     cycles = float((tau[-1] - tau[0]) / period)
     samples_per_period = float(period / (tau[1] - tau[0]))
     scale, unit = delay_axis(run)
-    design = np.column_stack([trend, np.sin(2 * np.pi * frequency * tau), np.cos(2 * np.pi * frequency * tau)])
+    phase = 2 * np.pi * frequency * tau
+    design = np.column_stack([trend, np.sin(phase), np.cos(phase)])
     coefficients = np.linalg.lstsq(design, trace, rcond=None)[0]
     residual = trace - design @ coefficients
     lags, ac = autocorrelation_from_run(run, receiver=receiver)
