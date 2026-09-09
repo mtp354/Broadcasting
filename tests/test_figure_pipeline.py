@@ -2,7 +2,7 @@
 import ast
 import json
 from pathlib import Path
-from types import SimpleNamespace
+import re
 
 import matplotlib
 matplotlib.use("Agg")
@@ -12,6 +12,7 @@ import pytest
 
 from scripts import generate_figures as figures
 from scripts import figure_sources
+from broadcasting.analysis import delay_axis
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -122,7 +123,7 @@ def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch)
         pytest.skip("The manuscript integration check needs the locally saved, gitignored campaigns.")
 
     notebook = json.loads((ROOT / "visualizations.ipynb").read_text())
-    cell = next(cell for cell in notebook["cells"] if cell.get("id") == "manuscript-figures-3-6")
+    cell = next(cell for cell in notebook["cells"] if cell.get("id") == "manuscript-figures")
     tree = ast.parse("".join(cell["source"]))
     save_settings = [
         node for node in tree.body if isinstance(node, ast.Assign)
@@ -138,20 +139,33 @@ def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch)
                         lambda *args, **kwargs: pytest.fail("Preview attempted to save a figure"))
     namespace = {}
     try:
-        exec(compile(tree, "visualizations.ipynb:manuscript-figures-3-6", "exec"), namespace)
+        exec(compile(tree, "visualizations.ipynb:manuscript-figures", "exec"), namespace)
         rendered = namespace["manuscript_figures"]
-        assert set(rendered) == {3, 4, 5, 6}
-        crossover_data = [line for line in rendered[3].axes[0].lines
+        assert set(rendered) == {1, 2, 4, 5, 6}
+        memory_ax = rendered[2].axes[0]
+        memory_cfg = namespace["FIGURE_2"]
+        assert len(namespace["memory_runs"]) == len(memory_cfg["data_styles"]) == 4
+        for run, style in zip(namespace["memory_runs"], memory_cfg["data_styles"]):
+            lines = [line for line in memory_ax.lines if line.get_label() == style["label"]]
+            assert len(lines) == 1
+            scale, _unit = delay_axis(run)
+            np.testing.assert_allclose(lines[0].get_xdata(), scale * np.asarray(run["tau_values"]))
+            np.testing.assert_allclose(lines[0].get_ydata(), run["backend_fidelities"])
+        memory_labels = [text.get_text() for text in memory_ax.get_legend().texts]
+        assert all(not re.search(r"\b\d{4}[-/]\d{2}[-/]\d{2}\b|\b\d{8}\b|historical|campaign",
+                                 label, flags=re.IGNORECASE) for label in memory_labels)
+
+        crossover_data = [line for line in rendered[4].axes[0].lines
                           if line.get_label().startswith(("Exact", "Sampled"))]
         assert [len(line.get_xdata()) for line in crossover_data] == [5, 50, 50]
 
-        delay_axes = [ax for ax in rendered[4].axes if ax.get_visible()]
+        delay_axes = [ax for ax in rendered[5].axes if ax.get_visible()]
         assert len(delay_axes) == 2
         assert namespace["panel_backends"] == ["ibm_marrakesh", "ibm_kingston"]
         assert [len(group) for group in namespace["panel_traces"]] == [4, 1]
         for ax, group in zip(delay_axes, namespace["panel_traces"]):
             assert len(ax.lines) == 3 * len(group) + 1  # Two receivers, mean, one panel baseline.
-            expected_bands = 2 * len(group) if namespace["FIGURE_4"]["show_intervals"] else 0
+            expected_bands = 2 * len(group) if namespace["FIGURE_5"]["show_intervals"] else 0
             assert len(ax.collections) == expected_bands
             assert [text.get_text() for text in ax.get_legend().texts] == ["Receiver 1", "Receiver 2", "Mean"]
             for run_index, (run, _theta_index, histograms) in enumerate(group):
@@ -168,9 +182,10 @@ def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch)
                 np.testing.assert_allclose(ax.lines[3 * run_index + 2].get_ydata(), expected.mean(axis=1))
 
         assert len(namespace["scaling_points"]) == 55
-        np.testing.assert_array_equal(rendered[5].axes[0].get_xticks(), [1, 2, 3, 4])
+        np.testing.assert_array_equal(rendered[6].axes[0].get_xticks(), [1, 2, 3, 4])
 
-        convergence_ax = rendered[6].axes[0]
+        convergence_ax = rendered[1].axes[0]
+        convergence_cfg = namespace["FIGURE_1"]
         assert convergence_ax.get_xscale() == convergence_ax.get_yscale() == "log"
         assert len(convergence_ax.lines) == 16  # Two receivers + total for five seeds, plus reference.
         assert all(len(line.get_xdata()) == 10 for line in convergence_ax.lines)
@@ -182,15 +197,23 @@ def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch)
             np.testing.assert_allclose(lines[0].get_ydata(), errors[:, 0])
             np.testing.assert_allclose(lines[1].get_ydata(), errors[:, 1])
             np.testing.assert_allclose(lines[2].get_ydata(), errors.sum(axis=1))
-            assert [line.get_color() for line in lines] == ["red", "blue", "black"]
-        for line in convergence_ax.lines:
-            assert line.get_marker() in ("", "None", None)
-            assert line.get_linestyle() == "-"
-            assert line.get_alpha() == 0.8
+            component_styles = [*convergence_cfg["receiver_styles"], convergence_cfg["total_style"]]
+            for line, component_style in zip(lines, component_styles):
+                expected_style = {**convergence_cfg["line_style"], **component_style}
+                for property_name in ("color", "marker", "linestyle", "alpha", "linewidth"):
+                    assert getattr(line, f"get_{property_name}")() == expected_style[property_name]
         assert [text.get_text() for text in convergence_ax.get_legend().texts] == [
-            "Reference", "Receiver 1", "Receiver 2", "Total"]
+            convergence_cfg["reference_style"]["label"],
+            *[style["label"] for style in component_styles],
+        ]
         reference = convergence_ax.lines[-1]
-        np.testing.assert_allclose(reference.get_ydata()[0], expected_errors[0][0].sum())
+        for property_name in ("color", "marker", "linestyle", "alpha", "linewidth"):
+            assert getattr(reference, f"get_{property_name}")() == convergence_cfg["reference_style"][property_name]
+        counts = np.asarray(namespace["study"].sample_counts)
+        anchor = convergence_cfg["reference_anchor_index"]
+        expected_reference = (convergence_cfg["reference_multiplier"] * expected_errors[0][anchor].sum()
+                              * (counts / counts[anchor]) ** convergence_cfg["reference_exponent"])
+        np.testing.assert_allclose(reference.get_ydata(), expected_reference)
         for limits, getter in [(convergence_ax.get_xlim(), "get_xdata"),
                                (convergence_ax.get_ylim(), "get_ydata")]:
             values = np.concatenate([np.asarray(getattr(line, getter)()) for line in convergence_ax.lines])

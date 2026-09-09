@@ -1,6 +1,17 @@
 {
   "schema_version": 1,
-  "generator": "visualizations.ipynb#manuscript-figures-3-6",
+  "generator": "visualizations.ipynb#manuscript-figures",
+  "palette": {
+    "burgundy": "#9F1853",
+    "cyan": "#33B1FF",
+    "coral": "#FA4D56",
+    "slate": "#778899"
+  },
+  "palette_source": {
+    "path": "manuscript/m1n2qec0_circ.png",
+    "sha256": "3a88cf71111dd1e2dd95eb403ca0d23eb870f07469ffcd05934b72e819ade1e9",
+    "historical_overrides": {}
+  },
   "rc_params": {
     "figure.dpi": 120,
     "font.family": "DejaVu Sans",
@@ -25,9 +36,451 @@
     "strip_titles": true
   },
   "figures": {
-    "3": {
+    "1": {
       "settings": {
-        "filename": "figure_03_qec_crossover.png",
+        "filename": "figure_01_sampling_convergence.png",
+        "figsize": [
+          4.4,
+          3.4
+        ],
+        "archive_dir": "results/convergence",
+        "batches": [
+          "repeats_01",
+          "repeats_02"
+        ],
+        "seeds": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "show_seed_zero": true,
+        "line_style": {
+          "linestyle": "-",
+          "marker": "",
+          "linewidth": 0.6,
+          "alpha": 0.6
+        },
+        "receiver_styles": [
+          {
+            "color": "#9F1853",
+            "label": "Receiver 1"
+          },
+          {
+            "color": "#33B1FF",
+            "label": "Receiver 2"
+          }
+        ],
+        "total_style": {
+          "color": "grey",
+          "label": "Total",
+          "alpha": 0.8,
+          "linewidth": 1.0
+        },
+        "show_reference": true,
+        "reference_exponent": -0.5,
+        "reference_anchor_index": 0,
+        "reference_multiplier": 1.0,
+        "reference_style": {
+          "color": "black",
+          "linestyle": "--",
+          "marker": "",
+          "linewidth": 1.2,
+          "alpha": 1,
+          "label": "\u221d 1/\u221a$n_s$"
+        },
+        "axes": {
+          "xlabel": "Monte Carlo trajectories per noise probability, $n_s$",
+          "ylabel": "Integrated absolute fidelity error",
+          "xlim": null,
+          "ylim": null,
+          "xscale": "log",
+          "yscale": "log"
+        },
+        "grid": {
+          "visible": true,
+          "which": "both",
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "best",
+          "fontsize": 8,
+          "frameon": true
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "analysis/convergence/historical_summary.json",
+          "sha256": "008197ef845bb18b93f82207d8f089076547696e2dfd1ac13dd62c8ab6985c03",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/exact.json",
+          "sha256": "c2c4c8500924ee9e2de135022cfafa9a2dc0f94a80054d9ed44b38561c257b00",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n100.json",
+          "sha256": "9800534e8fd8127291ab2f13a21c8092a55723a065d6d14a731a86db65dea1b3",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n1000.json",
+          "sha256": "a66d1da2522a8ffb496d680662a2fe85bcb8a8cc10028aea7fde8af6df4da351",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n10000.json",
+          "sha256": "23c63ef476d72fa4e8559261d562bcf4301abac97d52497afede1f9a6d6a8f80",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n100000.json",
+          "sha256": "02a2ca31e04c2ddea76acf4be21e2307aa8204566529b2f1f52ed16bd51c4672",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n200.json",
+          "sha256": "438d5b2fa60bdbe0b9001cc39d81de7060a0900f7d948435eaa246371e965766",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n2000.json",
+          "sha256": "1600dfbf330e555ac40afe865cd43a53e8d62f540fd44f1285cb0576f0333dfc",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n50.json",
+          "sha256": "00daa1a8f85fa90ecf576dfab74e1728e979b138c1c5d9d7b8382aed72bb8655",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n500.json",
+          "sha256": "7abea2f029c4c25c8492f68d512a3888ebdda65830bc69d1fe7eb6651992573d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n5000.json",
+          "sha256": "9bb8db432c615e01a9e6f6a47ba5afa619fb2a757eace6389307687fc30f84a8",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed1_n50000.json",
+          "sha256": "3da007c1a9e3bc17ec17e41af1d507864ee701ba47a6561682155b61b2fc77c9",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n100.json",
+          "sha256": "8c9be9e15051ad79be30765cec1ab2e3bc3f8943eeb1a25188273a7f33e71d9a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n1000.json",
+          "sha256": "a20e537d1da22fec70cbc90e69596873e294b720f6ae42e4eca8fea5de2b6c00",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n10000.json",
+          "sha256": "8fac0291d643ac05ecc773fa2248b9db8f8970e295a19e1ec1a4ff9946e20594",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n100000.json",
+          "sha256": "0705be19b7a45a15fa30dd4d9bcc914e891ebc7c8fa19906d96ef52f60e025bf",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n200.json",
+          "sha256": "52ed0dfa573eaf7d7ac40bd4727b38f301267dbb5396a858d9b9ac5447d21b0e",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n2000.json",
+          "sha256": "d716ee4afb92a45918d1d3a3b522eefb9a52ef2eec6b929911a4725779ca92de",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n50.json",
+          "sha256": "02efebba3f3bf583a777f82c1dcf4094e3ef212eb8041541ecd0c313869f7979",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n500.json",
+          "sha256": "687978e95e6c92240d9c2104b50ae01d911b84f4aaf0ba47ad71b455bad1ba46",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n5000.json",
+          "sha256": "722191a4be7ed219c493c2058be3b41f6a4be2904f46c2a79e6d530f0add4b1c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/run_seed2_n50000.json",
+          "sha256": "929dcc645019d5f1d8f4823ec5d2ccd650789892cb963ee90067ab4d3b63c97a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_01/study.json",
+          "sha256": "9930d84a25093f209dd205b18ec6148768e97f7d9763b944d2e0e3d4f3d54aef",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/exact.json",
+          "sha256": "433ffd40bc2ef43c16b473a55585d18857e3e3260325e91727ad56360c0d6da8",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n100.json",
+          "sha256": "1e8619378fbfc98a491c13679015c63cf50ddcc8fc0a385eb7f3bb6372f7079d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n1000.json",
+          "sha256": "39bf6818476338b5fda893398073f2665f94138149e23e55d98855c7c8d0986a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n10000.json",
+          "sha256": "c7910bf35144503fd3f66b98e9bb06b446271bfcc7f27178ea98323581f2f7f6",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n100000.json",
+          "sha256": "1a2f6de58b7d318fd05d85a3dbf6adca788f043491d9faf51f6303a7d230bc15",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n200.json",
+          "sha256": "72ab42f7f794ddc607991b7d43b5c5d6c994a32d8c342287321ac652812d9b8c",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n2000.json",
+          "sha256": "2d751ef037ccc7c827a9a05d0e82e7a01c3fc60136612aa8c55f3dfbe92faa1b",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n50.json",
+          "sha256": "722ad24de1b6ca914a87a2272bbb9f40cff01209f5acf9fbe21cb10f4b666155",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n500.json",
+          "sha256": "04d3844ba23212bd518cbbff7866bb104a479f2d405278f6d6f2fa9fad248328",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n5000.json",
+          "sha256": "fb21f18786242f53a7a57a82bbd1de2a02e25ab4969de3ff691e48bacb9c73d6",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed3_n50000.json",
+          "sha256": "4b985d7809a6861b9fa79b765925c88c93decbd1d829dce5bc842ba0eba142a3",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n100.json",
+          "sha256": "e8dc4f32cc1a62c76c40a36115856df55d5fe090be18d48505354b319eefe11f",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n1000.json",
+          "sha256": "b69f06dc91f97d55de48310283e0954494adef8ec803e8b7220c717be4f1897f",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n10000.json",
+          "sha256": "e8da473d7e507641ab09a2a060803235e1df143d68de9b00bacef82735899848",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n100000.json",
+          "sha256": "186d359f1ea563582b025aea0a578001879f3764de5a93d30575503b023cc31a",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n200.json",
+          "sha256": "3e83327285c7c4a16dd0add9eb380861bcf06b741b256d9f40fcee6dd4216692",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n2000.json",
+          "sha256": "838b2cdcbde597b5bd46f733fb0cad48730a45a875572744d1c328a2febe53b5",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n50.json",
+          "sha256": "26cee59e82d720d330fb6d24b1171a8013661d7c0189a71c7327a1d08cfc0abf",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n500.json",
+          "sha256": "d2268237d4f3209df1a0f696a7b9fa0f96458c2957981968adcea0d178b57ff8",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n5000.json",
+          "sha256": "f859eb0467fbc237248ce96d138b3d0f170d93043d193213005aaff4c0e0ba07",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/run_seed4_n50000.json",
+          "sha256": "e1bf22122195239747d74723cf466570f4741411e2002c6f3a00e04da522163d",
+          "historical_overrides": {}
+        },
+        {
+          "path": "results/convergence/repeats_02/study.json",
+          "sha256": "d728cec5ddf913eaa9ad7eef42fa29ea53cc04e972a3be976895a2eb5797bb7b",
+          "historical_overrides": {}
+        }
+      ]
+    },
+    "2": {
+      "settings": {
+        "filename": "figure_02_qec_memory.png",
+        "figsize": [
+          4.4,
+          3.4
+        ],
+        "sources": [
+          "results/qec513/qec513_delay_sweep_20260513_123922.json",
+          "results/qec513/qec513_delay_sweep_20260513_163257.json",
+          "results/qec513/qec513_delay_sweep_20260518_132249.json",
+          "results/qec513/qec513_delay_sweep_20260618_104151.json"
+        ],
+        "data_styles": [
+          {
+            "color": "#9F1853",
+            "label": "Encoded, opt=3"
+          },
+          {
+            "color": "#33B1FF",
+            "label": "Encoded, opt=0"
+          },
+          {
+            "color": "#FA4D56",
+            "label": "Bare, opt=3"
+          },
+          {
+            "color": "#778899",
+            "label": "Bare, opt=0"
+          }
+        ],
+        "data_common": {
+          "linestyle": "-",
+          "marker": "",
+          "linewidth": 1.2,
+          "alpha": 0.8
+        },
+        "show_ideal": true,
+        "ideal_style": {
+          "color": "black",
+          "linestyle": "--",
+          "marker": "",
+          "linewidth": 1.2,
+          "label": "Noise-free"
+        },
+        "baseline": 0.5,
+        "baseline_style": {
+          "color": "gray",
+          "linestyle": "--",
+          "linewidth": 1,
+          "alpha": 0.5
+        },
+        "xlabel": null,
+        "axes": {
+          "ylabel": "Recovered-state fidelity",
+          "xlim": null,
+          "ylim": [
+            0,
+            1.05
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "grid": {
+          "visible": true,
+          "alpha": 0.25
+        },
+        "legend": {
+          "loc": "best",
+          "fontsize": 8,
+          "frameon": true
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "results/qec513/qec513_delay_sweep_20260513_123922.json",
+          "sha256": "d6da6cf19710abb3adbe8b626aad947ab619f7fdf8544ff0f9369f9db61f1b63",
+          "historical_overrides": {
+            "use_qec": {
+              "value": true,
+              "evidence": "9341748:qec_testing.ipynb cell 2 builds the encoded benchmark; cells 7-8 select both May13 Kingston records as QEC; this snapshot precedes introduction of the bare circuit in 9e0adc7.",
+              "status": "historical notebook attribution; not an archived compiled-circuit verification"
+            },
+            "dt": {
+              "value": 4e-09,
+              "evidence": "Inferred same-device/day value: 9341748:qec_testing.ipynb cell 4 prints Kingston dt=4e-09 s for the May13 opt0 job; this opt3 record has no job-specific dt archive."
+            }
+          }
+        },
+        {
+          "path": "results/qec513/qec513_delay_sweep_20260513_163257.json",
+          "sha256": "cfe29222e0e20385398392e479a3281cedccad03b691ce6d25c1efb5b8d05ad9",
+          "historical_overrides": {
+            "use_qec": {
+              "value": true,
+              "evidence": "9341748:qec_testing.ipynb cell 2 builds the encoded benchmark; cells 7-8 select both May13 Kingston records as QEC; this snapshot precedes introduction of the bare circuit in 9e0adc7.",
+              "status": "historical notebook attribution; not an archived compiled-circuit verification"
+            },
+            "dt": {
+              "value": 4e-09,
+              "evidence": "9341748:qec_testing.ipynb cell 4 output prints matching job d82dopugbeec73allus0 and Time units = 4e-09 s."
+            }
+          }
+        },
+        {
+          "path": "results/qec513/qec513_delay_sweep_20260518_132249.json",
+          "sha256": "e4a2ed3987775ddc5b4c81eacbf79b002153224af74f25ae098253a6dabf6148",
+          "historical_overrides": {
+            "use_qec": {
+              "value": false,
+              "evidence": "9e0adc7:qec_testing.ipynb cell 3 builds one-qubit bare circuit; cell 5 prints matching job ID; cell 6 prints matching saved filename; comparison explicitly labels this run No QEC.",
+              "status": "historical notebook attribution; not an archived compiled-circuit verification"
+            },
+            "dt": {
+              "value": 4e-09,
+              "evidence": "9e0adc7:qec_testing.ipynb cell 5 output prints matching job d85kl7mgbeec73ap8sag and Time units = 4e-09 s."
+            }
+          }
+        },
+        {
+          "path": "results/qec513/qec513_delay_sweep_20260618_104151.json",
+          "sha256": "25c68f3959025c1f53ffa0a9a6d0c14d2f33bf822cf7007b77d8819e2eb94489",
+          "historical_overrides": {
+            "use_qec": {
+              "value": false,
+              "evidence": "222d468:qec_testing.ipynb cell 3 builds one-qubit bare circuit; cell 5 prints matching job ID; cell 6 prints matching saved filename; comparison explicitly labels this run No QEC.",
+              "status": "historical notebook attribution; not an archived compiled-circuit verification"
+            },
+            "dt": {
+              "value": 4e-09,
+              "evidence": "222d468:qec_testing.ipynb cell 5 output prints matching job d8paek201fac73d1e3tg and Time units = 4e-09 s."
+            }
+          }
+        }
+      ]
+    },
+    "4": {
+      "settings": {
+        "filename": "figure_04_qec_crossover.png",
         "figsize": [
           4.4,
           3.4
@@ -45,17 +498,17 @@
         "data_styles": [
           {
             "marker": "",
-            "color": "blue",
+            "color": "#33B1FF",
             "label": "Exact bare"
           },
           {
             "marker": "",
-            "color": "red",
+            "color": "#9F1853",
             "label": "Exact encoded"
           },
           {
             "marker": "",
-            "color": "green",
+            "color": "#FA4D56",
             "label": "Sampled encoded ($n_s={n_samples}$)"
           }
         ],
@@ -136,9 +589,9 @@
         }
       ]
     },
-    "4": {
+    "5": {
       "settings": {
-        "filename": "figure_04_delay_repeats.png",
+        "filename": "figure_05_delay_repeats.png",
         "panel_backends": [
           "ibm_marrakesh",
           "ibm_kingston"
@@ -156,8 +609,8 @@
           "campaigns/delay_01/results/repeat_002_m1_n2.json"
         ],
         "receiver_colors": [
-          "red",
-          "blue"
+          "#9F1853",
+          "#33B1FF"
         ],
         "receiver_style": {
           "marker": "",
@@ -270,9 +723,9 @@
         }
       ]
     },
-    "5": {
+    "6": {
       "settings": {
-        "filename": "figure_05_hardware_scaling.png",
+        "filename": "figure_06_hardware_scaling.png",
         "figsize": [
           7.2,
           4.5
@@ -284,9 +737,9 @@
         ],
         "sources": null,
         "sender_colors": {
-          "1": "#0072B2",
-          "2": "#D55E00",
-          "3": "#009E73"
+          "1": "#9F1853",
+          "2": "#33B1FF",
+          "3": "#FA4D56"
         },
         "backend_markers": {
           "ibm_kingston": "s",
@@ -294,9 +747,9 @@
           "ibm_marrakesh": "o"
         },
         "fallback_colors": [
-          "#CC79A7",
-          "#E69F00",
-          "#56B4E9"
+          "#778899",
+          "#FA4D56",
+          "#33B1FF"
         ],
         "fallback_markers": [
           "D",
@@ -627,309 +1080,6 @@
         {
           "path": "results/run_20260908_153150_79eab41b.json",
           "sha256": "a225306aa86f43bab1af8309c069d58c8c523c9fb6de92645ab5c56428a96866",
-          "historical_overrides": {}
-        }
-      ]
-    },
-    "6": {
-      "settings": {
-        "filename": "figure_06_sampling_convergence.png",
-        "figsize": [
-          7.2,
-          4.5
-        ],
-        "archive_dir": "results/convergence",
-        "batches": [
-          "repeats_01",
-          "repeats_02"
-        ],
-        "seeds": [
-          1,
-          2,
-          3,
-          4
-        ],
-        "show_historical": true,
-        "line_style": {
-          "linestyle": "-",
-          "marker": "",
-          "linewidth": 0.6,
-          "alpha": 0.6
-        },
-        "receiver_styles": [
-          {
-            "color": "red",
-            "label": "Receiver 1"
-          },
-          {
-            "color": "blue",
-            "label": "Receiver 2"
-          }
-        ],
-        "total_style": {
-          "color": "grey",
-          "label": "Total",
-          "alpha": 0.8,
-          "linewidth": 1.0
-        },
-        "show_reference": true,
-        "reference_exponent": -0.5,
-        "reference_anchor_index": 0,
-        "reference_multiplier": 1.0,
-        "reference_style": {
-          "color": "black",
-          "linestyle": "--",
-          "marker": "",
-          "linewidth": 1.2,
-          "alpha": 1,
-          "label": "\u221d1/\u221a$n_s$"
-        },
-        "axes": {
-          "xlabel": "Monte Carlo trajectories per noise probability, $n_s$",
-          "ylabel": "Integrated absolute fidelity error",
-          "xlim": null,
-          "ylim": null,
-          "xscale": "log",
-          "yscale": "log"
-        },
-        "grid": {
-          "visible": true,
-          "which": "both",
-          "alpha": 0.2
-        },
-        "legend": {
-          "loc": "best",
-          "fontsize": 8,
-          "frameon": true
-        },
-        "layout": {
-          "pad": 1.1
-        }
-      },
-      "sources": [
-        {
-          "path": "analysis/convergence/historical_summary.json",
-          "sha256": "008197ef845bb18b93f82207d8f089076547696e2dfd1ac13dd62c8ab6985c03",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/exact.json",
-          "sha256": "c2c4c8500924ee9e2de135022cfafa9a2dc0f94a80054d9ed44b38561c257b00",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n100.json",
-          "sha256": "9800534e8fd8127291ab2f13a21c8092a55723a065d6d14a731a86db65dea1b3",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n1000.json",
-          "sha256": "a66d1da2522a8ffb496d680662a2fe85bcb8a8cc10028aea7fde8af6df4da351",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n10000.json",
-          "sha256": "23c63ef476d72fa4e8559261d562bcf4301abac97d52497afede1f9a6d6a8f80",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n100000.json",
-          "sha256": "02a2ca31e04c2ddea76acf4be21e2307aa8204566529b2f1f52ed16bd51c4672",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n200.json",
-          "sha256": "438d5b2fa60bdbe0b9001cc39d81de7060a0900f7d948435eaa246371e965766",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n2000.json",
-          "sha256": "1600dfbf330e555ac40afe865cd43a53e8d62f540fd44f1285cb0576f0333dfc",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n50.json",
-          "sha256": "00daa1a8f85fa90ecf576dfab74e1728e979b138c1c5d9d7b8382aed72bb8655",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n500.json",
-          "sha256": "7abea2f029c4c25c8492f68d512a3888ebdda65830bc69d1fe7eb6651992573d",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n5000.json",
-          "sha256": "9bb8db432c615e01a9e6f6a47ba5afa619fb2a757eace6389307687fc30f84a8",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed1_n50000.json",
-          "sha256": "3da007c1a9e3bc17ec17e41af1d507864ee701ba47a6561682155b61b2fc77c9",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n100.json",
-          "sha256": "8c9be9e15051ad79be30765cec1ab2e3bc3f8943eeb1a25188273a7f33e71d9a",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n1000.json",
-          "sha256": "a20e537d1da22fec70cbc90e69596873e294b720f6ae42e4eca8fea5de2b6c00",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n10000.json",
-          "sha256": "8fac0291d643ac05ecc773fa2248b9db8f8970e295a19e1ec1a4ff9946e20594",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n100000.json",
-          "sha256": "0705be19b7a45a15fa30dd4d9bcc914e891ebc7c8fa19906d96ef52f60e025bf",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n200.json",
-          "sha256": "52ed0dfa573eaf7d7ac40bd4727b38f301267dbb5396a858d9b9ac5447d21b0e",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n2000.json",
-          "sha256": "d716ee4afb92a45918d1d3a3b522eefb9a52ef2eec6b929911a4725779ca92de",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n50.json",
-          "sha256": "02efebba3f3bf583a777f82c1dcf4094e3ef212eb8041541ecd0c313869f7979",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n500.json",
-          "sha256": "687978e95e6c92240d9c2104b50ae01d911b84f4aaf0ba47ad71b455bad1ba46",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n5000.json",
-          "sha256": "722191a4be7ed219c493c2058be3b41f6a4be2904f46c2a79e6d530f0add4b1c",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/run_seed2_n50000.json",
-          "sha256": "929dcc645019d5f1d8f4823ec5d2ccd650789892cb963ee90067ab4d3b63c97a",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_01/study.json",
-          "sha256": "9930d84a25093f209dd205b18ec6148768e97f7d9763b944d2e0e3d4f3d54aef",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/exact.json",
-          "sha256": "433ffd40bc2ef43c16b473a55585d18857e3e3260325e91727ad56360c0d6da8",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n100.json",
-          "sha256": "1e8619378fbfc98a491c13679015c63cf50ddcc8fc0a385eb7f3bb6372f7079d",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n1000.json",
-          "sha256": "39bf6818476338b5fda893398073f2665f94138149e23e55d98855c7c8d0986a",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n10000.json",
-          "sha256": "c7910bf35144503fd3f66b98e9bb06b446271bfcc7f27178ea98323581f2f7f6",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n100000.json",
-          "sha256": "1a2f6de58b7d318fd05d85a3dbf6adca788f043491d9faf51f6303a7d230bc15",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n200.json",
-          "sha256": "72ab42f7f794ddc607991b7d43b5c5d6c994a32d8c342287321ac652812d9b8c",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n2000.json",
-          "sha256": "2d751ef037ccc7c827a9a05d0e82e7a01c3fc60136612aa8c55f3dfbe92faa1b",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n50.json",
-          "sha256": "722ad24de1b6ca914a87a2272bbb9f40cff01209f5acf9fbe21cb10f4b666155",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n500.json",
-          "sha256": "04d3844ba23212bd518cbbff7866bb104a479f2d405278f6d6f2fa9fad248328",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n5000.json",
-          "sha256": "fb21f18786242f53a7a57a82bbd1de2a02e25ab4969de3ff691e48bacb9c73d6",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed3_n50000.json",
-          "sha256": "4b985d7809a6861b9fa79b765925c88c93decbd1d829dce5bc842ba0eba142a3",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n100.json",
-          "sha256": "e8dc4f32cc1a62c76c40a36115856df55d5fe090be18d48505354b319eefe11f",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n1000.json",
-          "sha256": "b69f06dc91f97d55de48310283e0954494adef8ec803e8b7220c717be4f1897f",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n10000.json",
-          "sha256": "e8da473d7e507641ab09a2a060803235e1df143d68de9b00bacef82735899848",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n100000.json",
-          "sha256": "186d359f1ea563582b025aea0a578001879f3764de5a93d30575503b023cc31a",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n200.json",
-          "sha256": "3e83327285c7c4a16dd0add9eb380861bcf06b741b256d9f40fcee6dd4216692",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n2000.json",
-          "sha256": "838b2cdcbde597b5bd46f733fb0cad48730a45a875572744d1c328a2febe53b5",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n50.json",
-          "sha256": "26cee59e82d720d330fb6d24b1171a8013661d7c0189a71c7327a1d08cfc0abf",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n500.json",
-          "sha256": "d2268237d4f3209df1a0f696a7b9fa0f96458c2957981968adcea0d178b57ff8",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n5000.json",
-          "sha256": "f859eb0467fbc237248ce96d138b3d0f170d93043d193213005aaff4c0e0ba07",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/run_seed4_n50000.json",
-          "sha256": "e1bf22122195239747d74723cf466570f4741411e2002c6f3a00e04da522163d",
-          "historical_overrides": {}
-        },
-        {
-          "path": "results/convergence/repeats_02/study.json",
-          "sha256": "d728cec5ddf913eaa9ad7eef42fa29ea53cc04e972a3be976895a2eb5797bb7b",
           "historical_overrides": {}
         }
       ]

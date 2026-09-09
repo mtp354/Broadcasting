@@ -206,22 +206,28 @@ campaign records together. Receipts and analysis JSON are excluded. Separate job
 cases, and angles remain separate; duplicate saves of the same observation are removed.
 
 For the manuscript, open [visualizations.ipynb](visualizations.ipynb) and run the
-self-contained **Manuscript Figures 3–6** cell near the top. It imports its own
+self-contained **Manuscript figures** cell near the top. It imports its own
 dependencies and reads saved inputs, so earlier cells need not be executed. Edit
-`PLOT_RC`, `EXPORT`, and the `FIGURE_3`, `FIGURE_4`, `FIGURE_5`, and `FIGURE_6`
-dictionaries in that cell to adjust shared styling, source selection, and each
-figure's plotting controls, including sizes, colours, markers, lines, axes, labels,
-and legends. Rerun the cell to preview changes.
+`QISKIT_PALETTE`, `PLOT_RC`, `EXPORT`, and the `FIGURE_1`, `FIGURE_2`, `FIGURE_4`,
+`FIGURE_5`, and `FIGURE_6` dictionaries in that cell to adjust shared styling,
+source selection, and each figure's plotting controls, including sizes, colours,
+markers, lines, axes, labels, and legends. The palette uses the circuit diagram's
+burgundy (`#9F1853`), cyan (`#33B1FF`), coral (`#FA4D56`), and slate (`#778899`).
+Rerun the cell to preview changes.
 
 `SAVE_MANUSCRIPT_FIGURES=True` writes the following PNGs into both `manuscript/`
 and `figures/`, matching the manuscript's figure references:
 
 | Figure | PNG | Default saved evidence |
 |---|---|---|
-| 3 | `figure_03_qec_crossover.png` | Pinned QEC crossover simulation sources |
-| 4 | `figure_04_delay_repeats.png` | Two panels: historical Marrakesh sweep overlaid with all three `delay_01` campaign repeats on the left; historical Kingston sweep on the right. All are 121-point, opt3, M=1/N=2 delay sweeps. |
-| 5 | `figure_05_hardware_scaling.png` | All 55 qualifying opt3, zero-delay observations, combining historical jobs and the saved scaling campaign |
-| 6 | `figure_06_sampling_convergence.png` | Recovered historical seed 0 and four complete new seed curves, 1–4 |
+| 1 | `figure_01_sampling_convergence.png` | Five separate Monte Carlo seed curves, 0–4, with receiver errors, total error, and reference |
+| 2 | `figure_02_qec_memory.png` | Four pinned encoded/bare QEC memory curves, retaining each saved fidelity and delay grid |
+| 4 | `figure_04_qec_crossover.png` | Pinned QEC crossover simulation sources |
+| 5 | `figure_05_delay_repeats.png` | Two panels: all four Marrakesh sweeps overlaid on the left, Kingston on the right. All are 121-point, opt3, M=1/N=2 delay sweeps. |
+| 6 | `figure_06_hardware_scaling.png` | All 55 qualifying opt3, zero-delay observations |
+
+Figure 3 is the existing Qiskit circuit diagram, `manuscript/m1n2qec0_circ.png`.
+The cell renders all five data plots; it does not redraw the circuit.
 
 The cell writes `figures/manuscript_sources.json` with input paths, SHA-256 hashes,
 and plotting settings for these exports. Set `SAVE_MANUSCRIPT_FIGURES=False` to
@@ -233,9 +239,9 @@ The campaign notebook also exports exploratory plots to `figures/campaigns/`:
 
 | PNG | Meaning | Manuscript use |
 |---|---|---|
-| `hardware_scaling_opt3.png` | Fidelity y, receiver count N x, sender count M colour; opt3/tau0 only. Points are receiver means; vertical bars span receiver min–max. | Figure 5 supporting analysis |
-| `receiver_fidelity_vs_time_repeats.png` | Separate receiver curves for each repeat/angle, recorded time units, and Wilson shot intervals; latest two historical sweeps plus the selected campaign. | Figure 4 supporting analysis |
-| `mc_sampling_convergence.png` | Restored historical curve plus compatible new seed curves, on log–log axes. | Figure 6 supporting analysis |
+| `hardware_scaling_opt3.png` | Fidelity y, receiver count N x, sender count M colour; opt3/tau0 only. Points are receiver means; vertical bars span receiver min–max. | Figure 6 supporting analysis |
+| `receiver_fidelity_vs_time_repeats.png` | Separate receiver curves for each repeat/angle, recorded time units, and Wilson shot intervals; latest two historical sweeps plus the selected campaign. | Figure 5 supporting analysis |
+| `mc_sampling_convergence.png` | Restored historical curve plus compatible new seed curves, on log–log axes. | Figure 1 supporting analysis |
 
 Receiver-range bars describe receiver variation, not confidence intervals. Historical
 backend/date/shot differences remain visible or archived in plotted-point metadata.
@@ -266,10 +272,10 @@ python scripts/generate_figures.py
 ```
 
 The historical generator's hardware/memory sources remain explicitly pinned by its
-25-record SHA-256 manifest. Use the **Manuscript Figures 3–6** cell for the selected
-combined historical/campaign figures and their separate manifest. The hardware
-campaigns do not regenerate Figure 1's separate QEC memory benchmark, Figure 2's
-circuit diagram, or Figure 3's QEC crossover simulation evidence.
+25-record SHA-256 manifest. Use the **Manuscript figures** cell for all five selected
+data plots and their separate manifest. Figure 2's QEC memory benchmark and Figure
+4's crossover simulation retain their separately pinned sources. Figure 3's circuit
+diagram remains a separate asset.
 
 The manuscript embeds PNGs. All 15 existing generated PDF figures were removed;
 external reference papers and the complete compiled manuscript PDF are retained.
@@ -371,7 +377,7 @@ Incomplete or mixed groups fail before any output is written.
 | `tests/` | Offline numerical, circuit, notebook, provenance and execution regressions |
 | `hpc/` | Optional simulation CLI and cluster/archive tools |
 | `run_broadcast.ipynb` | Main hardware campaign and convergence workflow |
-| `visualizations.ipynb` | Configurable manuscript Figures 3–6 and additional saved-result exploration |
+| `visualizations.ipynb` | Configurable manuscript Figures 1, 2, 4, 5, and 6 and additional saved-result exploration |
 | `qec_testing.ipynb` | Separate encoded/bare memory benchmark; hardware defaults off |
 | `results/`, `campaigns/*/results/` | Historical raw evidence and new immutable records |
 | `analysis/`, `figures/` | Derived outputs and explicit source provenance |
@@ -411,7 +417,7 @@ Remaining work:
 1. Assess size/layout effects, receiver asymmetry, phase dependence, and run variation.
    Preserve negative or inconclusive results. Additional controls or delay ablations
    should follow the evidence.
-2. Review the selected Figures 3–6, convergence overlays, captions, and statistical
+2. Review Figures 1–6, convergence overlays, captions, and statistical
    claims for release. Tune their exposed notebook settings and regenerate the PNGs
    as needed. Conditional shot intervals do not replace repetition-based uncertainty.
 3. Finalize author/affiliation details, archive deposit/DOI, and release checks.
