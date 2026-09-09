@@ -1,0 +1,195 @@
+{
+  "timestamp": "2026-09-08T22:32:42.923496",
+  "experiment_type": "simulation",
+  "backend": "aer_sampling",
+  "optimization_level": null,
+  "job_id": null,
+  "shots": null,
+  "seed": 1,
+  "n_samples": 100000,
+  "protocol": {
+    "M": 1,
+    "N": 2,
+    "alpha": 0.7071067811865475,
+    "use_qec": true,
+    "theta_samples": [
+      [
+        0.0
+      ]
+    ],
+    "linear_feedforward": true,
+    "outcomes_list": [
+      0
+    ]
+  },
+  "sweep": {
+    "axis": "p",
+    "values": [
+      0.0,
+      0.05,
+      0.1,
+      0.15000000000000002,
+      0.2,
+      0.25,
+      0.30000000000000004,
+      0.35000000000000003,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6000000000000001,
+      0.65,
+      0.7000000000000001,
+      0.75,
+      0.8,
+      0.8500000000000001,
+      0.9,
+      0.9500000000000001,
+      1.0
+    ]
+  },
+  "fidelities": [
+    [
+      1.0000000000000004,
+      1.0000000000000004
+    ],
+    [
+      0.9847500000000015,
+      0.9850100000000018
+    ],
+    [
+      0.946830000000001,
+      0.9475100000000015
+    ],
+    [
+      0.8915000000000004,
+      0.8937800000000004
+    ],
+    [
+      0.8332900000000018,
+      0.8352100000000011
+    ],
+    [
+      0.771490000000001,
+      0.7741900000000006
+    ],
+    [
+      0.7109400000000006,
+      0.7124000000000005
+    ],
+    [
+      0.6565200000000009,
+      0.6592400000000014
+    ],
+    [
+      0.61263,
+      0.6100900000000005
+    ],
+    [
+      0.5733600000000005,
+      0.5721800000000002
+    ],
+    [
+      0.5427500000000011,
+      0.5446200000000007
+    ],
+    [
+      0.5220300000000009,
+      0.5238100000000004
+    ],
+    [
+      0.5092600000000007,
+      0.5116000000000004
+    ],
+    [
+      0.4998400000000005,
+      0.5024600000000007
+    ],
+    [
+      0.49753000000000075,
+      0.5001000000000004
+    ],
+    [
+      0.4973000000000004,
+      0.4992400000000003
+    ],
+    [
+      0.4978100000000009,
+      0.5017200000000006
+    ],
+    [
+      0.4954700000000007,
+      0.5012000000000002
+    ],
+    [
+      0.49105000000000076,
+      0.4924700000000006
+    ],
+    [
+      0.4781800000000005,
+      0.47853000000000084
+    ],
+    [
+      0.4578700000000004,
+      0.4575800000000009
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": null,
+  "metadata": {
+    "linear_feedforward": true,
+    "outcomes_list": [
+      0
+    ],
+    "software": {
+      "python": "3.12.3",
+      "dependencies": {
+        "numpy": "2.3.3",
+        "scipy": "1.16.2",
+        "qiskit": "2.2.1",
+        "qiskit-aer": "0.17.2",
+        "qiskit-ibm-runtime": "0.42.0"
+      },
+      "code_revision": "ebd4c3efb7ed7e50071c17a545b83f34ede4bb53",
+      "source_sha256": {
+        "broadcasting/__init__.py": "4eebebb03de6384850b652a830bb1c55992edc53bf4b78e3e2675e2ec9e560cb",
+        "broadcasting/analysis.py": "7e56128c0cd2b141c7b9c821a95947179dc20e87bcf7140081df8d4d8c2e4eaf",
+        "broadcasting/backend.py": "7afb9eb408a340fb6b1320c8173ffccd3967eeda7d87b794f6940e4e22b36484",
+        "broadcasting/circuit.py": "afef8393549a0213bbeede29a0aeda00e5e13f7a738e5b16a2f8f99be1b4dbf6",
+        "broadcasting/convergence.py": "3bfa19dc858ab08d8fe9fe28b01af80975655b1af88a81718e511d4d59d7e7e5",
+        "broadcasting/fidelity.py": "d7051feac4eb4dfab9f66e28bc5e7fc682b0e3b6e005f38e276bf8b64b620e27",
+        "broadcasting/hardware_campaign.py": "a525b7b1105c54650f1a6252b3745ab56836151495c3dc5a4b247cc1cb925134",
+        "broadcasting/helpers.py": "3b4359b53ee596071fd32130fe22e44a1a9cf2a0422289d5cdfe8ed007fa23f3",
+        "broadcasting/plotting.py": "0ace80fe6d899f111835d8c70c1d682829758a4dc529faa6367678c6414c3135",
+        "broadcasting/protocol.py": "18425aa3a9c82adfa579aebcf5a68295f87287cc13d0ca5f4b4f8891fbcf24b8",
+        "broadcasting/provenance.py": "f92415be89d8905d158068e1cb926d898161762841ee59a2a385948a874064f5",
+        "broadcasting/qec_513.py": "02c283d0484a9503673748a19305be449e6f700cd32be1b3445c16b36ee1f47f",
+        "broadcasting/results.py": "5c461625084a2ea2f5f5ca8bf34c6d71445d206bc2c91a1174d75fb05ff5e4ab",
+        "broadcasting/simulation.py": "6c7f5c741ac6fcca74d0f998e6c623e076de3b4f89094c579c50467f3cf43f6a",
+        "broadcasting/state_preparation.py": "c38b8716be7f040265742eafbadd61380c78ba556d05850a597a4967f8f5278f",
+        "broadcasting/validation.py": "ef5ee7720cd1a7c3b229925cd395f9e6a4a15ab7c39f7846a1237a3c896509ae",
+        "hpc/backup_results.sh": "7dbda9c29b140a923f1722b200743f0eac71dfc4e036b55b7a1f37052467bbc0",
+        "hpc/fetch_results.sh": "5e1bc4c05aab19f3ffaf0c92704aa2d1ed168830a04bd6461194acdf6fca8afc",
+        "hpc/run_experiment.py": "752f4f489d84c82e961737d0269b248528fc7f08c937ca78b022c45f5390cb63",
+        "hpc/setup_scratch.sh": "f7105d9cd801e89da16029081647f14f9cedbdf2faecc44ed77ba0ea25749b65",
+        "hpc/slurm_broadcast.sh": "4a4539a9a4f56cb86ee05fb4770669e5233cefa77282870ebb259e5c81dafc7a",
+        "scripts/analyze_saved_hardware.py": "b26fd73ce0e95083d5688f05c1d65da933d7e8cdf7b0891fd99a243258f75c53",
+        "scripts/figure_sources.py": "14f3f87c019213df789d822a0d48a291d68e5493a04e7016f1ff81a24f1c53ea",
+        "scripts/generate_figures.py": "20d70147ff29685b93d7a1c4657bca2e4d963977baf8370a4eee66c2f1286a06",
+        "scripts/hardware_campaign.py": "e57ccb4fffab05c236520b7c154333e45f5442191ed9bc9823c1fd7b6d4963d3",
+        "scripts/merge_hpc_runs.py": "721df52278cb73915d313cb58cf78c310fbf842f1da9b2ab93bad57b93a7435e",
+        "scripts/setup.sh": "3d16c3e9299e8655b5aab42cd45830b1ad0bd6cf59fe1906924584277051bd36"
+      },
+      "source_snapshot": null
+    },
+    "convergence": {
+      "metric": "sum_over_receivers_trapezoid_over_p_absolute_fidelity_error",
+      "exact_sha256": "c2c4c8500924ee9e2de135022cfafa9a2dc0f94a80054d9ed44b38561c257b00",
+      "errors_per_receiver": [
+        0.00123024999999997,
+        0.0012045123456790516
+      ],
+      "batch": "repeats_01"
+    }
+  }
+}
