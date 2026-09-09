@@ -1,8 +1,8 @@
-"""Restore the original convergence curve and checkpoint compatible repetitions.
+"""Numerical convergence studies using the shared experiment-record format.
 
-Historical points are rounded summaries recovered from the original notebook,
-not independent repetitions or reconstructed raw trajectories. New runs retain
-full fidelity grids and their exact reference before a plot is made.
+Each study indexes immutable exact and sampled measurements. Seed 0 has only
+rounded error summaries; it remains explicitly separate from raw fidelity grids.
+All plotting belongs to visualizations.ipynb.
 """
 from __future__ import annotations
 
@@ -12,16 +12,14 @@ import json
 from pathlib import Path
 import uuid
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from .backend import ExactBackend, SamplingBackend
-from .plotting import save_figure
 from .protocol import ProtocolConfig
-from .results import load_run, save_run, write_run_json
+from .results import RESULTS_DIR, load_run, save_run, write_run_json
 
 ROOT = Path(__file__).resolve().parent.parent
-HISTORICAL_PATH = ROOT / "analysis/convergence/historical_summary.json"
+SEED_ZERO_PATH = ROOT / "results/convergence/seed_zero.json"
 METRIC = "sum_over_receivers_trapezoid_over_p_absolute_fidelity_error"
 NOISE_MODEL = "independent_physical_depolarizing"
 
@@ -30,9 +28,24 @@ NOISE_MODEL = "independent_physical_depolarizing"
 class ConvergenceStudy:
     config: ProtocolConfig
     sample_counts: list[int]
-    historical: dict
+    seed_zero: dict
     repetitions: list[dict]
     archive_dir: Path
+
+
+def _resolve_record(path):
+    path = Path(path)
+    return path if path.is_absolute() else ROOT / path
+
+
+def _stored_path(path):
+    path = Path(path).resolve()
+    return str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+
+
+def _measurement_path(batch_dir, seed, count):
+    manifest = _read(Path(batch_dir) / "study.json")
+    return _resolve_record(manifest["measurement_paths"][f"seed{seed}_n{count}"])
 
 
 def _read(path):
@@ -63,7 +76,8 @@ def _config_from_run(run):
 def fidelity_error(sampled, exact, probabilities):
     """Integrated absolute fidelity error per receiver on an identical p grid."""
     sampled, exact, p = np.asarray(sampled), np.asarray(exact), np.asarray(probabilities)
-    if (sampled.shape != exact.shape or sampled.ndim != 2 or len(p) != len(exact)
+    if (p.ndim != 1 or not np.all(np.isfinite(p))
+            or sampled.shape != exact.shape or sampled.ndim != 2 or len(p) != len(exact)
             or len(p) < 2 or not np.all(np.diff(p) > 0)):
         raise ValueError("Fidelity arrays must share one increasing p grid and receiver shape.")
     if not np.all(np.isfinite(sampled)) or not np.all(np.isfinite(exact)):
@@ -72,7 +86,7 @@ def fidelity_error(sampled, exact, probabilities):
 
 
 def _reference(batch_dir, config):
-    path = batch_dir / "exact.json"
+    path = _resolve_record(_read(Path(batch_dir) / "study.json")["exact_path"])
     run = load_run(path)
     if run["backend"] != "aer_exact" or _scenario(_config_from_run(run)) != _scenario(config):
         raise ValueError(f"Exact reference has different physical settings: {path}")
@@ -93,14 +107,10 @@ def _measurement(path, config, reference, reference_hash):
     return run, errors
 
 
-def load_historical_convergence(*, archive_dir=None, historical_path=HISTORICAL_PATH):
-    """Read the original curve and compatible checkpointed runs, without computing data.
-
-    Other simulation scenarios are excluded, never interpolated or pooled. A
-    corrupt checkpoint belonging to this scenario raises rather than disappearing.
-    """
-    history = _read(historical_path)
-    config = ProtocolConfig(**history["config"])
+def load_convergence(*, archive_dir=None, seed_zero_path=SEED_ZERO_PATH):
+    """Load compatible saved studies, preserving every seed and native sample grid."""
+    seed_zero = _read(seed_zero_path)
+    config = ProtocolConfig(**seed_zero["config"])
     archive_dir = Path(archive_dir) if archive_dir else ROOT / "results/convergence"
     repetitions = []
     for manifest_path in sorted(archive_dir.glob("*/study.json")):
@@ -109,23 +119,25 @@ def load_historical_convergence(*, archive_dir=None, historical_path=HISTORICAL_
                 or _scenario(ProtocolConfig(**manifest["config"])) != _scenario(config)):
             continue
         batch_dir = manifest_path.parent
-        if not (batch_dir / "exact.json").exists():
+        if not _resolve_record(manifest["exact_path"]).exists():
             continue
         reference, reference_hash = _reference(batch_dir, config)
         for seed in manifest["seeds"]:
             points = []
             for count in manifest["sample_counts"]:
-                path = batch_dir / f"run_seed{seed}_n{count}.json"
+                path = _measurement_path(batch_dir, seed, count)
                 if not path.exists():
                     continue
                 run, errors = _measurement(path, config, reference, reference_hash)
                 if run["seed"] != seed or run["n_samples"] != count:
-                    raise ValueError(f"Seed/count disagree with checkpoint name: {path}")
+                    raise ValueError(f"Seed/count disagree with study index: {path}")
                 points.append({"n_samples": count, "errors_per_receiver": errors.tolist(), "path": str(path)})
             if points:
                 repetitions.append({"seed": seed, "batch": batch_dir.name, "points": points,
-                                    "complete": len(points) == len(manifest["sample_counts"])})
-    return ConvergenceStudy(config, history["sample_counts"], history, repetitions, archive_dir)
+                                    "complete": len(points) == len(manifest["sample_counts"]),
+                                    "exact_path": str(_resolve_record(manifest["exact_path"])),
+                                    "study_path": str(manifest_path)})
+    return ConvergenceStudy(config, seed_zero["sample_counts"], seed_zero, repetitions, archive_dir)
 
 
 def _positive_integers(values, name, *, allow_zero=False):
@@ -138,20 +150,19 @@ def _positive_integers(values, name, *, allow_zero=False):
     return [int(x) for x in values]
 
 
-def collect_convergence_repeats(study, *, repeats=2, seeds=None, batch_dir=None, sample_counts=None):
-    """Run explicit local repetitions, resuming a fixed batch directory safely.
+def collect_convergence_repeats(study, *, repeats=2, seeds=None, batch_dir=None,
+                                sample_counts=None, results_dir=RESULTS_DIR):
+    """Collect explicitly requested local runs, resuming without rewriting results.
 
-    Each completed trajectory-count sweep is archived immediately. Re-executing
-    with the same directory/config skips those points and reuses its saved exact
-    reference. A change of parameters requires a new directory. Samples within
-    each seed curve are correlated; separate seeds are plotted separately.
+    The study contains only an index and numerical settings. Exact and sampled
+    grids use the same shared record store as every other experiment.
     """
     if isinstance(repeats, bool) or not isinstance(repeats, int) or repeats < 1:
         raise ValueError("repeats must be a positive integer.")
     counts = _positive_integers(study.sample_counts if sample_counts is None else sample_counts, "sample_counts")
     if counts != sorted(counts):
         raise ValueError("sample_counts must be increasing.")
-    batch_dir = Path(batch_dir) if batch_dir else study.archive_dir / f"repeat_{uuid.uuid4().hex[:12]}"
+    batch_dir = Path(batch_dir) if batch_dir else study.archive_dir / f"study_{uuid.uuid4().hex[:12]}"
     manifest_path = batch_dir / "study.json"
     previous = _read(manifest_path) if manifest_path.exists() else None
     used = {study.config.seed} | {item["seed"] for item in study.repetitions if item["batch"] != batch_dir.name}
@@ -164,32 +175,40 @@ def collect_convergence_repeats(study, *, repeats=2, seeds=None, batch_dir=None,
     seeds = _positive_integers(seeds, "seeds", allow_zero=True)
     if len(seeds) != repeats or used.intersection(seeds):
         raise ValueError("Choose one new distinct seed per repeat, excluding previously used seeds.")
-    manifest = {"schema_version": 1, "config": asdict(study.config), "sample_counts": counts,
-                "seeds": seeds, "metric": METRIC, "noise_model": NOISE_MODEL,
-                "historical_source": study.historical["source"]}
-    if previous is not None and previous != manifest:
-        raise ValueError("Batch settings changed; use a new batch_dir or restore the original settings.")
-    batch_dir.mkdir(parents=True, exist_ok=True)
-    if previous is None:
+    settings = {"config": asdict(study.config), "sample_counts": counts,
+                "seeds": seeds, "metric": METRIC, "noise_model": NOISE_MODEL}
+    if previous is not None:
+        if any(previous.get(key) != value for key, value in settings.items()):
+            raise ValueError("Study settings changed; use a new batch_dir or restore the original settings.")
+        manifest = previous
+    else:
+        study_id = uuid.uuid4().hex
+        directory = Path(results_dir).resolve()
+        manifest = {"schema_version": 2, "study_id": study_id, **settings,
+                    "exact_path": _stored_path(directory / f"run_{study_id}_exact.json"),
+                    "measurement_paths": {
+                        f"seed{seed}_n{count}": _stored_path(directory / f"run_{study_id}_seed{seed}_n{count}.json")
+                        for seed in seeds for count in counts}}
+        batch_dir.mkdir(parents=True, exist_ok=True)
         write_run_json(manifest, manifest_path)
-    exact_path = batch_dir / "exact.json"
+    exact_path = _resolve_record(manifest["exact_path"])
     if not exact_path.exists():
-        print("Computing the exact reference for this batch…", flush=True)
+        print("Computing the exact reference…", flush=True)
         exact_config = replace(study.config, n_samples=None)
         exact = ExactBackend().run(exact_config)
         save_run(exact, exact_config, filepath=exact_path)
     reference, reference_hash = _reference(batch_dir, study.config)
     for seed in seeds:
         for count in counts:
-            path = batch_dir / f"run_seed{seed}_n{count}.json"
+            path = _resolve_record(manifest["measurement_paths"][f"seed{seed}_n{count}"])
             if path.exists():
                 run, _ = _measurement(path, study.config, reference, reference_hash)
                 if run["seed"] != seed or run["n_samples"] != count:
-                    raise ValueError(f"Seed/count disagree with checkpoint name: {path}")
+                    raise ValueError(f"Seed/count disagree with study index: {path}")
                 print(f"Reusing seed={seed}, trajectories={count:,}", flush=True)
                 continue
             config = replace(study.config, seed=seed, n_samples=count)
-            print(f"Running seed={seed}, trajectories={count:,} across {len(config.p_list)} p values…", flush=True)
+            print(f"Running seed={seed}, trajectories={count:,} across {len(config.p_list)} probabilities…", flush=True)
             sampled = SamplingBackend().run(config)
             if sampled.metadata.get("seed") != seed or sampled.metadata.get("n_samples") != count:
                 raise ValueError("Sampling backend did not use the requested seed and trajectory count.")
@@ -199,33 +218,3 @@ def collect_convergence_repeats(study, *, repeats=2, seeds=None, batch_dir=None,
             save_run(sampled, config, filepath=path)
             print(f"Saved {path.name}: total error={errors.sum():.6g}", flush=True)
     return batch_dir
-
-
-def plot_convergence(study, *, output_path=None):
-    """Log-log total error, original curve and each new seed kept separate."""
-    if output_path is not None and Path(output_path).suffix.lower() != ".png":
-        raise ValueError("Convergence figures are PNG only.")
-    fig, ax = plt.subplots(figsize=(7, 4.6))
-    counts = np.asarray(study.sample_counts)
-    historical = np.asarray(study.historical["errors_per_receiver"]).sum(axis=1)
-    ax.loglog(counts, historical, "o-", color="black", markersize=4,
-              label=f"Historical seed {study.config.seed} (notebook summaries)")
-    for repetition in study.repetitions:
-        points = repetition["points"]
-        x = [point["n_samples"] for point in points]
-        y = [sum(point["errors_per_receiver"]) for point in points]
-        positive = np.asarray(y) > 0
-        suffix = " (partial)" if not repetition["complete"] else ""
-        ax.loglog(np.asarray(x)[positive], np.asarray(y)[positive], "o-", markersize=4,
-                  label=f"Seed {repetition['seed']}, {repetition['batch']}{suffix}")
-        if not np.all(positive):
-            ax.text(0.02, 0.02, "Zero-error points omitted on logarithmic y axis.", transform=ax.transAxes, fontsize=8)
-    reference = historical[0] * np.sqrt(counts[0] / counts)
-    ax.loglog(counts, reference, ":", color="0.5", label=r"$n^{-1/2}$ reference (anchored to first historical point)")
-    ax.set(xlabel="Monte Carlo trajectories per noise probability", ylabel="Integrated absolute fidelity error (sum over receivers)")
-    ax.grid(which="both", alpha=0.2)
-    ax.legend(fontsize=8)
-    fig.tight_layout()
-    if output_path is not None:
-        save_figure(fig, output_path)
-    return fig

@@ -72,7 +72,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     p.add_argument("--linear-feedforward", type=int, choices=[0, 1], default=1)
     outcomes.add_argument("--random-outcomes", action="store_true", help="Sample sender outcomes (default when --outcomes is absent).")
-    p.add_argument("--experiment-id", default=None, help="Submission/campaign identity shared by array tasks.")
+    p.add_argument("--experiment-id", default=None, help="Experiment identity shared by array tasks.")
 
     # Noise sweep
     p.add_argument("--p-values", type=float, nargs="+", help="Explicit probability grid; takes precedence over min/max/steps.")
@@ -93,7 +93,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--output-dir",
         type=str,
-        default="results",
+        default="results/records",
         help="Directory to write result JSON.",
     )
     return p.parse_args(argv)
@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> None:
 
     result = backend.run(config)
 
-    result.metadata.update({
+    result.metadata.setdefault("execution", {}).update({
         "experiment_id": args.experiment_id or os.environ.get("SLURM_ARRAY_JOB_ID") or os.environ.get("SLURM_JOB_ID"),
         "requested_sweep_values": p_full.tolist(),
         "sweep_task_index": int(task_id) if task_id is not None else None,

@@ -8,7 +8,9 @@ import numpy as np
 import pytest
 
 from broadcasting.protocol import BroadcastResult, ProtocolConfig
-from broadcasting.results import load_run, save_run
+from broadcasting.results import (SCHEMA_VERSION, list_runs, load_run, run_paths,
+                                  save_memory_run, save_run, validate_run_record,
+                                  write_run_json)
 
 
 def _make_config(**overrides):
@@ -91,7 +93,7 @@ class TestHardwareDtRecording:
         config = _make_config()
         result = _make_result(
             "hardware (ibm_test)", backend="ibm_test", shots=100,
-            job_id="abc123", tau=0, dt=5e-4,
+            job_id="abc123", sweep_values=[0, 50], dt=5e-4,
         )
         path = save_run(result, config, results_dir=tmp_path)
         loaded = load_run(path)
@@ -150,3 +152,95 @@ class TestExecutedSettings:
         with pytest.raises(ValueError):
             write_run_json({"bad": float("nan")}, tmp_path / "invalid.json")
         assert list(tmp_path.iterdir()) == []
+
+
+def test_broadcast_record_contains_common_schema_and_execution_identity(tmp_path):
+    result = _make_result("exact", execution={"experiment_id": "delay", "case_id": "m1_n2"})
+    path = save_run(result, _make_config(), results_dir=tmp_path)
+    run = load_run(path)
+    assert run["schema_version"] == SCHEMA_VERSION
+    assert run["experiment_kind"] == "broadcasting"
+    assert run["record_id"]
+    assert run["sweep"]["unit"] == "probability"
+    assert run["metadata"]["execution"]["case_id"] == "m1_n2"
+    assert (run["M"], run["N"], run["nt"]) == (1, 2, 1)
+
+
+def _memory_payload(**updates):
+    payload = {"experiment_type": "hardware", "backend": "ibm_test", "job_id": "memory-job",
+               "shots": 100, "optimization_level": 3, "use_qec": True,
+               "state_prep": {"theta": 0.7, "phi": 0.2}, "tau_values": [0, 50],
+               "backend_fidelities": [0.9, 0.75], "ideal_fidelities": [1.0, 1.0],
+               "backend_counts": [{"0": 90, "1": 10}, {"0": 75, "1": 25}],
+               "metadata": {"dt": 4e-9, "execution": {"experiment_id": "memory"}}}
+    payload.update(updates)
+    return payload
+
+
+def test_memory_sweep_uses_same_loader_counts_and_reference_grid(tmp_path):
+    source = _memory_payload()
+    path = save_memory_run(source, results_dir=tmp_path)
+    run = load_run(path)
+    assert run["experiment_kind"] == "memory"
+    assert (run["M"], run["N"]) == (0, 1)
+    assert run["fidelities"] == [[0.9], [0.75]]
+    assert run["counts"] == [source["backend_counts"]]
+    assert run["reference_fidelities"] == {"ideal": [[1.0], [1.0]]}
+    assert run["ideal_fidelities"] == [1.0, 1.0]
+    assert run["state_prep"] == source["state_prep"]
+    assert run["theta_samples"] == [[0.7, 0.2]]
+    assert run["entries"][1] == {"theta_idx": 0, "thetas": [0.7, 0.2], "tau": 50,
+                                  "fidelities": [0.75], "counts": {"0": 75, "1": 25}}
+
+
+def test_memory_simulation_without_external_reference(tmp_path):
+    source = _memory_payload(experiment_type="simulation", backend="aer_simulator",
+                             job_id=None, use_qec=False, ideal_fidelities=None)
+    run = load_run(save_memory_run(source, results_dir=tmp_path))
+    assert run["experiment_type"] == "simulation"
+    assert run["use_qec"] is False
+    assert run["ideal_fidelities"] is None
+
+
+def test_memory_encoding_must_be_explicit_and_writes_are_exclusive(tmp_path):
+    with pytest.raises(ValueError, match="use_qec"):
+        save_memory_run(_memory_payload(use_qec=None), results_dir=tmp_path)
+    assert not list(tmp_path.iterdir())
+    target = save_memory_run(_memory_payload(), filepath=tmp_path / "memory.json")
+    original = target.read_bytes()
+    with pytest.raises(FileExistsError):
+        save_memory_run(_memory_payload(), filepath=target)
+    assert target.read_bytes() == original
+
+
+def test_record_discovery_uses_schema_and_filters_physical_experiment_kind(tmp_path):
+    broadcast = save_run(_make_result("exact"), _make_config(), filepath=tmp_path / "custom.json")
+    memory = save_memory_run(_memory_payload(), filepath=tmp_path / "nested" / "measured.json")
+    write_run_json({"schema_version": SCHEMA_VERSION, "config": {}}, tmp_path / "plan.json")
+    assert set(run_paths(tmp_path)) == {broadcast, memory}
+    assert len(list_runs(tmp_path)) == 2
+    assert [r["filepath"] for r in list_runs(tmp_path, experiment_kind="memory")] == [str(memory)]
+    assert len(list_runs(tmp_path, experiment_type="simulation")) == 1
+    assert len(list_runs(tmp_path, backend="ibm_test")) == 1
+
+
+def test_loader_rejects_unmigrated_input_without_rewriting_it(tmp_path):
+    path = tmp_path / "input.json"
+    path.write_text('{"experiment_type": "simulation", "sweep": {}}')
+    original = path.read_bytes()
+    with pytest.raises(ValueError, match="schema_version"):
+        load_run(path)
+    assert path.read_bytes() == original
+
+
+@pytest.mark.parametrize("field,value,match", [
+    ("fidelities", [[0.9, 0.7]], "shape"),
+    ("fidelities", [[float("nan")], [0.75]], "finite"),
+    ("counts", [[{"0": 89, "1": 10}, {"0": 75, "1": 25}]], "shot total"),
+])
+def test_malformed_measurements_are_rejected(tmp_path, field, value, match):
+    import json
+    record = json.loads(save_memory_run(_memory_payload(), results_dir=tmp_path).read_text())
+    record[field] = value
+    with pytest.raises(ValueError, match=match):
+        validate_run_record(record)

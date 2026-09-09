@@ -1,9 +1,9 @@
 __pycache__/
 .pytest_cache/
 .venv/
-# Local campaign bundles contain compiled circuits, receipts, and raw readouts.
-# Archive the complete directory before release; do not commit credentials.
-campaigns/
+# Local execution bundles and the verified archive of superseded files.
+experiments/
+.local-archive/
 configs/*.local.json
 slurm_logs/
 
@@ -17,8 +17,5 @@ slurm_logs/
 *Notes.bib
 *.out
 manuscript/*.pdf
-# Figures use PNG; keep generated PDF figures out of the checkout.
-figures/**/*.pdf
-analysis/**/*.pdf
 *.synctex.gz
 *.toc

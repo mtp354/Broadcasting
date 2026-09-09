@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "campaign_id": "broadcasting-delay-repeats",
+  "experiment_id": "broadcasting-delay-repeats",
   "runtime_account": "EDIT_ME",
   "backend": "EDIT_ME",
   "shots": 10000,

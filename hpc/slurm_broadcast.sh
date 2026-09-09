@@ -28,10 +28,11 @@ set -euo pipefail
 SCRATCH_DIR="${BROADCAST_SCRATCH_DIR:-/scratch/prest-hc-13/Broadcasting}"
 GLOBAL_DIR="${BROADCAST_GLOBAL_DIR:-/global/u/prest-hc-13/Broadcasting}"
 SUBMISSION_ID="${SLURM_ARRAY_JOB_ID:-${SLURM_JOB_ID:-manual_$(date +%s)_$$}}"
-SUBMISSION_DIR="${SCRATCH_DIR}/submissions/${SUBMISSION_ID}"
+SUBMISSION_DIR="${SCRATCH_DIR}/experiments/submissions/${SUBMISSION_ID}"
 CODE_DIR="${SUBMISSION_DIR}/source"
-RESULT_DIR="${SUBMISSION_DIR}/results"
-ARCHIVE_DIR="${GLOBAL_DIR}/results/submissions/${SUBMISSION_ID}"
+RESULT_DIR="${SCRATCH_DIR}/results/records"
+ARCHIVE_DIR="${GLOBAL_DIR}/experiments/submissions/${SUBMISSION_ID}"
+ARCHIVE_RESULTS="${GLOBAL_DIR}/results/records"
 mkdir -p "${SUBMISSION_DIR}" "${RESULT_DIR}" "${SCRATCH_DIR}/slurm_logs"
 
 # Each submission gets its own source tree. A later submission cannot replace
@@ -44,7 +45,7 @@ mkdir -p "${SUBMISSION_DIR}" "${RESULT_DIR}" "${SCRATCH_DIR}/slurm_logs"
         trap 'rm -rf "${STAGING_DIR}"' EXIT
         rsync -a --exclude='.git' --exclude='.venv' --exclude='__pycache__' \
               --exclude='*.pyc' --exclude='results' --exclude='slurm_logs' \
-              --exclude='submissions' --exclude='campaigns' "${GLOBAL_DIR}/" "${STAGING_DIR}/"
+              --exclude='experiments' --exclude='.local-archive' "${GLOBAL_DIR}/" "${STAGING_DIR}/"
         REVISION="$(git -C "${GLOBAL_DIR}" rev-parse HEAD 2>/dev/null || true)"
         printf '{"submission_id":"%s","code_revision":"%s"}\n' \
                "${SUBMISSION_ID}" "${REVISION}" > "${STAGING_DIR}/source_snapshot.json"
@@ -97,6 +98,7 @@ fi
 if [ -n "${SEED:-}" ]; then ARGS+=(--seed "${SEED}"); fi
 python -m hpc.run_experiment "${ARGS[@]}"
 
-# Preserve submission identity in persistent storage as well as in each JSON.
-rsync -a --ignore-existing --include='run_*.json' --exclude='*' "${RESULT_DIR}/" "${ARCHIVE_DIR}/"
+# Archive canonical measurements separately from submission source snapshots.
+mkdir -p "${ARCHIVE_RESULTS}"
+rsync -a --ignore-existing --include='run_*.json' --exclude='*' "${RESULT_DIR}/" "${ARCHIVE_RESULTS}/"
 echo "Done: ${SUBMISSION_ID}"

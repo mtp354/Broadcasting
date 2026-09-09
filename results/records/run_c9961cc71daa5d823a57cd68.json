@@ -1,0 +1,311 @@
+{
+  "experiment_kind": "memory",
+  "timestamp": "2026-05-13T16:32:57.163704",
+  "experiment_type": "hardware",
+  "backend": "ibm_kingston",
+  "optimization_level": 0,
+  "job_id": "d82dopugbeec73allus0",
+  "shots": 8192,
+  "seed": 42,
+  "n_samples": null,
+  "protocol": {
+    "M": 0,
+    "N": 1,
+    "alpha": null,
+    "use_qec": true,
+    "theta_samples": [
+      [
+        2.4314546363447995,
+        2.757554564287996
+      ]
+    ],
+    "state_prep": {
+      "theta": 2.4314546363447995,
+      "phi": 2.757554564287996,
+      "description": "Ry(theta) Rz(phi) |0>"
+    },
+    "linear_feedforward": null,
+    "outcomes_list": null
+  },
+  "sweep": {
+    "axis": "tau",
+    "unit": "dt",
+    "values": [
+      0,
+      300,
+      600,
+      900,
+      1200,
+      1500,
+      1800,
+      2100,
+      2400,
+      2700,
+      3000,
+      3300,
+      3600,
+      3900,
+      4200,
+      4500,
+      4800,
+      5100,
+      5400,
+      5700,
+      6000
+    ]
+  },
+  "fidelities": [
+    [
+      0.4906005859375
+    ],
+    [
+      0.4803466796875
+    ],
+    [
+      0.4893798828125
+    ],
+    [
+      0.48486328125
+    ],
+    [
+      0.48779296875
+    ],
+    [
+      0.4827880859375
+    ],
+    [
+      0.48193359375
+    ],
+    [
+      0.4859619140625
+    ],
+    [
+      0.4814453125
+    ],
+    [
+      0.4842529296875
+    ],
+    [
+      0.4837646484375
+    ],
+    [
+      0.485107421875
+    ],
+    [
+      0.486083984375
+    ],
+    [
+      0.482666015625
+    ],
+    [
+      0.47705078125
+    ],
+    [
+      0.496337890625
+    ],
+    [
+      0.480712890625
+    ],
+    [
+      0.494873046875
+    ],
+    [
+      0.4766845703125
+    ],
+    [
+      0.480712890625
+    ],
+    [
+      0.484619140625
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": [
+    [
+      {
+        "1": 4173,
+        "0": 4019
+      },
+      {
+        "0": 3935,
+        "1": 4257
+      },
+      {
+        "0": 4009,
+        "1": 4183
+      },
+      {
+        "1": 4220,
+        "0": 3972
+      },
+      {
+        "0": 3996,
+        "1": 4196
+      },
+      {
+        "0": 3955,
+        "1": 4237
+      },
+      {
+        "0": 3948,
+        "1": 4244
+      },
+      {
+        "1": 4211,
+        "0": 3981
+      },
+      {
+        "0": 3944,
+        "1": 4248
+      },
+      {
+        "0": 3967,
+        "1": 4225
+      },
+      {
+        "1": 4229,
+        "0": 3963
+      },
+      {
+        "0": 3974,
+        "1": 4218
+      },
+      {
+        "1": 4210,
+        "0": 3982
+      },
+      {
+        "1": 4238,
+        "0": 3954
+      },
+      {
+        "1": 4284,
+        "0": 3908
+      },
+      {
+        "1": 4126,
+        "0": 4066
+      },
+      {
+        "0": 3938,
+        "1": 4254
+      },
+      {
+        "0": 4054,
+        "1": 4138
+      },
+      {
+        "1": 4287,
+        "0": 3905
+      },
+      {
+        "1": 4254,
+        "0": 3938
+      },
+      {
+        "1": 4222,
+        "0": 3970
+      }
+    ]
+  ],
+  "metadata": {
+    "dt": 4e-09,
+    "provenance": {
+      "attributions": {
+        "use_qec": {
+          "value": true,
+          "evidence": "9341748:qec_testing.ipynb cell 2 builds the encoded benchmark; cells 7-8 select both May13 Kingston records as QEC; this snapshot precedes introduction of the bare circuit in 9e0adc7.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        },
+        "dt": {
+          "value": 4e-09,
+          "evidence": "9341748:qec_testing.ipynb cell 4 output prints matching job d82dopugbeec73allus0 and Time units = 4e-09 s."
+        }
+      },
+      "sources": [
+        {
+          "path": "results/qec513/qec513_delay_sweep_20260513_163257.json",
+          "sha256": "cfe29222e0e20385398392e479a3281cedccad03b691ce6d25c1efb5b8d05ad9"
+        },
+        {
+          "path": "results/qec513/qec513_delay_sweep_20260513_163539.json",
+          "sha256": "f36e1d80eea71f53cebeda7b18e6b00cc1aaad12629df6e22a9bb2629267bf8b"
+        }
+      ],
+      "archive": {
+        "path": ".local-archive/before-results-v2.tar.gz",
+        "sha256": "5210d00f69b739208253264e450135143911bf8fba5cca5a84bd8ae2f55b16a8",
+        "source_count": 215
+      }
+    }
+  },
+  "reference_fidelities": {
+    "ideal": [
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ]
+    ]
+  },
+  "schema_version": 2,
+  "record_id": "c9961cc71daa5d823a57cd68"
+}

@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-09-08T13:27:28.443042",
+  "experiment_type": "hardware",
+  "backend": "ibm_marrakesh",
+  "optimization_level": 3,
+  "job_id": "dag49mni3e6s738lteu0",
+  "shots": 4096,
+  "seed": 42,
+  "n_samples": null,
+  "protocol": {
+    "M": 1,
+    "N": 2,
+    "alpha": 0.7071067811865475,
+    "use_qec": false,
+    "theta_samples": [
+      [
+        4.862909272689599
+      ]
+    ]
+  },
+  "sweep": {
+    "axis": "tau",
+    "values": [
+      0
+    ],
+    "unit": "dt"
+  },
+  "fidelities": [
+    [
+      0.909423828125,
+      0.821533203125
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": [
+    [
+      {
+        "00": 3123,
+        "01": 242,
+        "10": 602,
+        "11": 129
+      }
+    ]
+  ],
+  "metadata": {
+    "dt": 4e-09,
+    "provenance": {
+      "sources": [
+        {
+          "path": "results/run_20260908_132728_4fc6f552.json",
+          "sha256": "8168876c8bfb224b5a8651b3b6fb49e17b63af4eac03a23e9fd00f8896e88396"
+        }
+      ],
+      "archive": {
+        "path": ".local-archive/before-results-v2.tar.gz",
+        "sha256": "5210d00f69b739208253264e450135143911bf8fba5cca5a84bd8ae2f55b16a8",
+        "source_count": 215
+      }
+    }
+  },
+  "experiment_kind": "broadcasting",
+  "schema_version": 2,
+  "record_id": "da461d64d8ee22a3c723c96c"
+}

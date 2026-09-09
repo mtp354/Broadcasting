@@ -11,6 +11,9 @@ from typing import Any
 
 import numpy as np
 
+from .validation import dedupe_by_job
+from .provenance import execution_summary
+
 
 def delay_axis(run: dict[str, Any]) -> tuple[float, str]:
     """Use recorded seconds/dt, otherwise keep native dt; never guess a device dt."""
@@ -236,3 +239,42 @@ def periodicity_summary(run: dict[str, Any], *, receiver: int | None = None) -> 
         "first_positive_ac_peak": float(ac[positive_peaks[0]]) if positive_peaks else None,
         "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution",
     }
+
+
+def hardware_scaling_points(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return one opt3, zero-delay point per job/case/theta, without pooling.
+
+    Fidelity and receiver ranges are recomputed from saved joint counts.
+    Display offsets and all other visual choices belong to the notebook.
+    """
+    points = []
+    for run in dedupe_by_job(runs):
+        if (run.get("experiment_kind", "broadcasting") != "broadcasting"
+                or run.get("use_qec", False)
+                or run.get("experiment_type") != "hardware"
+                or run.get("optimization_level") != 3
+                or run.get("sweep", {}).get("axis") != "tau"):
+            continue
+        zero = np.flatnonzero(np.asarray(run["sweep"]["values"]) == 0)
+        if len(zero) != 1 or not run.get("counts"):
+            continue
+        for theta_index, row in enumerate(run["counts"]):
+            stats = joint_success_statistics(row[int(zero[0])], run["N"])
+            local = stats["local_fidelities"]
+            points.append({
+                "M": run["M"], "N": run["N"], "x": float(run["N"]), "backend": run.get("backend", "unknown"),
+                "timestamp": run.get("timestamp", ""), "job_id": run.get("job_id"),
+                "filename": run.get("filename", ""), "shots": stats["shots"],
+                "theta_index": theta_index,
+                "thetas": run.get("theta_samples", [[]])[theta_index],
+                "record_id": run.get("record_id"), "execution": execution_summary(run),
+                "mean": stats["mean_local"]["estimate"],
+                "minimum": min(local), "maximum": max(local),
+            })
+    points.sort(key=lambda point: (point["N"], point["M"], point["backend"],
+                                   point["timestamp"], str(point["job_id"]),
+                                   point["execution"].get("run_id", ""),
+                                   point["execution"].get("repeat_index", -1),
+                                   point["execution"].get("case_id", ""),
+                                   point["filename"], point["theta_index"]))
+    return points

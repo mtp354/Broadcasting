@@ -697,7 +697,7 @@ class HardwareBackend(Backend):
                       receiver_delay_factors=None) -> BroadcastResult:
         """Compile, submit and wait for a sweep (legacy convenience interface).
 
-        For recoverable experiments use the campaign CLI, which durably saves job
+        For recoverable experiments use the experiments CLI, which durably saves job
         IDs immediately and separates submission from result collection.
         """
         started = time.perf_counter()

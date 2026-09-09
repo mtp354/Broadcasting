@@ -12,4 +12,4 @@ BROADCAST_PYTHON=python BROADCAST_VENV="${SCRATCH_DIR}/.venv" \
     bash "${GLOBAL_DIR}/scripts/setup.sh"
 
 echo "Cluster environment ready at ${SCRATCH_DIR}/.venv."
-echo "See README.md for the small smoke submission and array workflow."
+echo "See README.md for HPC paths and hpc/slurm_broadcast.sh for submission settings."

@@ -12,15 +12,16 @@ from typing import Any, Hashable
 
 
 def _record_identity(run: dict[str, Any]) -> str | None:
-    """A Runtime job may contain several separately saved campaign cases."""
+    """One physical experiment kind and case within an executed job."""
     job_id = run.get("job_id")
     if not job_id:
         return None
-    campaign = (run.get("metadata") or {}).get("campaign")
-    if campaign:
-        return (f"{job_id} / {campaign['run_id']} / repeat {campaign['repeat_index']} / "
-                f"{campaign['case_id']}")
-    return job_id
+    kind = run.get("experiment_kind", "broadcasting")
+    execution = (run.get("metadata") or {}).get("execution", {})
+    identity = f"{kind} / {job_id}"
+    if execution.get("case_id") is not None:
+        identity += f" / {execution['case_id']}"
+    return identity
 
 
 def find_duplicate_jobs(runs: list[dict[str, Any]]) -> dict[str, list[str]]:
@@ -53,7 +54,7 @@ def group_by_cohort(
 def dedupe_by_job(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Drop duplicate saves of the same job/case, keeping the first record.
 
-    Separate campaign cases can share a job; retaining them does not make them
+    Separate experiment cases can share a job; retaining them does not make them
     independent job repetitions.
 
     Never deletes or modifies the underlying files -- only filters the

@@ -14,6 +14,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
+def execution_summary(run: dict) -> dict:
+    """Compact execution identity for derived points; full evidence stays in the record."""
+    execution = (run.get("metadata") or {}).get("execution") or {}
+    fields = ("experiment_id", "run_id", "repeat_index", "case_id", "receiver_delay_factors",
+              "protocol_family", "circuit_family", "theta_seed", "submission_id", "array_task_id")
+    return {field: execution[field] for field in fields if field in execution}
+
+
 def _code_revision() -> str | None:
     """Read checkout identity without launching a process during offline planning."""
     git_dir = ROOT / ".git"

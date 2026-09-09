@@ -1,8 +1,7 @@
-"""JSON I/O for broadcasting experiment results.
+"""One measured-result schema and store for broadcasting and quantum memory.
 
-New runs share one schema for simulations and hardware. ``load_run`` adds
-convenience views (``entries``, ``nt`` …) for plotting; it does not migrate
-or rewrite historical source formats.
+Records retain per-preparation counts, receiver fidelities, execution details,
+and source evidence. Plotting and analysis both read them through ``load_run``.
 """
 
 from __future__ import annotations
@@ -19,7 +18,8 @@ import numpy as np
 
 from .protocol import BroadcastResult, ProtocolConfig
 
-RESULTS_DIR = Path("results")
+SCHEMA_VERSION = 2
+RESULTS_DIR = Path("results/records")
 DEFAULT_OPTIMIZATION_LEVEL = 3
 
 
@@ -195,6 +195,10 @@ def save_run(
         "metadata": extra_meta,
     }
 
+    data.update(schema_version=SCHEMA_VERSION, experiment_kind="broadcasting",
+                record_id=uuid.uuid4().hex)
+    data["sweep"]["unit"] = "dt" if sweep_axis == "tau" else "probability"
+    validate_run_record(data)
     return write_run_json(data, filepath)
 
 
@@ -202,108 +206,207 @@ def save_run(
 # Load
 # ---------------------------------------------------------------------------
 
-def load_run(filepath: str | Path) -> dict[str, Any]:
-    """Load a unified-schema run JSON file.
+def save_memory_run(
+    result: dict[str, Any],
+    filepath: str | Path | None = None,
+    results_dir: str | Path = RESULTS_DIR,
+    *,
+    metadata: dict[str, Any] | None = None,
+) -> Path:
+    """Save a measured one-qubit memory sweep using the common result schema.
 
-    Returns a dict with all unified fields plus legacy aliases
-    (``entries``, ``nt``, ``tau_values`` …) used by older plotting code.
+    ``result`` provides ``state_prep`` (theta and phi), ``use_qec``,
+    ``tau_values``, ``backend_fidelities`` and optional ``backend_counts``.
+    ``ideal_fidelities`` is an optional numerical reference on the same grid.
+    Hardware and local simulations use this same interface. An explicit
+    encoding flag is required; circuit type is never inferred from a filename.
     """
-    with open(filepath) as f:
-        raw = json.load(f)
+    preparation = dict(result.get("state_prep", {}))
+    if not {"theta", "phi"} <= preparation.keys():
+        raise ValueError("Memory results require state_prep theta and phi")
+    use_qec = result.get("use_qec", (result.get("protocol") or {}).get("use_qec"))
+    if not isinstance(use_qec, (bool, np.bool_)):
+        raise ValueError("Memory results require an explicit boolean use_qec")
+    sweep_values = list(result["tau_values"])
+    values = result.get("backend_fidelities", result.get("fidelities"))
+    if values is None:
+        raise ValueError("Memory results require measured fidelities")
+    fidelities = np.asarray(values, dtype=float).reshape(len(sweep_values), 1).tolist()
+    count_values = result.get("backend_counts", result.get("counts"))
+    counts = None if count_values is None else [list(count_values)]
+    record_metadata = dict(result.get("metadata") or {})
+    record_metadata.update(metadata or {})
+    backend = result.get("backend")
+    data = {
+        "schema_version": SCHEMA_VERSION,
+        "record_id": uuid.uuid4().hex,
+        "experiment_kind": "memory",
+        "timestamp": result.get("timestamp", datetime.now().isoformat()),
+        "experiment_type": result.get("experiment_type", "hardware"),
+        "backend": backend,
+        "optimization_level": result.get("optimization_level"),
+        "job_id": result.get("job_id"),
+        "shots": result.get("shots"),
+        "seed": result.get("seed"),
+        "n_samples": None,
+        "protocol": {
+            "M": 0, "N": 1, "alpha": None, "use_qec": bool(use_qec),
+            "theta_samples": [[preparation["theta"], preparation["phi"]]],
+            "state_prep": preparation,
+            "linear_feedforward": None, "outcomes_list": None,
+        },
+        "sweep": {"axis": "tau", "unit": "dt", "values": sweep_values},
+        "fidelities": fidelities,
+        "per_theta_fidelities": None,
+        "counts": counts,
+        "metadata": record_metadata,
+    }
+    if result.get("ideal_fidelities") is not None:
+        reference = np.asarray(result["ideal_fidelities"], dtype=float)
+        data["reference_fidelities"] = {"ideal": reference.reshape(len(sweep_values), 1).tolist()}
+    validate_run_record(data)
+    if filepath is None:
+        filepath = Path(results_dir) / f"run_{data['record_id']}.json"
+    return write_run_json(data, filepath)
 
-    if "experiment_type" not in raw or "sweep" not in raw:
-        raise ValueError(
-            f"{filepath} is not in the unified schema. "
-            "Use its matching unified record or an explicit read-only analysis "
-            "adapter; historical source files must remain unchanged."
-        )
 
+def validate_run_record(data: dict[str, Any]) -> None:
+    """Validate record structure without estimating or changing any quantity."""
+    if data.get("schema_version") != SCHEMA_VERSION:
+        raise ValueError(f"Expected measured-result schema_version={SCHEMA_VERSION}")
+    if data.get("experiment_kind") not in {"broadcasting", "memory"}:
+        raise ValueError("experiment_kind must be broadcasting or memory")
+    if data.get("experiment_type") not in {"hardware", "simulation", "hpc_submission"}:
+        raise ValueError("Unknown experiment_type")
+    if not isinstance(data.get("record_id"), str) or not data["record_id"]:
+        raise ValueError("A nonempty record_id is required")
+    protocol = data["protocol"]
+    receivers = protocol["N"]
+    if not isinstance(receivers, int) or receivers < 1:
+        raise ValueError("protocol.N must be a positive integer")
+    if data["experiment_kind"] == "memory" and (protocol["M"] != 0 or receivers != 1):
+        raise ValueError("Memory records have zero senders and one receiver")
+    samples = protocol.get("theta_samples")
+    if not isinstance(samples, list) or not samples:
+        raise ValueError("theta_samples must retain at least one preparation")
+    sweep = data["sweep"]
+    values = np.asarray(sweep["values"], dtype=float)
+    if values.ndim != 1 or not np.isfinite(values).all():
+        raise ValueError("sweep.values must be a finite one-dimensional grid")
+    size = len(values)
+
+    def check_fidelities(value: Any, shape: tuple[int, ...], field: str) -> None:
+        array = np.asarray(value, dtype=float)
+        if not size and array.size == 0:
+            return
+        if array.shape != shape:
+            raise ValueError(f"{field} shape {array.shape} does not match {shape}")
+        if not np.isfinite(array).all() or np.any(array < -1e-12) or np.any(array > 1 + 1e-12):
+            raise ValueError(f"{field} must contain finite fidelities in [0, 1]")
+
+    check_fidelities(data["fidelities"], (size, receivers), "fidelities")
+    per_theta = data.get("per_theta_fidelities")
+    if per_theta is not None:
+        check_fidelities(per_theta, (len(samples), size, receivers), "per_theta_fidelities")
+    for name, reference in (data.get("reference_fidelities") or {}).items():
+        check_fidelities(reference, (size, receivers), f"reference_fidelities.{name}")
+    counts = data.get("counts")
+    if counts is not None:
+        if len(counts) != len(samples) or any(len(row) != size for row in counts):
+            raise ValueError("counts must have shape [preparation][sweep]")
+        for row in counts:
+            for histogram in row:
+                if not isinstance(histogram, dict):
+                    raise ValueError("Each count histogram must be a dictionary")
+                if any(not isinstance(key, str) or len(key) != receivers or set(key) - {"0", "1"}
+                       for key in histogram):
+                    raise ValueError("Count keys must be receiver-register bitstrings")
+                if any(not isinstance(count, (int, np.integer)) or isinstance(count, bool) or count < 0
+                       for count in histogram.values()):
+                    raise ValueError("Counts must be nonnegative integers")
+                if data.get("shots") is not None and sum(histogram.values()) != data["shots"]:
+                    raise ValueError("Histogram shot total disagrees with recorded shots")
+    if "campaign" in (data.get("metadata") or {}):
+        raise ValueError("Result collection identity belongs in metadata.execution")
+
+
+def load_run(filepath: str | Path) -> dict[str, Any]:
+    """Read a canonical broadcasting or memory record and expose numeric views.
+
+    Original input formats are converted by the one-time migration script;
+    loading never consults plotting manifests or changes the saved evidence.
+    """
+    with open(filepath, encoding="utf-8") as handle:
+        raw = json.load(handle)
+    validate_run_record(raw)
     proto = raw["protocol"]
     sweep = raw["sweep"]
-    theta_samples = proto.get("theta_samples", [[]])
-    nt = len(theta_samples)
-    fidelities = raw["fidelities"]
-
-    # Legacy `entries` view (one record per sweep point per theta sample).
-    entries: list[dict[str, Any]] = []
+    theta_samples = proto["theta_samples"]
     per_theta = raw.get("per_theta_fidelities")
     counts_grid = raw.get("counts")
-    sweep_values = sweep.get("values", [])
-    sweep_key = "tau" if sweep["axis"] == "tau" else "p"
+    entries = []
+    sweep_key = "tau" if sweep["axis"] == "tau" else sweep["axis"]
     for ti, thetas in enumerate(theta_samples):
-        for j, sv in enumerate(sweep_values):
+        for j, value in enumerate(sweep["values"]):
             if per_theta is not None:
-                fids_ij = per_theta[ti][j]
+                fids = per_theta[ti][j]
             elif ti == 0:
-                fids_ij = fidelities[j]
+                fids = raw["fidelities"][j]
             else:
                 continue
-            entry: dict[str, Any] = {
-                "theta_idx": ti,
-                "thetas": thetas,
-                sweep_key: sv,
-                "fidelities": fids_ij,
-            }
+            entry = {"theta_idx": ti, "thetas": thetas, sweep_key: value, "fidelities": fids}
             if counts_grid is not None:
                 entry["counts"] = counts_grid[ti][j]
             entries.append(entry)
-
-    return {
-        # Unified schema fields
-        "filepath": str(filepath),
-        "filename": Path(filepath).name,
-        "timestamp": raw.get("timestamp", ""),
-        "experiment_type": raw["experiment_type"],
-        "backend": raw.get("backend"),
-        "optimization_level": raw.get("optimization_level"),
-        "job_id": raw.get("job_id"),
-        "shots": raw.get("shots"),
-        "seed": raw.get("seed"),
-        "n_samples": raw.get("n_samples"),
-        "sweep": sweep,
-        "fidelities": fidelities,
-        "per_theta_fidelities": per_theta,
-        "counts": counts_grid,
-        "metadata": raw.get("metadata", {}),
-        # Convenience / legacy aliases
-        "protocol": proto,
-        "linear_feedforward": proto.get("linear_feedforward"),
-        "outcomes_list": proto.get("outcomes_list"),
-        "M": proto["M"],
-        "N": proto["N"],
-        "alpha": proto.get("alpha"),
-        "use_qec": proto.get("use_qec", False),
-        "nt": nt,
-        "theta_samples": theta_samples,
-        "tau_values": sweep["values"] if sweep["axis"] == "tau" else [],
-        "p_list": sweep["values"] if sweep["axis"] == "p" else [],
-        "entries": entries,
-    }
-
-
-def list_runs(results_dir: str | Path = RESULTS_DIR) -> list[dict[str, Any]]:
-    """Recursively load saved runs and campaign cases, skipping unreadable files.
-
-    Only ``run_*.json`` and ``repeat_*.json`` are experiment records; campaign
-    plans, prepared circuits, receipts, and derived analysis JSON are excluded.
-    """
-    runs = []
-    for f in run_paths(results_dir):
-        try:
-            runs.append(load_run(f))
-        except Exception as e:
-            print(f"Skipping {f.name}: {e}")
-    return runs
+    run = dict(raw)
+    run.update(
+        filepath=str(filepath), filename=Path(filepath).name,
+        M=proto["M"], N=proto["N"], alpha=proto.get("alpha"),
+        use_qec=proto.get("use_qec"), theta_samples=theta_samples, nt=len(theta_samples),
+        linear_feedforward=proto.get("linear_feedforward"), outcomes_list=proto.get("outcomes_list"),
+        tau_values=sweep["values"] if sweep["axis"] == "tau" else [],
+        p_list=sweep["values"] if sweep["axis"] == "p" else [], entries=entries,
+    )
+    if raw["experiment_kind"] == "memory":
+        run["state_prep"] = proto["state_prep"]
+        ideal = (raw.get("reference_fidelities") or {}).get("ideal")
+        run["ideal_fidelities"] = None if ideal is None else [row[0] for row in ideal]
+    return run
 
 
 def run_paths(results_dir: str | Path = RESULTS_DIR) -> list[Path]:
-    """Find saved experiment filenames, including nested campaign results."""
+    """Find canonical records by their schema, independent of execution layout."""
     root = Path(results_dir)
-    # Campaign receipts/attempts are named repeat_000.json; a result also has
-    # the case ID, for example repeat_000_m1_n2.json.
-    return sorted({path for pattern in ("run_*.json", "repeat_[0-9]*_*.json")
-                   for path in root.rglob(pattern)
-                   if "legacy" not in path.relative_to(root).parts})
+    if (root / "records").is_dir():
+        root = root / "records"
+    records = []
+    for path in sorted(root.rglob("*.json")):
+        try:
+            with path.open(encoding="utf-8") as handle:
+                data = json.load(handle)
+        except (OSError, ValueError) as error:
+            if path.name.startswith("run_"):
+                raise ValueError(f"Cannot read result record {path}") from error
+            continue
+        if (isinstance(data, dict) and data.get("schema_version") == SCHEMA_VERSION
+                and data.get("experiment_kind") in {"broadcasting", "memory"}):
+            records.append(path)
+    return records
+
+
+def list_runs(
+    results_dir: str | Path = RESULTS_DIR,
+    *,
+    experiment_kind: str | None = None,
+    experiment_type: str | None = None,
+    backend: str | None = None,
+) -> list[dict[str, Any]]:
+    """Load measured records, optionally selecting their physical kind or backend."""
+    runs = [load_run(path) for path in run_paths(results_dir)]
+    return [run for run in runs if
+            (experiment_kind is None or run["experiment_kind"] == experiment_kind) and
+            (experiment_type is None or run["experiment_type"] == experiment_type) and
+            (backend is None or run.get("backend") == backend)]
 
 
 # ---------------------------------------------------------------------------

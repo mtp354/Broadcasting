@@ -8,3 +8,4 @@ pytest
 ipykernel
 nbclient
 nbformat
+pylatexenc

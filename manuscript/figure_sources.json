@@ -1,0 +1,2551 @@
+{
+  "schema_version": 2,
+  "generator": "visualizations.ipynb",
+  "palette": {
+    "burgundy": "#9F1853",
+    "cyan": "#33B1FF",
+    "coral": "#FA4D56",
+    "slate": "#778899"
+  },
+  "rc_params": {
+    "figure.dpi": 120,
+    "font.family": "DejaVu Sans",
+    "font.size": 12,
+    "axes.labelsize": 12,
+    "axes.titlesize": 12,
+    "axes.linewidth": 0.8,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
+    "legend.fontsize": 12,
+    "lines.linewidth": 1.2,
+    "lines.markersize": 4,
+    "axes.spines.top": false,
+    "axes.spines.right": false
+  },
+  "export": {
+    "dpi": 300,
+    "bbox_inches": "tight",
+    "pad_inches": 0.06,
+    "facecolor": "white",
+    "transparent": false
+  },
+  "qiskit_version": "2.2.1",
+  "figures": {
+    "1": {
+      "settings": {
+        "filename": "figure_01_sampling_convergence.png",
+        "figsize": [
+          4.4,
+          3.4
+        ],
+        "archive_dir": "results/convergence",
+        "batches": [
+          "repeats_01",
+          "repeats_02"
+        ],
+        "seeds": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "show_seed_zero": true,
+        "line_style": {
+          "linestyle": "-",
+          "marker": "",
+          "linewidth": 0.6,
+          "alpha": 0.6
+        },
+        "receiver_styles": [
+          {
+            "color": "#9F1853",
+            "label": "Receiver 1"
+          },
+          {
+            "color": "#33B1FF",
+            "label": "Receiver 2"
+          }
+        ],
+        "total_style": {
+          "color": "grey",
+          "label": "Total",
+          "alpha": 0.8,
+          "linewidth": 1.0
+        },
+        "show_reference": true,
+        "reference_exponent": -0.5,
+        "reference_anchor_index": 0,
+        "reference_multiplier": 1.0,
+        "reference_style": {
+          "color": "black",
+          "linestyle": "--",
+          "marker": "",
+          "linewidth": 1.2,
+          "alpha": 1,
+          "label": "\u221d 1/\u221a$n_s$"
+        },
+        "axes": {
+          "xlabel": "Number of Samples, $n_s$",
+          "ylabel": "Integrated fidelity error",
+          "xlim": null,
+          "ylim": null,
+          "xscale": "log",
+          "yscale": "log"
+        },
+        "grid": {
+          "visible": true,
+          "which": "both",
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "best",
+          "fontsize": 12,
+          "frameon": true
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "results/convergence/repeats_01/study.json",
+          "sha256": "265573c3c338e22b7299cc29334fa73e4437a5364499a280a0abf877f183cfae"
+        },
+        {
+          "path": "results/convergence/repeats_02/study.json",
+          "sha256": "972165a1a93db70628868c950fe239bb1e60a18995f98a5cbcca5d385f3bf485"
+        },
+        {
+          "path": "results/convergence/seed_zero.json",
+          "sha256": "008197ef845bb18b93f82207d8f089076547696e2dfd1ac13dd62c8ab6985c03"
+        },
+        {
+          "path": "results/records/run_044cbfd99ff7bb7319ccd07c.json",
+          "sha256": "d0ff581e1979dd8c2fec3e51d821286134b3e6ba5f3c5756b0069272ffe7f5a0"
+        },
+        {
+          "path": "results/records/run_0541d70fce5bc0f5ee0cde84.json",
+          "sha256": "52cc7ccda06c6c151f61c4dc998cac3941b9e17fb24527563c67c6f575596b16"
+        },
+        {
+          "path": "results/records/run_0778e2f4019a0f3c28d9ab0e.json",
+          "sha256": "94dd3f872a8b263988aebb635c4d148b53cf0f60f679e56ff20168a26452c9e7"
+        },
+        {
+          "path": "results/records/run_2185ca07ff6754317763ec06.json",
+          "sha256": "abdf8a1be70da5a5798877046dbb9e538da132b168d27ffc01c6370c91434724"
+        },
+        {
+          "path": "results/records/run_2272a811f90693df511442ef.json",
+          "sha256": "309ef14b5a5960d8768894825049f9d0136f18b783c38c1f5116c41ee9e6699f"
+        },
+        {
+          "path": "results/records/run_252d282c107eef26c6797a5f.json",
+          "sha256": "5ac927b8d3ecd39b0eefdf519ce821acb8f67f0ca9bd2abb49410087fa179d3c"
+        },
+        {
+          "path": "results/records/run_2d27adc67c33b259712d25b5.json",
+          "sha256": "20ac1352ff032e17aad51a73aca0491263f7662536d8dacd7651986dada3936d"
+        },
+        {
+          "path": "results/records/run_349437afd99c867f0c1d894c.json",
+          "sha256": "4a127c3ee92be72b6e89efd3dcdb6953b84b9054c6083f8e88c585575bb2f0b3"
+        },
+        {
+          "path": "results/records/run_3a5cf65e7261d0f6345fcf65.json",
+          "sha256": "74e7acaa49263f8bb3d6c8430a0073945b53771d241298225d1c49984f4560d9"
+        },
+        {
+          "path": "results/records/run_3ebaa584e489000c836debb1.json",
+          "sha256": "6e2123bab18240e77116e028fc5999a87fc05ac99d7797d8978f30fcf4795467"
+        },
+        {
+          "path": "results/records/run_4063a287a072e0af5ba94702.json",
+          "sha256": "84292f2707fd2210c947fdf88d2d767e7969db744265ed6c1c36bea286f4f48e"
+        },
+        {
+          "path": "results/records/run_4eb7905f6d4ddec035595ba7.json",
+          "sha256": "79d70e18436c580e379117409103f14e02cd82cdf767ccbc065bb7909c2f4139"
+        },
+        {
+          "path": "results/records/run_5345d63a09ed8750b1bb2b33.json",
+          "sha256": "b88f64b26c0023e05971e7e62ee6ffe96a639532eb9d6e3a1471ab610c658cc0"
+        },
+        {
+          "path": "results/records/run_5488d57505d32df998730ada.json",
+          "sha256": "6d62cc1067986b32fa8a2cb7258b29956cb993e46ed8814f5d1468487f227197"
+        },
+        {
+          "path": "results/records/run_5d2bfba3fd9377b4c4d4e0f4.json",
+          "sha256": "b825725ff2365d3eb1a5dee6fccffefcd84068b81faaadaacfacc6641fefab17"
+        },
+        {
+          "path": "results/records/run_6081a90fac77bf2261b4adfb.json",
+          "sha256": "7cb4be1d793353be08bb99829b74c7406750a0be6d5475ad005f580f5e46ed16"
+        },
+        {
+          "path": "results/records/run_608b0691eb1de749ed50a393.json",
+          "sha256": "8f4d1a7445b89ce0a4d7fbe8fb709fc7532f1f563204ce8131e0240422fbe5c6"
+        },
+        {
+          "path": "results/records/run_751140c1540c6a9d9925efe5.json",
+          "sha256": "18afd1a2adf41feccf810b479d2b7396834250a86e08b08e17dc81bf03ee1206"
+        },
+        {
+          "path": "results/records/run_769b959d42a75b9109d0391c.json",
+          "sha256": "0ccf2b46cba99510bc707bb8e5b35c825f37b389bd38fa511da455d9c2433052"
+        },
+        {
+          "path": "results/records/run_78058b662f302e7f6e069160.json",
+          "sha256": "75164ac20006ff0ed8f8a81e07b33dfd6a4ffe268f768c23d9abbdcc530c84f1"
+        },
+        {
+          "path": "results/records/run_7df9b538f06604bbc5cbba62.json",
+          "sha256": "58791c0c608a93b2305e281be887fc962d37c83cf75e96d1c1e1c7ffd4150eb7"
+        },
+        {
+          "path": "results/records/run_8a7077aabb3b61b865cc12d4.json",
+          "sha256": "223ef6654870284631d55e34fd646e4fc4e74ed3b978c07b42250cb8fd0446a4"
+        },
+        {
+          "path": "results/records/run_8cfa51e89eb67662e565591f.json",
+          "sha256": "407bba3677de27c841dc7dacf2f3df38b80e0f3ac1b94e64b4c4c22ce06de178"
+        },
+        {
+          "path": "results/records/run_8eee96f94613de592a45617f.json",
+          "sha256": "d7fc8f9a112802df192c4436e3a5b5981688850520f3210ef7f594e72993c3ba"
+        },
+        {
+          "path": "results/records/run_9176e99fca97846d003f6e61.json",
+          "sha256": "c476221fd4ed206f88080d453510a9d7c23bae91992fd68233296e0467e94bd7"
+        },
+        {
+          "path": "results/records/run_9f35cabf50a93eecb225b887.json",
+          "sha256": "36b0729368ec197304b6ecfa9c34e936c8d773c586a9ba0cec8f05a68d6edb69"
+        },
+        {
+          "path": "results/records/run_ac35c0f6e442878d8920fea0.json",
+          "sha256": "5d7b05f492212bb147943160ec9a876f48c195134191130fc9032b961774616a"
+        },
+        {
+          "path": "results/records/run_ad89be27d3868cd350f19738.json",
+          "sha256": "79e3bc9a55ecb158086343830f5510bd5e1984571d86bfc4bfde5faceb99d986"
+        },
+        {
+          "path": "results/records/run_b09d70437cd34d5d06956cf5.json",
+          "sha256": "635153de1c4a4ac9f261d21ac7ac04d62b8216723cdf9ee234ff0edeec50f839"
+        },
+        {
+          "path": "results/records/run_b171bfc90e49a38498398801.json",
+          "sha256": "f35c8f5cf4f6efacbe295ad8573b74fa1b3a91091744787e46958066f3da3015"
+        },
+        {
+          "path": "results/records/run_b1abccfd0767e3bb8591e2df.json",
+          "sha256": "5ea2a13dd76c0e9c074993547ce2c8008bf60d575bea466a2ac151d05f03eb49"
+        },
+        {
+          "path": "results/records/run_c5b8ad04b5086c0916c9cee1.json",
+          "sha256": "c7c9bbf94846f294c964417d34ab327872e11b0074ebf056d7fd9b70aba19c42"
+        },
+        {
+          "path": "results/records/run_cd6aed64630e0f7fe7681f7b.json",
+          "sha256": "db31433fd80ddef98e65de5a58b9b2d574a62387bf12abaaac7d631ccd260ed9"
+        },
+        {
+          "path": "results/records/run_d35f31a42f7c9188d9aae62c.json",
+          "sha256": "45d0893e78f252c38ab56d6433b3f7e88a4c97b27fc9a0853de9888be9da98e0"
+        },
+        {
+          "path": "results/records/run_d4412f1a3c83d6c33710e17f.json",
+          "sha256": "80b940c19fd1d8842fe1acd6302470ea9b1da87a2fb2d933f25e78ff4429f2c0"
+        },
+        {
+          "path": "results/records/run_d9f8367d3057ac3b7dd9dacb.json",
+          "sha256": "0342acaa9fa6fb92ecd501e3bb6db7ed651a45800e0c9d07d9c38906a7888cd5"
+        },
+        {
+          "path": "results/records/run_e0028ca2c3747390ba600b1c.json",
+          "sha256": "d5d7bc445bd0e5ed579031615b4254057133a3093941ffc5dfd162e003f03b4d"
+        },
+        {
+          "path": "results/records/run_e65bcb75092152c8c0e0a8b2.json",
+          "sha256": "c8701da6dcd81e5eb4ef6ef8dd35db4e4975c7a9e0909d721d59821b5eb7c1e0"
+        },
+        {
+          "path": "results/records/run_e9026307bcf1e1ac24d7f136.json",
+          "sha256": "9d15de92cf1db613ff137d32befdf2a9a896ad0a2aade36d5852e2c952503791"
+        },
+        {
+          "path": "results/records/run_e9e4f2a2f40b6d1025e56d91.json",
+          "sha256": "b51ca06d78b3b7ba4075d324d919ffbcafd4a7f412f66434d056eff96e7d72e3"
+        },
+        {
+          "path": "results/records/run_fab677f0de546dc607a1c814.json",
+          "sha256": "02846ad538dd9066e0eff1330c016e4fb5011f8b6d637b4e975bbfc918532d5d"
+        },
+        {
+          "path": "results/records/run_fc5df2246495fa3336f22d66.json",
+          "sha256": "35795813138c2aaf30fcd78eb7222ac4ea996b1fdb80fad15fc9ede9cfd88df7"
+        }
+      ]
+    },
+    "2": {
+      "settings": {
+        "filename": "figure_02_qec_memory.png",
+        "figsize": [
+          4.4,
+          3.4
+        ],
+        "sources": [
+          "results/records/run_48c5255eac91a1784c73944f.json",
+          "results/records/run_c9961cc71daa5d823a57cd68.json",
+          "results/records/run_025ae13e0183f58f80e31d03.json",
+          "results/records/run_2c91bf3308b84e88c880b308.json"
+        ],
+        "data_styles": [
+          {
+            "color": "#9F1853",
+            "label": "Encoded, $\u2113=3$"
+          },
+          {
+            "color": "#33B1FF",
+            "label": "Encoded, $\u2113=0$"
+          },
+          {
+            "color": "#FA4D56",
+            "label": "Bare, $\u2113=3$"
+          },
+          {
+            "color": "#778899",
+            "label": "Bare, $\u2113=0$"
+          }
+        ],
+        "data_common": {
+          "linestyle": "-",
+          "marker": "",
+          "linewidth": 1.2,
+          "alpha": 0.8
+        },
+        "show_ideal": true,
+        "ideal_style": {
+          "color": "black",
+          "linestyle": "--",
+          "marker": "",
+          "linewidth": 1.2,
+          "label": "Noise-free"
+        },
+        "baseline": 0.5,
+        "baseline_style": {
+          "color": "gray",
+          "linestyle": "--",
+          "linewidth": 1,
+          "alpha": 0.5
+        },
+        "xlabel": null,
+        "axes": {
+          "ylabel": "Fidelity, F",
+          "xlim": null,
+          "ylim": [
+            0,
+            1.05
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "grid": {
+          "visible": true,
+          "alpha": 0.25
+        },
+        "legend": {
+          "loc": "lower center",
+          "ncol": 2,
+          "fontsize": 12,
+          "frameon": true,
+          "columnspacing": 0.8,
+          "handlelength": 1,
+          "handletextpad": 0.4
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "results/records/run_48c5255eac91a1784c73944f.json",
+          "sha256": "067d85a2f39791238a2d9ef660504986179a48f2a05f47ca39332a6a172ba9a5"
+        },
+        {
+          "path": "results/records/run_c9961cc71daa5d823a57cd68.json",
+          "sha256": "5da53d5224055012eb276ccce664bb8fc33bcdc20cca921cfbd0141a2115068e"
+        },
+        {
+          "path": "results/records/run_025ae13e0183f58f80e31d03.json",
+          "sha256": "166e61058e1b25dce82ce2e990a13be4291eb95c6ce4e1286891ce6d97f45212"
+        },
+        {
+          "path": "results/records/run_2c91bf3308b84e88c880b308.json",
+          "sha256": "65624ff8a769787ab0474b9d1be059bf3720b32d9c6465854abb6dff84d47174"
+        }
+      ]
+    },
+    "3": {
+      "settings": {
+        "filename": "figure_03_broadcast_circuit.png",
+        "figsize": [
+          7.2,
+          5.78
+        ],
+        "M": 1,
+        "N": 2,
+        "thetas": [
+          0.7853981633974483
+        ],
+        "alpha": 0.7071067811865475,
+        "tau": null,
+        "linear_feedforward": false,
+        "height_ratios": [
+          4.5,
+          4
+        ],
+        "hspace": 0.04,
+        "margins": {
+          "left": 0.01,
+          "right": 0.995,
+          "bottom": 0.005,
+          "top": 0.995
+        },
+        "draw_margin": [
+          1.6,
+          0.15,
+          0.1,
+          0.15
+        ],
+        "style": "iqp",
+        "resource_color": "#33B1FF",
+        "resource_text_color": "#000000",
+        "resource_label": "$|\\Psi\\rangle$",
+        "sender_label": null,
+        "fourier_label": "$F_3^\\dagger$"
+      },
+      "sources": [
+        {
+          "path": "broadcasting/circuit.py",
+          "sha256": "afef8393549a0213bbeede29a0aeda00e5e13f7a738e5b16a2f8f99be1b4dbf6"
+        },
+        {
+          "path": "broadcasting/fidelity.py",
+          "sha256": "d7051feac4eb4dfab9f66e28bc5e7fc682b0e3b6e005f38e276bf8b64b620e27"
+        },
+        {
+          "path": "broadcasting/state_preparation.py",
+          "sha256": "c38b8716be7f040265742eafbadd61380c78ba556d05850a597a4967f8f5278f"
+        }
+      ]
+    },
+    "4": {
+      "settings": {
+        "filename": "figure_04_qec_crossover.png",
+        "figsize": [
+          4.4,
+          4.4
+        ],
+        "sources": [
+          "results/records/run_a5e7cf640b46986ea6c0aee3.json",
+          "results/records/run_6970dd796640cbdec866d2e2.json",
+          "results/records/run_bb4881e0e309e98f6181006f.json"
+        ],
+        "theory_p_range": [
+          0,
+          1
+        ],
+        "theory_points": 500,
+        "show_theory": false,
+        "bare_theory": {
+          "color": "black",
+          "linestyle": "--",
+          "linewidth": 1.1,
+          "label": "Bare theory"
+        },
+        "encoded_theory": {
+          "color": "#9F1853",
+          "linestyle": "-",
+          "linewidth": 1.3,
+          "label": "Encoded theory"
+        },
+        "data_styles": [
+          {
+            "marker": "",
+            "color": "#33B1FF",
+            "label": "Exact bare"
+          },
+          {
+            "marker": "",
+            "color": "#9F1853",
+            "label": "Exact encoded"
+          },
+          {
+            "marker": "",
+            "color": "#FA4D56",
+            "label": "Sampled encoded ($n_s={n_samples}$)"
+          }
+        ],
+        "data_common": {
+          "linestyle": "-",
+          "markersize": 3.5,
+          "alpha": 0.9
+        },
+        "show_crossover": true,
+        "crossover_style": {
+          "color": "0.5",
+          "linestyle": ":",
+          "linewidth": 1
+        },
+        "show_inset": true,
+        "inset_bounds": [
+          0.6,
+          0.54,
+          0.37,
+          0.4
+        ],
+        "inset_axes": {
+          "xlim": [
+            0.1,
+            0.18
+          ],
+          "ylim": [
+            0.88,
+            0.96
+          ]
+        },
+        "inset_ticks": {
+          "axis": "both",
+          "labelsize": 12
+        },
+        "axes": {
+          "xlabel": "Depolarizing Probability, $p$",
+          "ylabel": "Receiver Fidelity, $F$",
+          "xlim": [
+            0,
+            1
+          ],
+          "ylim": [
+            0.3,
+            1.02
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "grid": {
+          "visible": true,
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "upper center",
+          "bbox_to_anchor": [
+            0.5,
+            -0.3
+          ],
+          "fontsize": 12,
+          "frameon": false,
+          "borderaxespad": 0
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "results/records/run_a5e7cf640b46986ea6c0aee3.json",
+          "sha256": "913808fc7544cc2cbbd05047cc2537b25ef4bb9ac1076433cbe192ff7248d182"
+        },
+        {
+          "path": "results/records/run_6970dd796640cbdec866d2e2.json",
+          "sha256": "a129b49b595a7a51a34aaa1217021764dec92a45425d881543897de70c299cfb"
+        },
+        {
+          "path": "results/records/run_bb4881e0e309e98f6181006f.json",
+          "sha256": "08d4f6798181b0a6496e39fee1c5d1782df24f5bda8968ab818ce2aad208e8fb"
+        }
+      ]
+    },
+    "5": {
+      "settings": {
+        "filename": "figure_05_delay_repeats.png",
+        "panel_backends": [
+          "ibm_marrakesh",
+          "ibm_kingston"
+        ],
+        "panel_size": [
+          3.6,
+          3.4
+        ],
+        "sharey": true,
+        "sources": [
+          "results/records/run_f7068f1a0f6e30f1f59c7b89.json",
+          "results/records/run_ab308009275a9870be5da092.json",
+          "results/records/run_e4f7225c3728c2e2636e77e8.json",
+          "results/records/run_167fb3eb6f12f6f134c53899.json",
+          "results/records/run_6db69732653e94b46f5b1947.json",
+          "results/records/run_853078b05ee112186a10942a.json"
+        ],
+        "receiver_colors": [
+          "#9F1853",
+          "#33B1FF"
+        ],
+        "receiver_style": {
+          "marker": "",
+          "linewidth": 0.9,
+          "alpha": 0.8
+        },
+        "run_styles": [
+          {
+            "linestyle": "-"
+          },
+          {
+            "linestyle": "-"
+          },
+          {
+            "linestyle": "-"
+          }
+        ],
+        "receiver_label": "Receiver {receiver}",
+        "show_intervals": false,
+        "confidence": 0.95,
+        "interval_style": {
+          "alpha": 0.18,
+          "linewidth": 0
+        },
+        "show_mean": true,
+        "mean_style": {
+          "color": "black",
+          "marker": "",
+          "linewidth": 0.8,
+          "alpha": 1,
+          "label": "Mean",
+          "linestyle": "--"
+        },
+        "baseline": 0.5,
+        "baseline_style": {
+          "color": "0.6",
+          "marker": "",
+          "linestyle": ":",
+          "linewidth": 0.8,
+          "alpha": 1
+        },
+        "xlabel": null,
+        "axes": {
+          "ylabel": "Receiver Fidelity, $F$",
+          "xlim": null,
+          "ylim": [
+            0,
+            1.02
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "panel_label": "({letter}) {backend}",
+        "panel_text": {
+          "x": 0.97,
+          "y": 0.97,
+          "fontsize": 12,
+          "va": "top",
+          "ha": "right"
+        },
+        "grid": {
+          "visible": true,
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "lower left",
+          "ncol": 1,
+          "frameon": true,
+          "framealpha": 0.9,
+          "fontsize": 12
+        },
+        "layout": {
+          "pad": 1.1,
+          "w_pad": 1.2
+        }
+      },
+      "sources": [
+        {
+          "path": "results/records/run_f7068f1a0f6e30f1f59c7b89.json",
+          "sha256": "34eb81e95b2d7628b3a03a9854f641dd59f18b87270534d4684fbc62eddad8d0"
+        },
+        {
+          "path": "results/records/run_ab308009275a9870be5da092.json",
+          "sha256": "56e3bb781053daa8f94069af1faa20a2d9a0420f60a9ffdaa050c0ee26661f26"
+        },
+        {
+          "path": "results/records/run_e4f7225c3728c2e2636e77e8.json",
+          "sha256": "dfffcba791d1bf474ba4188b9102095d2e25c27c471027e7d53001103b0fd1b6"
+        },
+        {
+          "path": "results/records/run_167fb3eb6f12f6f134c53899.json",
+          "sha256": "a348eccf329cb7a6023e0283784822baa0fbf6af76a003ac61c6ed62ebe0a808"
+        },
+        {
+          "path": "results/records/run_6db69732653e94b46f5b1947.json",
+          "sha256": "284c565e191ec034f70bd3ef539d6520390cb7a8771c4740d834abc285bb9b9e"
+        },
+        {
+          "path": "results/records/run_853078b05ee112186a10942a.json",
+          "sha256": "90a9b5e1f30412b23e6ac4b7d9031701796f9d0798242016a019706657dc03e6"
+        }
+      ]
+    },
+    "6": {
+      "settings": {
+        "filename": "figure_06_hardware_scaling.png",
+        "figsize": [
+          4.4,
+          3.4
+        ],
+        "sources": null,
+        "sender_colors": {
+          "1": "#9F1853",
+          "2": "#33B1FF",
+          "3": "#FA4D56"
+        },
+        "backend_markers": {
+          "ibm_kingston": "s",
+          "ibm_fez": "^",
+          "ibm_marrakesh": "o"
+        },
+        "fallback_colors": [
+          "#778899",
+          "#FA4D56",
+          "#33B1FF"
+        ],
+        "fallback_markers": [
+          "D",
+          "v",
+          "P",
+          "X"
+        ],
+        "horizontal_spread": 0.56,
+        "show_receiver_range": true,
+        "point_style": {
+          "markersize": 4.5,
+          "capsize": 2.5,
+          "linewidth": 1.1,
+          "alpha": 0.85,
+          "linestyle": "none"
+        },
+        "sender_label": "$M={sender}$",
+        "backend_label": "{backend}",
+        "backend_legend_color": "0.3",
+        "baseline": 0.5,
+        "baseline_style": {
+          "color": "0.6",
+          "linestyle": ":",
+          "linewidth": 0.8
+        },
+        "axes": {
+          "xlabel": "Number of Receivers, $N$",
+          "ylabel": "Receiver Fidelity, $F$",
+          "xlim": null,
+          "ylim": [
+            0,
+            1.02
+          ],
+          "xscale": "linear",
+          "yscale": "linear"
+        },
+        "xticks": null,
+        "grid": {
+          "visible": true,
+          "axis": "y",
+          "alpha": 0.2
+        },
+        "legend": {
+          "loc": "lower center",
+          "bbox_to_anchor": [
+            0.5,
+            0.02
+          ],
+          "ncol": 2,
+          "frameon": false,
+          "fontsize": 12,
+          "columnspacing": 1,
+          "handlelength": 1,
+          "handletextpad": 0.4
+        },
+        "layout": {
+          "pad": 1.1
+        }
+      },
+      "sources": [
+        {
+          "path": "results/records/run_0293043502caa14e16f43632.json",
+          "sha256": "a8b88c334d6e8c8b511bdbc0fe77c1ed9d15b044c5162c184b07c2f08d087488"
+        },
+        {
+          "path": "results/records/run_167fb3eb6f12f6f134c53899.json",
+          "sha256": "a348eccf329cb7a6023e0283784822baa0fbf6af76a003ac61c6ed62ebe0a808"
+        },
+        {
+          "path": "results/records/run_1ae607ae77f87dc162ba8f01.json",
+          "sha256": "cef5b607854f63b23a01f23f509117982e6ee5499f67266a9e11b35d13805096"
+        },
+        {
+          "path": "results/records/run_1b7ae6a72e73fca3c5e5fa5d.json",
+          "sha256": "cee374697d38d95411861e005cdf58ad1887a28d0f2dfd702ae18b412ae25a6a"
+        },
+        {
+          "path": "results/records/run_26936857015ca76e4e41a929.json",
+          "sha256": "75c98eb639927496304a0c65e4aaea125e3db0e8aaea0af341614e286230d2a9"
+        },
+        {
+          "path": "results/records/run_2f3a88fc7f1df92a195d87c8.json",
+          "sha256": "a708027bb4d2e67f51376f535ce7af6f4ba86e3ebdadc24030095f9e24a82dda"
+        },
+        {
+          "path": "results/records/run_33f32cfedb0f423158c6e25d.json",
+          "sha256": "93bc17cea16bd30886cb11ccf4c0ed7f14adaeddae2573216f3fe48d189d2393"
+        },
+        {
+          "path": "results/records/run_3494666d4bc3545bcefc8ab3.json",
+          "sha256": "ab1f6dae24a2ec3b8a0253e04f5a3319902dad300cef7cd5cdb945ef424883f9"
+        },
+        {
+          "path": "results/records/run_36059da6dade91f1aa899790.json",
+          "sha256": "5705e3a6f00d0481801e5c17c7597ce2f17f3594fb0b66415fca10a038f8ab33"
+        },
+        {
+          "path": "results/records/run_3638bb06657485c1591111d4.json",
+          "sha256": "990197a365ab504e72ccee97bdd3098d9e3757ad71615e72475c2486de547a8d"
+        },
+        {
+          "path": "results/records/run_374a21ee21c4f973b697d744.json",
+          "sha256": "2aa48ef3834042817fe9ddcf1f23877938ab61014ff24d7249608bba24d8c20c"
+        },
+        {
+          "path": "results/records/run_3d26a7f0ede207a338e585d9.json",
+          "sha256": "f89fa9f92fa8bdaae0048cc82d1bc5a1d9cae960693e51773ee383cb6a3e7122"
+        },
+        {
+          "path": "results/records/run_40ed01e93d533d4e2014663d.json",
+          "sha256": "7e13789a3bd5884dbdd444702aa2dffdf6bcd6ed4ab17543bc2c5c6bc0f25bec"
+        },
+        {
+          "path": "results/records/run_4376189d8a394b68adef32da.json",
+          "sha256": "5ceb38a80e946731ee5b563778b1427d649b4381d4aac8bbbfffbae878dd5c34"
+        },
+        {
+          "path": "results/records/run_46a480938e0263611a13619a.json",
+          "sha256": "634c5e56164c65c8f556b49c5a63c88e7a2229856957f08669af44a0089923c9"
+        },
+        {
+          "path": "results/records/run_4ac39363738b7c26c2a17310.json",
+          "sha256": "2812b41a976ea68de690b12972dbea527aafa0f83c6e6cf00d9a89e2da2e832c"
+        },
+        {
+          "path": "results/records/run_4b9d1182f9b7758ce3950be4.json",
+          "sha256": "a26d567e75329682865745c622d834f4b5ff96304f2256ebacd62e35556cf63e"
+        },
+        {
+          "path": "results/records/run_4d34aec3527ddb3d88d9dcff.json",
+          "sha256": "c25013a34d1c8b4b6b7dd82beb9174f4e0986faddc9faffffe1ee39870dc754a"
+        },
+        {
+          "path": "results/records/run_543ec95c4cc789df373e4844.json",
+          "sha256": "c03abce14612087909e48388fe5997a171a279d164a9f0db425306ecb5328221"
+        },
+        {
+          "path": "results/records/run_62c3ac97ca6ae73061037091.json",
+          "sha256": "c2f8d1876a76bfbeb1297db7f4cd34fe759925a32b1ca4485640852c215cb99c"
+        },
+        {
+          "path": "results/records/run_65b5b2a16ea8a1d85a8ad993.json",
+          "sha256": "216023149037d7bef120930b341ffd63379aa7d5ce9a1fc9485541f62a621937"
+        },
+        {
+          "path": "results/records/run_6c284665c92b4c4f9d6703ef.json",
+          "sha256": "6c0b9878dc02195e5a897a3f8382c374d2bef701a921cb41f6e00324d176ebb0"
+        },
+        {
+          "path": "results/records/run_6d602d036f34ed68da4f567e.json",
+          "sha256": "69c86b0adb9c838c69672f27e4f32bf09d9124c65fd977395c072dc9a9693aca"
+        },
+        {
+          "path": "results/records/run_6db69732653e94b46f5b1947.json",
+          "sha256": "284c565e191ec034f70bd3ef539d6520390cb7a8771c4740d834abc285bb9b9e"
+        },
+        {
+          "path": "results/records/run_746b7dbad3af8f0497b6d274.json",
+          "sha256": "ebdbfdc4ff40f0a85b3668d9c46abd1178acb0b14c92a261bb8b0f35d9336a1a"
+        },
+        {
+          "path": "results/records/run_75a4d5daa4142f62c9c8610f.json",
+          "sha256": "ac372243b372cbf049aaa8f533f3ea6f86836d7f1efac2c1cfc2f32343bc433e"
+        },
+        {
+          "path": "results/records/run_7f4106c6a7d604ef0a1f4eae.json",
+          "sha256": "3b6f7ffd97a5a374b34444aec1ea20adfda948f46caf9ae9234331fb8ada0c57"
+        },
+        {
+          "path": "results/records/run_853078b05ee112186a10942a.json",
+          "sha256": "90a9b5e1f30412b23e6ac4b7d9031701796f9d0798242016a019706657dc03e6"
+        },
+        {
+          "path": "results/records/run_895d48a6a4330a32a6b89978.json",
+          "sha256": "e49b1ca43098e483a4bdd4ccd52ba7c15d1cf6fefdf9e92e17e8908bc33609d6"
+        },
+        {
+          "path": "results/records/run_9655cc392acad45d6c7e22bb.json",
+          "sha256": "6dbb192a503cbe661d727835b16a075329cf144b1ee0498fcf06d358cf219b35"
+        },
+        {
+          "path": "results/records/run_974670afccc7483c79bca571.json",
+          "sha256": "442a86f0858dafd7fc9a38add9baf1bc7a3d7a4f99f2a8c96022160d154900d3"
+        },
+        {
+          "path": "results/records/run_a39c3727abe65d9cc50d294b.json",
+          "sha256": "7b7c28c2724abd410df834f5fd3ef2df66f40736c50f86a3fd2e6917c8e6c659"
+        },
+        {
+          "path": "results/records/run_a9e7c401c8220955adb6e102.json",
+          "sha256": "d4b68f24c8292c93ae37d91b710474c11cca69c5aeb368a48edbb381f6446ffb"
+        },
+        {
+          "path": "results/records/run_ab308009275a9870be5da092.json",
+          "sha256": "56e3bb781053daa8f94069af1faa20a2d9a0420f60a9ffdaa050c0ee26661f26"
+        },
+        {
+          "path": "results/records/run_b467b3f1a1f20bfdd3eda37f.json",
+          "sha256": "e0e0ce94546060bea64a99ab29093bdf426fbb19044e7ac3835e877d9fd2da0f"
+        },
+        {
+          "path": "results/records/run_ba15591d96b69402dac7d118.json",
+          "sha256": "2d6c2c8ced95ee2a9817c599493dfb8e002961eecca07c4a3ea4bf8585c9419a"
+        },
+        {
+          "path": "results/records/run_c07774de7a0920cbd0535e08.json",
+          "sha256": "bdc7e9c82b0ca65b0d1a9cea052a49efcf7fb7f6c7c003385905dce6430dcfc8"
+        },
+        {
+          "path": "results/records/run_c0910981f7873c04eae264b0.json",
+          "sha256": "924434eb9cf859cb1ec3cedf2a05807fb901ba42342a6b2d23739353dd28d228"
+        },
+        {
+          "path": "results/records/run_c22539ae9e67427e2e01eeca.json",
+          "sha256": "819a5f152e1c7bbba2edeef18813f43c496e4760a69b72b2950b487f991bd311"
+        },
+        {
+          "path": "results/records/run_c25ca89901ca36631a96e50c.json",
+          "sha256": "bf08b20e5d80730e830414bdb353c86bc1a280be03a1c851936f427d74713d9e"
+        },
+        {
+          "path": "results/records/run_c4ba9ede78845082431371a0.json",
+          "sha256": "6c7c6c53a83b7e55018555f28564016cc7b9f265b1a239c0943d60a47e1b00e8"
+        },
+        {
+          "path": "results/records/run_c529a7490b5bf79ddaf55820.json",
+          "sha256": "e067114b80c0f0a1240e725e0a4f09b46fc98fc6625ed97d0d30103ba6bcae4a"
+        },
+        {
+          "path": "results/records/run_c892dca6e98632b7391a5ecf.json",
+          "sha256": "962d3fba0a3810e3bb6ed3d88140c2098f8eb953db9b4077de033217fa1da261"
+        },
+        {
+          "path": "results/records/run_d10f1d10b0dcd81d08f472a4.json",
+          "sha256": "ac970934bccb68fdf6c4b47cbcec74f200cbabdbb4a14ed7c75490f4818112b9"
+        },
+        {
+          "path": "results/records/run_da461d64d8ee22a3c723c96c.json",
+          "sha256": "1d1d8342cebf10fcd682f11d2cbbbbcb31292c0c696368105d7f2523bc2708d9"
+        },
+        {
+          "path": "results/records/run_dda7f3dd61b5c1649cd21237.json",
+          "sha256": "de80fc3acb82c7c9e6c46b409f190fd9f296e9405dc3f2fcd831910dbbd8e0c3"
+        },
+        {
+          "path": "results/records/run_ddd18f3ffc193f4a92402ebc.json",
+          "sha256": "92fdae28732e16a164220368d30fb6dd418d769362598c41682758f0d3cea772"
+        },
+        {
+          "path": "results/records/run_de371f1284d64792dbec0f3f.json",
+          "sha256": "b1b89653bc1877125ef159a8e9d9ea204267d364b28acd1d8320bb5861b4f54e"
+        },
+        {
+          "path": "results/records/run_e4f7225c3728c2e2636e77e8.json",
+          "sha256": "dfffcba791d1bf474ba4188b9102095d2e25c27c471027e7d53001103b0fd1b6"
+        },
+        {
+          "path": "results/records/run_e927ae6a75c954450ddb9bf1.json",
+          "sha256": "abcfad13e0604440d75a1c9bf11875218d8e851c0e49b488bc61aa19530c6f31"
+        },
+        {
+          "path": "results/records/run_eb398abac78496744e8b5159.json",
+          "sha256": "9ad99976b38f30676794df723b3fed1593e27d91769bfed41f0af3e58140161b"
+        },
+        {
+          "path": "results/records/run_f22e53d300ff54d44722c9de.json",
+          "sha256": "73649ebe2c4f65f9920e3bc6486868f980ca681f11ad4cec9af9309c7b56e773"
+        },
+        {
+          "path": "results/records/run_f4221c465ced579e6345f3e1.json",
+          "sha256": "7ee55fad820b95fb9f23baa3eda373a6a9d82d5f7531928b5ac5c607b7f02d76"
+        },
+        {
+          "path": "results/records/run_f57d1ffe525b542071d0564d.json",
+          "sha256": "4c8ab26d5ad244b07650537786eea80faa2747552f674abb5cef4bbb0c65cbf5"
+        },
+        {
+          "path": "results/records/run_f7068f1a0f6e30f1f59c7b89.json",
+          "sha256": "34eb81e95b2d7628b3a03a9854f641dd59f18b87270534d4684fbc62eddad8d0"
+        },
+        {
+          "path": "results/records/run_f8d68a0248211165fd5a29e7.json",
+          "sha256": "c4644730204128e9811eaa608ed8ce15186145d89a7f96f1f632edf70c34fb7a"
+        },
+        {
+          "path": "results/records/run_fdc68f7969dd158eff202426.json",
+          "sha256": "bc284b677b77d052a2e18ba588d75d764058652439eb74309354af5cf21990d9"
+        }
+      ]
+    }
+  },
+  "scaling_points": [
+    {
+      "M": 1,
+      "N": 1,
+      "x": 0.72,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_26936857015ca76e4e41a929.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "record_id": "26936857015ca76e4e41a929",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.9649658203125,
+      "minimum": 0.9649658203125,
+      "maximum": 0.9649658203125
+    },
+    {
+      "M": 1,
+      "N": 1,
+      "x": 0.79,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_3638bb06657485c1591111d4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "record_id": "3638bb06657485c1591111d4",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.9654541015625,
+      "minimum": 0.9654541015625,
+      "maximum": 0.9654541015625
+    },
+    {
+      "M": 1,
+      "N": 1,
+      "x": 0.86,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_fdc68f7969dd158eff202426.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "record_id": "fdc68f7969dd158eff202426",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.968017578125,
+      "minimum": 0.968017578125,
+      "maximum": 0.968017578125
+    },
+    {
+      "M": 2,
+      "N": 1,
+      "x": 0.9299999999999999,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_2f3a88fc7f1df92a195d87c8.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "record_id": "2f3a88fc7f1df92a195d87c8",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.883056640625,
+      "minimum": 0.883056640625,
+      "maximum": 0.883056640625
+    },
+    {
+      "M": 2,
+      "N": 1,
+      "x": 1.0,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_c22539ae9e67427e2e01eeca.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "record_id": "c22539ae9e67427e2e01eeca",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.9041748046875,
+      "minimum": 0.9041748046875,
+      "maximum": 0.9041748046875
+    },
+    {
+      "M": 2,
+      "N": 1,
+      "x": 1.07,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_6d602d036f34ed68da4f567e.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "record_id": "6d602d036f34ed68da4f567e",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.9111328125,
+      "minimum": 0.9111328125,
+      "maximum": 0.9111328125
+    },
+    {
+      "M": 3,
+      "N": 1,
+      "x": 1.1400000000000001,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_3d26a7f0ede207a338e585d9.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "record_id": "3d26a7f0ede207a338e585d9",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.9041748046875,
+      "minimum": 0.9041748046875,
+      "maximum": 0.9041748046875
+    },
+    {
+      "M": 3,
+      "N": 1,
+      "x": 1.21,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_895d48a6a4330a32a6b89978.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "record_id": "895d48a6a4330a32a6b89978",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.88623046875,
+      "minimum": 0.88623046875,
+      "maximum": 0.88623046875
+    },
+    {
+      "M": 3,
+      "N": 1,
+      "x": 1.28,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_36059da6dade91f1aa899790.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "record_id": "36059da6dade91f1aa899790",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n1",
+        "receiver_delay_factors": [
+          1
+        ]
+      },
+      "mean": 0.8878173828125,
+      "minimum": 0.8878173828125,
+      "maximum": 0.8878173828125
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.72,
+      "backend": "ibm_fez",
+      "timestamp": "2026-04-08T17:05:44.584495",
+      "job_id": "d7bc3ab0g7hs73dpd27g",
+      "filename": "run_c529a7490b5bf79ddaf55820.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "c529a7490b5bf79ddaf55820",
+      "execution": {},
+      "mean": 0.92218017578125,
+      "minimum": 0.9052734375,
+      "maximum": 0.9390869140625
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.7415384615384615,
+      "backend": "ibm_fez",
+      "timestamp": "2026-04-08T17:05:44.584495",
+      "job_id": "d7bc3ab0g7hs73dpd27g",
+      "filename": "run_c529a7490b5bf79ddaf55820.json",
+      "shots": 8192,
+      "theta_index": 1,
+      "thetas": [
+        2.757554564287996
+      ],
+      "record_id": "c529a7490b5bf79ddaf55820",
+      "execution": {},
+      "mean": 0.91546630859375,
+      "minimum": 0.9056396484375,
+      "maximum": 0.92529296875
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.763076923076923,
+      "backend": "ibm_fez",
+      "timestamp": "2026-05-13T15:04:33.077150",
+      "job_id": "d82ch8foha1c73bldjig",
+      "filename": "run_c07774de7a0920cbd0535e08.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.098517143286439
+      ],
+      "record_id": "c07774de7a0920cbd0535e08",
+      "execution": {},
+      "mean": 0.854248046875,
+      "minimum": 0.8233642578125,
+      "maximum": 0.8851318359375
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.7846153846153845,
+      "backend": "ibm_kingston",
+      "timestamp": "2026-04-08T16:08:14.227830",
+      "job_id": "d7bba5jklj2c73ev1oe0",
+      "filename": "run_7f4106c6a7d604ef0a1f4eae.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "7f4106c6a7d604ef0a1f4eae",
+      "execution": {},
+      "mean": 0.936767578125,
+      "minimum": 0.932861328125,
+      "maximum": 0.940673828125
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.8061538461538462,
+      "backend": "ibm_kingston",
+      "timestamp": "2026-05-18T12:02:32.315741",
+      "job_id": "d85jcso0bvlc73d5mdf0",
+      "filename": "run_1ae607ae77f87dc162ba8f01.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        4.098517143286439
+      ],
+      "record_id": "1ae607ae77f87dc162ba8f01",
+      "execution": {},
+      "mean": 0.9099,
+      "minimum": 0.8941,
+      "maximum": 0.9257000000000001
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.8276923076923077,
+      "backend": "ibm_kingston",
+      "timestamp": "2026-09-09T16:07:49.921333+00:00",
+      "job_id": "dago8l8mhr3c73e5ejq0",
+      "filename": "run_167fb3eb6f12f6f134c53899.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        3.132976794564699
+      ],
+      "record_id": "167fb3eb6f12f6f134c53899",
+      "execution": {
+        "experiment_id": "broadcasting-delay-01",
+        "run_id": "5bfbc6524097416e8c6642cc0568c656",
+        "repeat_index": 0,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.8516,
+      "minimum": 0.8133,
+      "maximum": 0.8899
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.8492307692307692,
+      "backend": "ibm_kingston",
+      "timestamp": "2026-09-09T16:07:51.759506+00:00",
+      "job_id": "dago8lomhr3c73e5ejrg",
+      "filename": "run_6db69732653e94b46f5b1947.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        2.293790565223654
+      ],
+      "record_id": "6db69732653e94b46f5b1947",
+      "execution": {
+        "experiment_id": "broadcasting-delay-01",
+        "run_id": "5bfbc6524097416e8c6642cc0568c656",
+        "repeat_index": 1,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.87385,
+      "minimum": 0.8482000000000001,
+      "maximum": 0.8995
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.8707692307692307,
+      "backend": "ibm_kingston",
+      "timestamp": "2026-09-09T16:07:52.990799+00:00",
+      "job_id": "dago8m39k43c73adlll0",
+      "filename": "run_853078b05ee112186a10942a.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        4.54138916939283
+      ],
+      "record_id": "853078b05ee112186a10942a",
+      "execution": {
+        "experiment_id": "broadcasting-delay-01",
+        "run_id": "5bfbc6524097416e8c6642cc0568c656",
+        "repeat_index": 2,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.8632,
+      "minimum": 0.8432000000000001,
+      "maximum": 0.8832
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.8923076923076922,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-05-13T14:17:04.298172",
+      "job_id": "d82btog0bvlc73d240pg",
+      "filename": "run_c4ba9ede78845082431371a0.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        5.92814419967864
+      ],
+      "record_id": "c4ba9ede78845082431371a0",
+      "execution": {},
+      "mean": 0.88427734375,
+      "minimum": 0.8695068359375,
+      "maximum": 0.8990478515625
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.9138461538461538,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-05-13T14:41:30.186253",
+      "job_id": "d82c0k6gbeec73aljrq0",
+      "filename": "run_ba15591d96b69402dac7d118.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "ba15591d96b69402dac7d118",
+      "execution": {},
+      "mean": 0.84698486328125,
+      "minimum": 0.767578125,
+      "maximum": 0.9263916015625
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.9353846153846153,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-08T13:27:28.443042",
+      "job_id": "dag49mni3e6s738lteu0",
+      "filename": "run_da461d64d8ee22a3c723c96c.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "da461d64d8ee22a3c723c96c",
+      "execution": {},
+      "mean": 0.865478515625,
+      "minimum": 0.821533203125,
+      "maximum": 0.909423828125
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.956923076923077,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-08T13:27:38.171052",
+      "job_id": "dag4b0hhvn6c73cq3k80",
+      "filename": "run_33f32cfedb0f423158c6e25d.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "33f32cfedb0f423158c6e25d",
+      "execution": {},
+      "mean": 0.8330078125,
+      "minimum": 0.793701171875,
+      "maximum": 0.872314453125
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 1.9784615384615385,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-08T15:31:50.541704",
+      "job_id": "dag61romhr3c73e4n2rg",
+      "filename": "run_543ec95c4cc789df373e4844.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "543ec95c4cc789df373e4844",
+      "execution": {},
+      "mean": 0.847412109375,
+      "minimum": 0.8349609375,
+      "maximum": 0.85986328125
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 2.0,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T01:50:50.948719+00:00",
+      "job_id": "dagbmuhhvn6c73cqci1g",
+      "filename": "run_f7068f1a0f6e30f1f59c7b89.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        3.132976794564699
+      ],
+      "record_id": "f7068f1a0f6e30f1f59c7b89",
+      "execution": {
+        "experiment_id": "broadcasting-delay-01",
+        "run_id": "132048dd9bb34e83b92f8bd556a82d39",
+        "repeat_index": 0,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.9023000000000001,
+      "minimum": 0.876,
+      "maximum": 0.9286000000000001
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 2.0215384615384617,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T01:50:52.587309+00:00",
+      "job_id": "dagbmv7i3e6s738m6esg",
+      "filename": "run_ab308009275a9870be5da092.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        2.293790565223654
+      ],
+      "record_id": "ab308009275a9870be5da092",
+      "execution": {
+        "experiment_id": "broadcasting-delay-01",
+        "run_id": "132048dd9bb34e83b92f8bd556a82d39",
+        "repeat_index": 1,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.89645,
+      "minimum": 0.8687,
+      "maximum": 0.9241999999999999
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 2.043076923076923,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T01:50:53.920437+00:00",
+      "job_id": "dagbmvfi3e6s738m6eu0",
+      "filename": "run_e4f7225c3728c2e2636e77e8.json",
+      "shots": 10000,
+      "theta_index": 0,
+      "thetas": [
+        4.54138916939283
+      ],
+      "record_id": "e4f7225c3728c2e2636e77e8",
+      "execution": {
+        "experiment_id": "broadcasting-delay-01",
+        "run_id": "132048dd9bb34e83b92f8bd556a82d39",
+        "repeat_index": 2,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.90865,
+      "minimum": 0.8998,
+      "maximum": 0.9175
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 2.0646153846153847,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_62c3ac97ca6ae73061037091.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "record_id": "62c3ac97ca6ae73061037091",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.8509521484375,
+      "minimum": 0.81689453125,
+      "maximum": 0.885009765625
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 2.086153846153846,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_f8d68a0248211165fd5a29e7.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "record_id": "f8d68a0248211165fd5a29e7",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.86920166015625,
+      "minimum": 0.8375244140625,
+      "maximum": 0.90087890625
+    },
+    {
+      "M": 1,
+      "N": 2,
+      "x": 2.1076923076923078,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_75a4d5daa4142f62c9c8610f.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "record_id": "75a4d5daa4142f62c9c8610f",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.87652587890625,
+      "minimum": 0.84423828125,
+      "maximum": 0.9088134765625
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "x": 2.1292307692307695,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:22:12.799839",
+      "job_id": "d7bbh8p5a5qc73dn9a60",
+      "filename": "run_4d34aec3527ddb3d88d9dcff.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996
+      ],
+      "record_id": "4d34aec3527ddb3d88d9dcff",
+      "execution": {},
+      "mean": 0.659912109375,
+      "minimum": 0.613037109375,
+      "maximum": 0.706787109375
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "x": 2.1507692307692308,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_46a480938e0263611a13619a.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "record_id": "46a480938e0263611a13619a",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.64312744140625,
+      "minimum": 0.5977783203125,
+      "maximum": 0.6884765625
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "x": 2.1723076923076925,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_40ed01e93d533d4e2014663d.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "record_id": "40ed01e93d533d4e2014663d",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.6370849609375,
+      "minimum": 0.608642578125,
+      "maximum": 0.66552734375
+    },
+    {
+      "M": 2,
+      "N": 2,
+      "x": 2.193846153846154,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_e927ae6a75c954450ddb9bf1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "record_id": "e927ae6a75c954450ddb9bf1",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.61956787109375,
+      "minimum": 0.6014404296875,
+      "maximum": 0.6376953125
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "x": 2.2153846153846155,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:31:29.775024",
+      "job_id": "d7bblg3klj2c73ev272g",
+      "filename": "run_a39c3727abe65d9cc50d294b.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996,
+        5.3947298351621535
+      ],
+      "record_id": "a39c3727abe65d9cc50d294b",
+      "execution": {},
+      "mean": 0.504150390625,
+      "minimum": 0.501708984375,
+      "maximum": 0.506591796875
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "x": 2.236923076923077,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_0293043502caa14e16f43632.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "record_id": "0293043502caa14e16f43632",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.49432373046875,
+      "minimum": 0.490478515625,
+      "maximum": 0.4981689453125
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "x": 2.2584615384615385,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_a9e7c401c8220955adb6e102.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "record_id": "a9e7c401c8220955adb6e102",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.49755859375,
+      "minimum": 0.4873046875,
+      "maximum": 0.5078125
+    },
+    {
+      "M": 3,
+      "N": 2,
+      "x": 2.2800000000000002,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_6c284665c92b4c4f9d6703ef.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "record_id": "6c284665c92b4c4f9d6703ef",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n2",
+        "receiver_delay_factors": [
+          1,
+          1
+        ]
+      },
+      "mean": 0.501953125,
+      "minimum": 0.5015869140625,
+      "maximum": 0.5023193359375
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "x": 2.7199999999999998,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:13:40.384396",
+      "job_id": "d7bbd4h5a5qc73dn9570",
+      "filename": "run_de371f1284d64792dbec0f3f.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "de371f1284d64792dbec0f3f",
+      "execution": {},
+      "mean": 0.8477376302083334,
+      "minimum": 0.703125,
+      "maximum": 0.92919921875
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "x": 2.776,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_3494666d4bc3545bcefc8ab3.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "record_id": "3494666d4bc3545bcefc8ab3",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.8601481119791666,
+      "minimum": 0.8204345703125,
+      "maximum": 0.88330078125
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "x": 2.832,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_746b7dbad3af8f0497b6d274.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "record_id": "746b7dbad3af8f0497b6d274",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.8618977864583334,
+      "minimum": 0.8231201171875,
+      "maximum": 0.8885498046875
+    },
+    {
+      "M": 1,
+      "N": 3,
+      "x": 2.888,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_eb398abac78496744e8b5159.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "record_id": "eb398abac78496744e8b5159",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.8543294270833334,
+      "minimum": 0.8072509765625,
+      "maximum": 0.8858642578125
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "x": 2.944,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:24:40.701526",
+      "job_id": "d7bbibb0g7hs73dpcb6g",
+      "filename": "run_974670afccc7483c79bca571.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996
+      ],
+      "record_id": "974670afccc7483c79bca571",
+      "execution": {},
+      "mean": 0.550048828125,
+      "minimum": 0.49951171875,
+      "maximum": 0.576416015625
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "x": 3.0,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_374a21ee21c4f973b697d744.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "record_id": "374a21ee21c4f973b697d744",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.5571695963541666,
+      "minimum": 0.5252685546875,
+      "maximum": 0.587646484375
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "x": 3.056,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_9655cc392acad45d6c7e22bb.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "record_id": "9655cc392acad45d6c7e22bb",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.5527750651041666,
+      "minimum": 0.51611328125,
+      "maximum": 0.6036376953125
+    },
+    {
+      "M": 2,
+      "N": 3,
+      "x": 3.112,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_4b9d1182f9b7758ce3950be4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "record_id": "4b9d1182f9b7758ce3950be4",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.5402018229166666,
+      "minimum": 0.49951171875,
+      "maximum": 0.5943603515625
+    },
+    {
+      "M": 3,
+      "N": 3,
+      "x": 3.168,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_c0910981f7873c04eae264b0.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "record_id": "c0910981f7873c04eae264b0",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.4960123697916667,
+      "minimum": 0.4937744140625,
+      "maximum": 0.4984130859375
+    },
+    {
+      "M": 3,
+      "N": 3,
+      "x": 3.224,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_c25ca89901ca36631a96e50c.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "record_id": "c25ca89901ca36631a96e50c",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.4940999348958333,
+      "minimum": 0.4913330078125,
+      "maximum": 0.496337890625
+    },
+    {
+      "M": 3,
+      "N": 3,
+      "x": 3.2800000000000002,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_4ac39363738b7c26c2a17310.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "record_id": "4ac39363738b7c26c2a17310",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n3",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.4990641276041667,
+      "minimum": 0.49169921875,
+      "maximum": 0.5072021484375
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "x": 3.7199999999999998,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-04-08T16:19:02.379498",
+      "job_id": "d7bbfhb0g7hs73dpc7og",
+      "filename": "run_4376189d8a394b68adef32da.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599
+      ],
+      "record_id": "4376189d8a394b68adef32da",
+      "execution": {},
+      "mean": 0.5838623046875,
+      "minimum": 0.439208984375,
+      "maximum": 0.651611328125
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "x": 3.776,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_ddd18f3ffc193f4a92402ebc.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965
+      ],
+      "record_id": "ddd18f3ffc193f4a92402ebc",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m1_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.553802490234375,
+      "minimum": 0.4344482421875,
+      "maximum": 0.63623046875
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "x": 3.832,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_1b7ae6a72e73fca3c5e5fa5d.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163
+      ],
+      "record_id": "1b7ae6a72e73fca3c5e5fa5d",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m1_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.547943115234375,
+      "minimum": 0.413818359375,
+      "maximum": 0.6368408203125
+    },
+    {
+      "M": 1,
+      "N": 4,
+      "x": 3.888,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_f22e53d300ff54d44722c9de.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159
+      ],
+      "record_id": "f22e53d300ff54d44722c9de",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m1_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.559722900390625,
+      "minimum": 0.428955078125,
+      "maximum": 0.6480712890625
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "x": 3.944,
+      "backend": "ibm_fez",
+      "timestamp": "2026-04-08T16:29:06.887416",
+      "job_id": "d7bbjsbklj2c73ev24jg",
+      "filename": "run_65b5b2a16ea8a1d85a8ad993.json",
+      "shots": 4096,
+      "theta_index": 0,
+      "thetas": [
+        4.862909272689599,
+        2.757554564287996
+      ],
+      "record_id": "65b5b2a16ea8a1d85a8ad993",
+      "execution": {},
+      "mean": 0.50091552734375,
+      "minimum": 0.4990234375,
+      "maximum": 0.5029296875
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "x": 4.0,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_f57d1ffe525b542071d0564d.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288
+      ],
+      "record_id": "f57d1ffe525b542071d0564d",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m2_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.50250244140625,
+      "minimum": 0.4912109375,
+      "maximum": 0.5142822265625
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "x": 4.056,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_dda7f3dd61b5c1649cd21237.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338
+      ],
+      "record_id": "dda7f3dd61b5c1649cd21237",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m2_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.502685546875,
+      "minimum": 0.49560546875,
+      "maximum": 0.5107421875
+    },
+    {
+      "M": 2,
+      "N": 4,
+      "x": 4.112,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_b467b3f1a1f20bfdd3eda37f.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213
+      ],
+      "record_id": "b467b3f1a1f20bfdd3eda37f",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m2_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.505706787109375,
+      "minimum": 0.4937744140625,
+      "maximum": 0.513916015625
+    },
+    {
+      "M": 3,
+      "N": 4,
+      "x": 4.168,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:01.083104+00:00",
+      "job_id": "dagc3m0mhr3c73e4uee0",
+      "filename": "run_c892dca6e98632b7391a5ecf.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        0.5690915206200965,
+        1.0080913138265288,
+        6.155375327284596
+      ],
+      "record_id": "c892dca6e98632b7391a5ecf",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 0,
+        "case_id": "m3_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.510894775390625,
+      "minimum": 0.502197265625,
+      "maximum": 0.5205078125
+    },
+    {
+      "M": 3,
+      "N": 4,
+      "x": 4.224,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:03.332982+00:00",
+      "job_id": "dagc3momhr3c73e4uefg",
+      "filename": "run_d10f1d10b0dcd81d08f472a4.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        3.4107044217677163,
+        2.969412252119338,
+        1.819154064837716
+      ],
+      "record_id": "d10f1d10b0dcd81d08f472a4",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 1,
+        "case_id": "m3_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.512298583984375,
+      "minimum": 0.5029296875,
+      "maximum": 0.5198974609375
+    },
+    {
+      "M": 3,
+      "N": 4,
+      "x": 4.28,
+      "backend": "ibm_marrakesh",
+      "timestamp": "2026-09-09T02:18:05.281270+00:00",
+      "job_id": "dagc3nfi3e6s738m6u50",
+      "filename": "run_f4221c465ced579e6345f3e1.json",
+      "shots": 8192,
+      "theta_index": 0,
+      "thetas": [
+        4.427359405477159,
+        1.494680332920213,
+        5.317016709091439
+      ],
+      "record_id": "f4221c465ced579e6345f3e1",
+      "execution": {
+        "experiment_id": "broadcasting-scaling-01",
+        "run_id": "cdee2ecff84c48eaa180e7be593ef00f",
+        "repeat_index": 2,
+        "case_id": "m3_n4",
+        "receiver_delay_factors": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "mean": 0.509307861328125,
+      "minimum": 0.495361328125,
+      "maximum": 0.52734375
+    }
+  ]
+}
