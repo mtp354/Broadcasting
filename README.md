@@ -223,7 +223,7 @@ and `figures/`, matching the manuscript's figure references:
 | 1 | `figure_01_sampling_convergence.png` | Five separate Monte Carlo seed curves, 0–4, with receiver errors, total error, and reference |
 | 2 | `figure_02_qec_memory.png` | Four pinned encoded/bare QEC memory curves, retaining each saved fidelity and delay grid |
 | 4 | `figure_04_qec_crossover.png` | Pinned QEC crossover simulation sources |
-| 5 | `figure_05_delay_repeats.png` | Two panels: all four Marrakesh sweeps overlaid on the left, Kingston on the right. All are 121-point, opt3, M=1/N=2 delay sweeps. |
+| 5 | `figure_05_delay_repeats.png` | Two panels: the three Marrakesh sweeps from `delay_01` overlaid on the left, the three Kingston sweeps from `delay_02` on the right. Each uses saved repeats 000–002; all are 121-point, opt3, M=1/N=2 delay sweeps. |
 | 6 | `figure_06_hardware_scaling.png` | All 55 qualifying opt3, zero-delay observations |
 
 Figure 3 is the existing Qiskit circuit diagram, `manuscript/m1n2qec0_circ.png`.

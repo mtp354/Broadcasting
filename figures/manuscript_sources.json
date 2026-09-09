@@ -90,8 +90,8 @@
           "label": "\u221d 1/\u221a$n_s$"
         },
         "axes": {
-          "xlabel": "Monte Carlo trajectories per noise probability, $n_s$",
-          "ylabel": "Integrated absolute fidelity error",
+          "xlabel": "Number of Samples, $n_s$",
+          "ylabel": "Fidelity Error, $1 - \u03a3_p F$",
           "xlim": null,
           "ylim": null,
           "xscale": "log",
@@ -355,19 +355,19 @@
         "data_styles": [
           {
             "color": "#9F1853",
-            "label": "Encoded, opt=3"
+            "label": "Encoded, $\u2113=3$"
           },
           {
             "color": "#33B1FF",
-            "label": "Encoded, opt=0"
+            "label": "Encoded, $\u2113=0$"
           },
           {
             "color": "#FA4D56",
-            "label": "Bare, opt=3"
+            "label": "Bare, $\u2113=3$"
           },
           {
             "color": "#778899",
-            "label": "Bare, opt=0"
+            "label": "Bare, $\u2113=0$"
           }
         ],
         "data_common": {
@@ -393,7 +393,7 @@
         },
         "xlabel": null,
         "axes": {
-          "ylabel": "Recovered-state fidelity",
+          "ylabel": "Fidelity, F",
           "xlim": null,
           "ylim": [
             0,
@@ -545,8 +545,8 @@
           "labelsize": 7
         },
         "axes": {
-          "xlabel": "Depolarizing probability $p$",
-          "ylabel": "Receiver Fidelity $F$",
+          "xlabel": "Depolarizing Probability, $p$",
+          "ylabel": "Receiver Fidelity, $F$",
           "xlim": [
             0,
             1
@@ -602,11 +602,12 @@
         ],
         "sharey": true,
         "sources": [
-          "results/run_20260518_120232.json",
-          "results/run_20260908_153150_79eab41b.json",
           "campaigns/delay_01/results/repeat_000_m1_n2.json",
           "campaigns/delay_01/results/repeat_001_m1_n2.json",
-          "campaigns/delay_01/results/repeat_002_m1_n2.json"
+          "campaigns/delay_01/results/repeat_002_m1_n2.json",
+          "campaigns/delay_02/results/repeat_000_m1_n2.json",
+          "campaigns/delay_02/results/repeat_001_m1_n2.json",
+          "campaigns/delay_02/results/repeat_002_m1_n2.json"
         ],
         "receiver_colors": [
           "#9F1853",
@@ -618,9 +619,6 @@
           "alpha": 0.8
         },
         "run_styles": [
-          {
-            "linestyle": "-"
-          },
           {
             "linestyle": "-"
           },
@@ -657,7 +655,7 @@
         },
         "xlabel": null,
         "axes": {
-          "ylabel": "Receiver Fidelity $F$",
+          "ylabel": "Receiver Fidelity, $F$",
           "xlim": null,
           "ylim": [
             0,
@@ -692,21 +690,6 @@
       },
       "sources": [
         {
-          "path": "results/run_20260518_120232.json",
-          "sha256": "edc0d3e487ab5c792e9578631d4d8c422631c79cac2f9a49abc89a444b2eb1aa",
-          "historical_overrides": {
-            "dt": {
-              "value": 4e-09,
-              "evidence": "Inferred same-device/day value: 9e0adc7:qec_testing.ipynb cell 5 prints Kingston dt=4e-09 s for the May18 memory job. Original broadcasting jobs did not archive dt; conversion is explicitly historical, not job-specific verification."
-            }
-          }
-        },
-        {
-          "path": "results/run_20260908_153150_79eab41b.json",
-          "sha256": "a225306aa86f43bab1af8309c069d58c8c523c9fb6de92645ab5c56428a96866",
-          "historical_overrides": {}
-        },
-        {
           "path": "campaigns/delay_01/results/repeat_000_m1_n2.json",
           "sha256": "256a9198f820db91f580653290700d8b88ed26b88410baaa613caaf308d9b8fb",
           "historical_overrides": {}
@@ -719,6 +702,21 @@
         {
           "path": "campaigns/delay_01/results/repeat_002_m1_n2.json",
           "sha256": "e49f509004413335d104cfc177a08fc986ff71303177ed433e51c2a39751e205",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_02/results/repeat_000_m1_n2.json",
+          "sha256": "bd202d14939014411bd7551cf350c054447c51be33a0b0d99fcb92e30e035044",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_02/results/repeat_001_m1_n2.json",
+          "sha256": "5b3f27f636137730bb27d2673af1e37fbd1593173c80d195cc8a705084628c75",
+          "historical_overrides": {}
+        },
+        {
+          "path": "campaigns/delay_02/results/repeat_002_m1_n2.json",
+          "sha256": "0726ac49afb440cb1883dd3862e2088eefdd358402fb9890e4d02fee2ec56cfe",
           "historical_overrides": {}
         }
       ]
@@ -776,8 +774,8 @@
           "linewidth": 0.8
         },
         "axes": {
-          "xlabel": "Number of receivers, $N$",
-          "ylabel": "Receiver Fidelity $F$",
+          "xlabel": "Number of Receivers, $N$",
+          "ylabel": "Receiver Fidelity, $F$",
           "xlim": null,
           "ylim": [
             0,

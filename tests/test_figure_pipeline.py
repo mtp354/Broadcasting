@@ -113,8 +113,8 @@ def test_qec_saved_comparison_and_disabled_hardware_cells_execute(monkeypatch):
 def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch):
     """Optional saved-campaign integration check, including log-axis autoscaling."""
     campaign_inputs = [
-        ROOT / "campaigns/delay_01/results" / f"repeat_{repeat:03d}_m1_n2.json"
-        for repeat in range(3)
+        ROOT / "campaigns" / campaign / "results" / f"repeat_{repeat:03d}_m1_n2.json"
+        for campaign in ("delay_01", "delay_02") for repeat in range(3)
     ] + [
         ROOT / "campaigns/scaling_01/results" / f"repeat_{repeat:03d}_m{m}_n{n}.json"
         for repeat in range(3) for m in range(1, 4) for n in range(1, 5)
@@ -162,8 +162,17 @@ def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch)
         delay_axes = [ax for ax in rendered[5].axes if ax.get_visible()]
         assert len(delay_axes) == 2
         assert namespace["panel_backends"] == ["ibm_marrakesh", "ibm_kingston"]
-        assert [len(group) for group in namespace["panel_traces"]] == [4, 1]
-        for ax, group in zip(delay_axes, namespace["panel_traces"]):
+        assert [len(group) for group in namespace["panel_traces"]] == [3, 3]
+        expected_delay_sources = {
+            backend: {ROOT / "campaigns" / campaign / "results" / f"repeat_{repeat:03d}_m1_n2.json"
+                      for repeat in range(3)}
+            for backend, campaign in [("ibm_marrakesh", "delay_01"), ("ibm_kingston", "delay_02")]
+        }
+        assert {Path(path).resolve() for path in namespace["FIGURE_5"]["sources"]} == set().union(
+            *expected_delay_sources.values())
+        for ax, backend, group in zip(delay_axes, namespace["panel_backends"], namespace["panel_traces"]):
+            assert {Path(run["filepath"]).resolve() for run, _theta_index, _histograms in group} == expected_delay_sources[backend]
+            assert all(run["backend"] == backend for run, _theta_index, _histograms in group)
             assert len(ax.lines) == 3 * len(group) + 1  # Two receivers, mean, one panel baseline.
             expected_bands = 2 * len(group) if namespace["FIGURE_5"]["show_intervals"] else 0
             assert len(ax.collections) == expected_bands
