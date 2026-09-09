@@ -141,31 +141,56 @@ def test_manuscript_notebook_preview_preserves_data_and_axis_ranges(monkeypatch)
         exec(compile(tree, "visualizations.ipynb:manuscript-figures-3-6", "exec"), namespace)
         rendered = namespace["manuscript_figures"]
         assert set(rendered) == {3, 4, 5, 6}
-        assert [len(line.get_xdata()) for line in rendered[3].axes[0].lines[2:5]] == [5, 50, 50]
+        crossover_data = [line for line in rendered[3].axes[0].lines
+                          if line.get_label().startswith(("Exact", "Sampled"))]
+        assert [len(line.get_xdata()) for line in crossover_data] == [5, 50, 50]
 
         delay_axes = [ax for ax in rendered[4].axes if ax.get_visible()]
-        assert len(delay_axes) == 5
-        for ax, (run, _theta_index, histograms) in zip(delay_axes, namespace["traces"]):
-            order = np.argsort(run["sweep"]["values"])
-            expected = np.array([
-                [sum(weight for bits, weight in histograms[index].items() if bits[-receiver - 1] == "0")
-                 / sum(histograms[index].values()) for receiver in range(run["N"])]
-                for index in order
-            ])
-            for receiver in range(2):
-                line = ax.lines[receiver]
-                assert len(line.get_xdata()) == 121
-                np.testing.assert_allclose(line.get_ydata(), expected[:, receiver])
-            np.testing.assert_allclose(ax.lines[2].get_ydata(), expected.mean(axis=1))
-            assert len(ax.collections) == 2  # Both receivers have Wilson confidence bands.
+        assert len(delay_axes) == 2
+        assert namespace["panel_backends"] == ["ibm_marrakesh", "ibm_kingston"]
+        assert [len(group) for group in namespace["panel_traces"]] == [4, 1]
+        for ax, group in zip(delay_axes, namespace["panel_traces"]):
+            assert len(ax.lines) == 3 * len(group) + 1  # Two receivers, mean, one panel baseline.
+            expected_bands = 2 * len(group) if namespace["FIGURE_4"]["show_intervals"] else 0
+            assert len(ax.collections) == expected_bands
+            assert [text.get_text() for text in ax.get_legend().texts] == ["Receiver 1", "Receiver 2", "Mean"]
+            for run_index, (run, _theta_index, histograms) in enumerate(group):
+                order = np.argsort(run["sweep"]["values"])
+                expected = np.array([
+                    [sum(weight for bits, weight in histograms[index].items() if bits[-receiver - 1] == "0")
+                     / sum(histograms[index].values()) for receiver in range(run["N"])]
+                    for index in order
+                ])
+                for receiver in range(2):
+                    line = ax.lines[3 * run_index + receiver]
+                    assert len(line.get_xdata()) == 121
+                    np.testing.assert_allclose(line.get_ydata(), expected[:, receiver])
+                np.testing.assert_allclose(ax.lines[3 * run_index + 2].get_ydata(), expected.mean(axis=1))
 
         assert len(namespace["scaling_points"]) == 55
         np.testing.assert_array_equal(rendered[5].axes[0].get_xticks(), [1, 2, 3, 4])
 
         convergence_ax = rendered[6].axes[0]
         assert convergence_ax.get_xscale() == convergence_ax.get_yscale() == "log"
-        assert len(convergence_ax.lines) == 6  # Historical + four seeds + anchored reference.
+        assert len(convergence_ax.lines) == 16  # Two receivers + total for five seeds, plus reference.
         assert all(len(line.get_xdata()) == 10 for line in convergence_ax.lines)
+        expected_errors = [np.asarray(namespace["study"].historical["errors_per_receiver"])]
+        expected_errors += [np.asarray([point["errors_per_receiver"] for point in rep["points"]])
+                            for rep in namespace["repetitions"]]
+        for index, errors in enumerate(expected_errors):
+            lines = convergence_ax.lines[3 * index:3 * index + 3]
+            np.testing.assert_allclose(lines[0].get_ydata(), errors[:, 0])
+            np.testing.assert_allclose(lines[1].get_ydata(), errors[:, 1])
+            np.testing.assert_allclose(lines[2].get_ydata(), errors.sum(axis=1))
+            assert [line.get_color() for line in lines] == ["red", "blue", "black"]
+        for line in convergence_ax.lines:
+            assert line.get_marker() in ("", "None", None)
+            assert line.get_linestyle() == "-"
+            assert line.get_alpha() == 0.8
+        assert [text.get_text() for text in convergence_ax.get_legend().texts] == [
+            "Reference", "Receiver 1", "Receiver 2", "Total"]
+        reference = convergence_ax.lines[-1]
+        np.testing.assert_allclose(reference.get_ydata()[0], expected_errors[0][0].sum())
         for limits, getter in [(convergence_ax.get_xlim(), "get_xdata"),
                                (convergence_ax.get_ylim(), "get_ydata")]:
             values = np.concatenate([np.asarray(getattr(line, getter)()) for line in convergence_ax.lines])

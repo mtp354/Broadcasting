@@ -219,7 +219,7 @@ and `figures/`, matching the manuscript's figure references:
 | Figure | PNG | Default saved evidence |
 |---|---|---|
 | 3 | `figure_03_qec_crossover.png` | Pinned QEC crossover simulation sources |
-| 4 | `figure_04_delay_repeats.png` | Latest two historical 121-point, opt3, M=1/N=2 delay sweeps and all three `delay_01` campaign repeats |
+| 4 | `figure_04_delay_repeats.png` | Two panels: historical Marrakesh sweep overlaid with all three `delay_01` campaign repeats on the left; historical Kingston sweep on the right. All are 121-point, opt3, M=1/N=2 delay sweeps. |
 | 5 | `figure_05_hardware_scaling.png` | All 55 qualifying opt3, zero-delay observations, combining historical jobs and the saved scaling campaign |
 | 6 | `figure_06_sampling_convergence.png` | Recovered historical seed 0 and four complete new seed curves, 1–4 |
 
