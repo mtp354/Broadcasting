@@ -333,8 +333,8 @@ Storing $\rho$ requires $O(D^2)$ complex numbers. The current bare-channel path 
 Without QEC, density-matrix storage grows as $(N+1)^{2M}4^N$; with QEC it initially grows as $(N+1)^{2M}4^{5N}$. The exact channel evolution is deterministic. Sender outcomes may be fixed or sampled; under the stated model they give identical corrected outputs by Eq.~\eqref{eq:factorization}.
 
 \subsection{Monte Carlo Sampling}
-% The previous convergence image repeated an effective seed. A new, archived
-% independent-seed study is required before restoring a convergence figure.
+% The restored historical convergence plot is one fixed-seed size sweep;
+% independent repeats must remain distinct from this rounded notebook evidence.
 
 For larger receiver counts the $4^{5N}$ scaling of the encoded density matrix becomes prohibitive, so we estimate the post-noise state by Monte Carlo sampling of the depolarizing channels as Pauli trajectories. We exploit the Kraus decomposition $\mathcal{D}_p(\rho) = \sum_{P\in\{I,X,Y,Z\}} q_P\, P\rho P$ with $q_I = 1-p$ and $q_X = q_Y = q_Z = p/3$, which lets us replace the mixed-state evolution by a pure-state random walk:
 \begin{enumerate}
@@ -351,7 +351,7 @@ The remaining stages operate on $\hat\rho$ as in the exact path. The unnormalize
 
 The implementation retains all $n_s$ encoded vectors and their Pauli labels before recovery. Its peak storage therefore includes $O(n_sD)$ for trajectories and $O(d_{\mathrm{dec}}^2)$ for the decoded empirical density matrix, where $d_{\mathrm{dec}}=(N+1)^M2^N$. Pauli applications and block recovery require $O(n_sND)$ work, followed by $O(n_s d_{\mathrm{dec}}^2)$ for outer products. The remaining dense decoded-space operations have the costs described above. The current pipeline does not stream scalar fidelities or report measured peak-memory and timing benchmarks.
 
-For independent trajectories, scalar sample means have standard errors proportional to $n_s^{-1/2}$ when their variance is finite. Figure~\ref{qec_crossover} compares one saved sampling run with exact simulations and the independently checked logical polynomial; it is a fixed-sample comparison from which no convergence exponent is inferred.
+For independent trajectories, scalar sample means have standard errors proportional to $n_s^{-1/2}$ when their variance is finite. Figure~\ref{qec_crossover} compares one saved sampling run with exact simulations and the independently checked logical polynomial. Figure~\ref{fig:mc_convergence} restores a separate historical sample-size sweep from archived notebook summaries. Its error is $\sum_i\int_0^1|\widehat F_i(p)-F_i^{\mathrm{exact}}(p)|\,dp$, evaluated by the trapezoidal rule on the common probability grid. The same seed is used across sample sizes, so these points are coupled estimates rather than independent repetitions. No convergence exponent or repetition-based confidence interval is inferred from this single trace.
 
 \subsection{Qiskit}
 We implement the broadcasting protocol as a dynamic quantum circuit using Qiskit \cite{javadi2024qiskit}. Dynamic circuits incorporate mid-circuit measurements and real-time classical feedforward, features that are essential for both the sender Fourier-basis measurement with byproduct correction and the QEC syndrome-extraction-and-correction cycle \cite{corcoles2021dynamic}.
@@ -364,7 +364,7 @@ Figure~\ref{QEC Fidelity} uses a separate single-qubit memory benchmark. It prep
 
 \begin{figure}[!tbp]
     \centering
-    \includegraphics[width=\linewidth]{qec513_delay_sweep_idle.pdf}
+    \includegraphics[width=\linewidth]{qec513_delay_sweep_idle.png}
     \caption{Standalone single-qubit memory benchmark on IBM Kingston: encoded $[[5,1,3]]$ runs at optimization levels 0 and 3 (13 May 2026), and bare runs at levels 3 (18 May) and 0 (18 June). All four runs use $8192$ shots per point. They form an exploratory comparison across dates; the manifest documents the historical $dt$ value used for time conversion. The noise-free reference is the saved ideal-circuit result. These are not QEC-enhanced broadcasting data.}
     \label{QEC Fidelity}
 \end{figure}
@@ -465,13 +465,13 @@ For uniformly spaced delay traces with at least eight points, we compute a linea
 \begin{figure*}[!t]
 \begin{minipage}[t]{0.48\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{qec vs no qec vs sampling.pdf}
+    \includegraphics[width=\linewidth]{qec vs no qec vs sampling.png}
     \caption{Average receiver fidelity as a function of depolarizing probability $p$ for the $M{=}1$, $N{=}2$ protocol with and without $[[5,1,3]]$ quantum error correction compared against Monte Carlo trajectory sampling estimates. The inset resolves the low-noise crossing at $p_\star=(3-\sqrt6)/4$. The saved curves use $\alpha=1/\sqrt3$, $\theta=\pi/4$; local depolarizing fidelity is independent of this pure-target choice. The sampling curve is one saved run, not a convergence study.}
     \label{qec_crossover}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.48\textwidth}
     \centering
-    \includegraphics[width=\linewidth]{delay time vs fidelity 121 opt3.pdf}
+    \includegraphics[width=\linewidth]{delay time vs fidelity 121 opt3.png}
     \caption{Receiver fidelity versus inserted delay for the unencoded $M=1,N=2$ protocol on IBM Kingston, optimization level 3, collected 18 May 2026 with $10{,}000$ shots per point. The $dt=4$ ns conversion is inferred from a Kingston memory-job output on the same date; it was not archived with this broadcasting job.}
     \label{qiskit_delay}
 \end{minipage}
@@ -479,12 +479,19 @@ For uniformly spaced delay traces with at least eight points, we compute a linea
 
 \begin{figure*}[!t]
     \centering
-    \includegraphics[width=\linewidth]{fidelity scaling hardware.pdf}
-    \caption{Existing unencoded hardware observations at zero added delay. Each point represents a job and sender-angle tuple, with backend, date, $(M,N)$, optimization level, and shot count retained. Points show receiver means and horizontal bars span receiver marginals; these bars represent receiver heterogeneity, not statistical uncertainty. The heterogeneous collection includes IBM Fez, Marrakesh, and Kingston and historical and current circuit variants; it is exploratory evidence, not a controlled size-scaling experiment.}
+    \includegraphics[width=\linewidth]{fidelity scaling hardware.png}
+    \caption{Existing unencoded hardware observations at zero added delay, restricted to optimization level 3. The horizontal axis is the number of receivers $N$, the vertical axis is receiver fidelity, and colour identifies the number of senders $M$. Each point represents one job and sender-angle tuple: its dot is the receiver mean and its vertical bar spans the minimum and maximum receiver marginals. Bars describe receiver heterogeneity, not statistical uncertainty. Small horizontal offsets separate observations at the same $N$; they do not represent noninteger network sizes. The saved collection spans backends, dates, shot counts, and circuit variants, so it remains exploratory rather than a controlled scaling cohort.}
     \label{protocol_scale}
 \end{figure*}
 
 Figure~\ref{qec_crossover} compares saved exact bare and encoded simulations, a saved Pauli-trajectory estimate, and the analytical curves. The exact curves agree with their predicted fidelities. The sampling points provide a fixed-sample numerical comparison; the independently constructed stabilizer oracle and analytical factorization provide checks that do not rely on agreement between the two simulation paths alone. The low-noise QEC advantage ends at $p_\star\simeq0.1376$, as derived above.
+
+\begin{figure*}[!t]
+    \centering
+    \includegraphics[width=0.62\linewidth]{mc_sampling_convergence.png}
+    \caption{Historical Monte Carlo-to-exact convergence for the encoded $M=1,N=2$ protocol, $\alpha=1/\sqrt2$, $\theta=0$, and sender outcome 0. The ordinate sums the two receivers' integrated absolute fidelity errors over 21 equally spaced depolarizing probabilities in $[0,1]$. Sample counts range from 50 to $10^5$, using seed 0 throughout. Points are reconstructed from archived notebook errors printed to eight decimal places; the original sampled fidelity grids were not retained. The dotted $n_s^{-1/2}$ reference is anchored at the first point and is not a fitted uncertainty estimate.}
+    \label{fig:mc_convergence}
+\end{figure*}
 
 Figure~\ref{qiskit_delay} shows the existing unencoded $M=1,N=2$ IBM Kingston delay sweep at optimization level 3. The fidelity is already below one near zero added delay, so errors outside the inserted idle interval contribute materially. The receiver traces also differ and exhibit nonmonotonic delay structure. A device-specific coherence-time explanation would require the calibration and layout at execution; no contemporaneous calibration supports assigning a particular $T_1$ range to this run.
 
@@ -494,7 +501,7 @@ The Marrakesh sweep saved on 8 September 2026 (run timestamp 15:31:50) uses $409
 
 The Kingston optimization-level-3 receiver-mean trace has a selected period of $0.504\,\mu\mathrm{s}$ with frequency-bin spacing $0.0413\,\mu\mathrm{s}^{-1}$. A sinusoid at this peak explains only $6.6\%$ of the linearly detrended variance. The level-0 trace gives $0.440\,\mu\mathrm{s}$ and $4.9\%$. Both peaks have only about two to three samples per cycle and lie near the Nyquist limit. Time conversion for these May traces uses a same-device, same-day $dt$ inference documented in the manifest. The September trace instead uses its recorded $dt$; its dominant period is $24.2\,\mu\mathrm{s}$ over a $24\,\mu\mathrm{s}$ observation window, so it is unresolved against smooth drift. These spectral summaries do not establish a reproducible oscillation period or a dynamical-decoupling mechanism.
 
-Figure~\ref{protocol_scale} places the available zero-added-delay hardware observations side by side with their run identities. These measurements span backends, dates, shot counts, optimization settings, and circuit versions, so they do not constitute a controlled scaling curve. Even within a matched cohort, a decrease in local fidelity with larger circuits can arise from accumulating independent gate, routing, idle, and readout errors. The prediction of $N$-independent local fidelity applies only to one idealized receiver channel per qubit, not to the full hardware circuit. The existing observations therefore do not establish correlated physical noise.
+Figure~\ref{protocol_scale} displays the available optimization-level-3 observations against receiver count, with sender count distinguished by colour. Measurements at the same $(M,N)$ remain separate. They span backends, dates, shot counts, and circuit versions, so they do not constitute a controlled scaling curve. Even within a matched cohort, a decrease in local fidelity with larger circuits can arise from accumulating independent gate, routing, idle, and readout errors. The prediction of $N$-independent local fidelity applies only to one idealized receiver channel per qubit, not to the full hardware circuit. The existing observations therefore do not establish correlated physical noise.
 
 The library implements a complete QEC-enhanced broadcasting circuit, validated in simulation. The reported hardware QEC data in Fig.~\ref{QEC Fidelity} are the standalone encoded-memory benchmark; a complete QEC-enhanced broadcasting hardware experiment has not been established by the archived data.
 

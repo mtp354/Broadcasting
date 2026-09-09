@@ -14,12 +14,15 @@ from broadcasting.plotting import (
     clear_titles,
     periodogram_from_run,
     plot_fidelity_vs_noise,
+    hardware_scaling_points,
+    plot_hardware_scaling,
+    plot_delay_repeats,
     plot_periodicity_comparison,
     plot_run_sweep,
     save_figure,
 )
 from broadcasting.protocol import BroadcastResult, ProtocolConfig
-from broadcasting.results import load_run, save_run
+from broadcasting.results import list_runs, load_run, save_run
 
 
 def test_clear_titles_removes_axes_and_suptitle():
@@ -43,6 +46,123 @@ def test_save_figure_strips_titles(tmp_path):
     assert out.exists()
     assert ax.get_title() == ""
     plt.close(fig)
+
+
+@pytest.mark.parametrize("filename,kwargs", [("figure.pdf", {}), ("figure.png", {"format": "pdf"}),
+                                            ("figure.svg", {})])
+def test_save_figure_rejects_non_png_before_writing(tmp_path, filename, kwargs):
+    fig, _ = plt.subplots()
+    with pytest.raises(ValueError, match="PNG only"):
+        save_figure(fig, tmp_path / filename, **kwargs)
+    assert not list(tmp_path.iterdir())
+    plt.close(fig)
+
+
+def _hardware_run(*, senders=1, receivers=2, opt=3, job="job-1", phases=None, dt=2e-9):
+    phases = phases or [[0.2] * senders]
+    counts = {"0" * receivers: 70, "1" * receivers: 10}
+    if receivers > 1:
+        counts["1" + "0" * (receivers - 1)] = 20
+    else:
+        counts["0"] += 20
+    return {"experiment_type": "hardware", "M": senders, "N": receivers,
+            "optimization_level": opt, "job_id": job, "backend": "ibm_test",
+            "shots": 100, "timestamp": "2026-09-08T12:00:00", "filename": f"run_{job}.json",
+            "theta_samples": phases, "sweep": {"axis": "tau", "values": [0, 100]},
+            "counts": [[counts, counts] for _ in phases], "metadata": {"dt": dt}}
+
+
+def test_scaling_coordinates_opt3_filter_sender_colors_and_receiver_ranges():
+    runs = [_hardware_run(opt=0, job="excluded"),
+            _hardware_run(job="m1n2"),
+            _hardware_run(senders=2, receivers=3, job="m2n3"),
+            _hardware_run(receivers=3, job="m1n3")]
+    fig = plot_hardware_scaling(runs)
+    points, ax = fig.broadcasting_points, fig.axes[0]
+    assert len(points) == 3
+    assert {point["job_id"] for point in points} == {"m1n2", "m1n3", "m2n3"}
+    assert ax.get_xlabel() == "Number of receivers, N"
+    assert "fidelity" in ax.get_ylabel()
+    assert ax.get_xticks().tolist() == [2, 3]
+    colors = {}
+    for point, container in zip(points, ax.containers):
+        line, _, bars = container.lines
+        assert line.get_xdata()[0] == pytest.approx(point["x"])
+        assert abs(point["x"] - point["N"]) <= 0.22 + 1e-12
+        assert line.get_ydata()[0] == pytest.approx(point["mean"])
+        assert point["minimum"] == pytest.approx(0.7)
+        assert point["maximum"] == pytest.approx(0.9)
+        segment = bars[0].get_segments()[0]
+        assert segment[:, 1].tolist() == pytest.approx([0.7, 0.9])
+        if point["M"] in colors:
+            assert line.get_color() == colors[point["M"]]
+        colors[point["M"]] = line.get_color()
+    assert colors[1] != colors[2]
+    plt.close(fig)
+
+
+def test_scaling_keeps_phase_samples_campaign_cases_and_repeats_separate():
+    runs = []
+    for repeat in range(2):
+        for case in ["all", "receiver0"]:
+            run = _hardware_run(job=f"shared-{repeat}", phases=[[0.2], [1.5]])
+            run["metadata"]["campaign"] = {"run_id": "campaign", "repeat_index": repeat, "case_id": case}
+            runs.append(run)
+    points = hardware_scaling_points([*runs, runs[0]])
+    assert len(points) == 8
+    assert len({point["x"] for point in points}) == 8
+    assert {point["thetas"][0] for point in points} == {0.2, 1.5}
+    assert points == hardware_scaling_points(list(reversed(runs)))
+
+
+def test_scaling_rejects_dataset_without_opt3_zero_delay():
+    with pytest.raises(ValueError, match="No opt3"):
+        plot_hardware_scaling([_hardware_run(opt=0)])
+
+
+def test_scaling_equal_receiver_fidelities_tolerates_mean_roundoff():
+    run = _hardware_run(receivers=3)
+    run["counts"] = [[{"000": 1, "111": 9}, {"000": 1, "111": 9}]]
+    fig = plot_hardware_scaling([run])
+    point = fig.broadcasting_points[0]
+    assert point["mean"] == pytest.approx(0.1)
+    assert point["minimum"] == point["maximum"] == 0.1
+    segment = fig.axes[0].containers[0].lines[2][0].get_segments()[0]
+    assert segment[:, 1].tolist() == pytest.approx([0.1, 0.1])
+    plt.close(fig)
+
+
+def test_delay_repeats_preserve_angles_repeat_identity_and_time_units():
+    first = _hardware_run(phases=[[0.2], [1.7]])
+    first["metadata"]["campaign"] = {"run_id": "campaign", "repeat_index": 2,
+                                     "case_id": "receiver0", "receiver_delay_factors": [1, 0]}
+    second = _hardware_run(job="unknown-dt", dt=None)
+    fig = plot_delay_repeats([first, second])
+    visible = [ax for ax in fig.axes if ax.get_visible()]
+    assert len(visible) == 3
+    for ax in visible[:2]:
+        assert ax.containers[0].lines[0].get_xdata().tolist() == pytest.approx([0, 0.2])
+        assert ax.get_xlabel() == "Idle delay (us)"
+        assert "repeat 2" in ax.texts[0].get_text()
+        assert "Receiver delay factors: [1, 0]" in ax.texts[0].get_text()
+    assert "[0.200]" in visible[0].texts[0].get_text()
+    assert "[1.700]" in visible[1].texts[0].get_text()
+    assert visible[2].get_xlabel() == "Idle delay (dt)"
+    assert visible[2].containers[0].lines[0].get_xdata().tolist() == [0, 100]
+    plt.close(fig)
+
+
+def test_list_runs_loads_nested_campaign_results_excluding_receipts_and_analysis(tmp_path):
+    config = ProtocolConfig(M=1, N=1, thetas=[0.2], use_qec=False)
+    result = BroadcastResult(fidelities=[[0.9]], metadata={"mode": "exact", "p_list": [0]})
+    save_run(result, config, filepath=tmp_path / "run_old.json")
+    save_run(result, config, filepath=tmp_path / "campaign/results/repeat_000_m1_n1.json")
+    for relative in ["campaign/receipts/repeat_000.json", "campaign/attempts/repeat_000.json",
+                     "campaign/prepared.json", "analysis/summary.json", "legacy/run_old.json"]:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("{}")
+    assert {run["filename"] for run in list_runs(tmp_path)} == {"run_old.json", "repeat_000_m1_n1.json"}
 
 
 def test_plot_fidelity_vs_noise_has_no_title_by_default():

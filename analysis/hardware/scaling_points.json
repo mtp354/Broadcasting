@@ -1,0 +1,295 @@
+[
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_fez",
+    "timestamp": "2026-04-08T17:05:44.584495",
+    "job_id": "d7bc3ab0g7hs73dpd27g",
+    "filename": "run_20260408_170544.json",
+    "shots": 8192,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.92218017578125,
+    "minimum": 0.9052734375,
+    "maximum": 0.9390869140625,
+    "x": 1.78
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_fez",
+    "timestamp": "2026-04-08T17:05:44.584495",
+    "job_id": "d7bc3ab0g7hs73dpd27g",
+    "filename": "run_20260408_170544.json",
+    "shots": 8192,
+    "theta_index": 1,
+    "thetas": [
+      2.757554564287996
+    ],
+    "campaign": {},
+    "mean": 0.91546630859375,
+    "minimum": 0.9056396484375,
+    "maximum": 0.92529296875,
+    "x": 1.82
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_fez",
+    "timestamp": "2026-05-13T15:04:33.077150",
+    "job_id": "d82ch8foha1c73bldjig",
+    "filename": "run_20260513_150433.json",
+    "shots": 8192,
+    "theta_index": 0,
+    "thetas": [
+      4.098517143286439
+    ],
+    "campaign": {},
+    "mean": 0.854248046875,
+    "minimum": 0.8233642578125,
+    "maximum": 0.8851318359375,
+    "x": 1.8599999999999999
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_kingston",
+    "timestamp": "2026-04-08T16:08:14.227830",
+    "job_id": "d7bba5jklj2c73ev1oe0",
+    "filename": "run_20260408_160814.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.936767578125,
+    "minimum": 0.932861328125,
+    "maximum": 0.940673828125,
+    "x": 1.9
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_kingston",
+    "timestamp": "2026-05-18T12:02:32.315741",
+    "job_id": "d85jcso0bvlc73d5mdf0",
+    "filename": "run_20260518_120232.json",
+    "shots": 10000,
+    "theta_index": 0,
+    "thetas": [
+      4.098517143286439
+    ],
+    "campaign": {},
+    "mean": 0.9099,
+    "minimum": 0.8941,
+    "maximum": 0.9257000000000001,
+    "x": 1.94
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-05-13T14:17:04.298172",
+    "job_id": "d82btog0bvlc73d240pg",
+    "filename": "run_20260513_141704.json",
+    "shots": 8192,
+    "theta_index": 0,
+    "thetas": [
+      5.92814419967864
+    ],
+    "campaign": {},
+    "mean": 0.88427734375,
+    "minimum": 0.8695068359375,
+    "maximum": 0.8990478515625,
+    "x": 1.98
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-05-13T14:41:30.186253",
+    "job_id": "d82c0k6gbeec73aljrq0",
+    "filename": "run_20260513_144130.json",
+    "shots": 8192,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.84698486328125,
+    "minimum": 0.767578125,
+    "maximum": 0.9263916015625,
+    "x": 2.02
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-09-08T13:27:28.443042",
+    "job_id": "dag49mni3e6s738lteu0",
+    "filename": "run_20260908_132728_4fc6f552.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.865478515625,
+    "minimum": 0.821533203125,
+    "maximum": 0.909423828125,
+    "x": 2.06
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-09-08T13:27:38.171052",
+    "job_id": "dag4b0hhvn6c73cq3k80",
+    "filename": "run_20260908_132738_ef85f542.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.8330078125,
+    "minimum": 0.793701171875,
+    "maximum": 0.872314453125,
+    "x": 2.1
+  },
+  {
+    "M": 1,
+    "N": 2,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-09-08T15:31:50.541704",
+    "job_id": "dag61romhr3c73e4n2rg",
+    "filename": "run_20260908_153150_79eab41b.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.847412109375,
+    "minimum": 0.8349609375,
+    "maximum": 0.85986328125,
+    "x": 2.14
+  },
+  {
+    "M": 2,
+    "N": 2,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-04-08T16:22:12.799839",
+    "job_id": "d7bbh8p5a5qc73dn9a60",
+    "filename": "run_20260408_162212.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599,
+      2.757554564287996
+    ],
+    "campaign": {},
+    "mean": 0.659912109375,
+    "minimum": 0.613037109375,
+    "maximum": 0.706787109375,
+    "x": 2.18
+  },
+  {
+    "M": 3,
+    "N": 2,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-04-08T16:31:29.775024",
+    "job_id": "d7bblg3klj2c73ev272g",
+    "filename": "run_20260408_163129.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599,
+      2.757554564287996,
+      5.3947298351621535
+    ],
+    "campaign": {},
+    "mean": 0.504150390625,
+    "minimum": 0.501708984375,
+    "maximum": 0.506591796875,
+    "x": 2.22
+  },
+  {
+    "M": 1,
+    "N": 3,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-04-08T16:13:40.384396",
+    "job_id": "d7bbd4h5a5qc73dn9570",
+    "filename": "run_20260408_161340.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.8477376302083334,
+    "minimum": 0.703125,
+    "maximum": 0.92919921875,
+    "x": 2.78
+  },
+  {
+    "M": 2,
+    "N": 3,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-04-08T16:24:40.701526",
+    "job_id": "d7bbibb0g7hs73dpcb6g",
+    "filename": "run_20260408_162440.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599,
+      2.757554564287996
+    ],
+    "campaign": {},
+    "mean": 0.550048828125,
+    "minimum": 0.49951171875,
+    "maximum": 0.576416015625,
+    "x": 3.22
+  },
+  {
+    "M": 1,
+    "N": 4,
+    "backend": "ibm_marrakesh",
+    "timestamp": "2026-04-08T16:19:02.379498",
+    "job_id": "d7bbfhb0g7hs73dpc7og",
+    "filename": "run_20260408_161902.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599
+    ],
+    "campaign": {},
+    "mean": 0.5838623046875,
+    "minimum": 0.439208984375,
+    "maximum": 0.651611328125,
+    "x": 3.78
+  },
+  {
+    "M": 2,
+    "N": 4,
+    "backend": "ibm_fez",
+    "timestamp": "2026-04-08T16:29:06.887416",
+    "job_id": "d7bbjsbklj2c73ev24jg",
+    "filename": "run_20260408_162906.json",
+    "shots": 4096,
+    "theta_index": 0,
+    "thetas": [
+      4.862909272689599,
+      2.757554564287996
+    ],
+    "campaign": {},
+    "mean": 0.50091552734375,
+    "minimum": 0.4990234375,
+    "maximum": 0.5029296875,
+    "x": 4.22
+  }
+]

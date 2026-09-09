@@ -2,7 +2,8 @@
 
 Planning and status are offline. Only prepare, submit, collect and attach-job
 create a Runtime service. Each repeat is a separate job with seeded, interleaved
-PUB order; templates and layout are reused exactly across repeats. Submitted
+PUB order. Identical phases reuse compiled circuits; different repeat phases
+get their own archived circuits with a shared initial layout. Submitted
 order is recorded but does not guarantee the provider's chronological execution.
 """
 from __future__ import annotations
@@ -25,10 +26,10 @@ from .provenance import calibration_provenance
 from .results import save_run, write_run_json
 
 
-CONFIG_KEYS = {
+COMMON_CONFIG_KEYS = {
     "schema_version", "campaign_id", "runtime_account", "backend", "shots",
     "repeats", "seed", "seed_transpiler", "optimization_level", "alpha",
-    "theta_samples", "tau_values_dt", "cases",
+    "tau_values_dt", "cases",
 }
 CASE_KEYS = {"id", "M", "N", "receiver_delay_factors", "initial_layout"}
 IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,63}\Z")
@@ -58,9 +59,11 @@ def _keys(data, allowed, name):
 
 def validate_config(config: dict, *, online: bool = False) -> dict:
     """Reject mistakes before account lookup or creating a run directory."""
-    _keys(config, CONFIG_KEYS, "Campaign")
-    if config["schema_version"] != 1:
-        raise ValueError("Unsupported campaign schema_version.")
+    if (not isinstance(config, dict) or type(config.get("schema_version")) is not int
+            or config["schema_version"] not in (1, 2)):
+        raise ValueError("Unsupported campaign schema_version; supported versions are 1 and 2.")
+    phase_key = "theta_samples" if config["schema_version"] == 1 else "phase_design"
+    _keys(config, COMMON_CONFIG_KEYS | {phase_key}, "Campaign")
     if not isinstance(config["campaign_id"], str) or not IDENTIFIER.fullmatch(config["campaign_id"]):
         raise ValueError("campaign_id must be a short filename-safe identifier.")
     for key in ("runtime_account", "backend"):
@@ -80,14 +83,6 @@ def validate_config(config: dict, *, online: bool = False) -> dict:
     if not isinstance(config["tau_values_dt"], list):
         raise ValueError("tau_values_dt must be a list.")
     HardwareBackend._validate_taus(config["tau_values_dt"])
-    samples = config["theta_samples"]
-    if not isinstance(samples, list) or not samples or any(not isinstance(row, list) or not row for row in samples):
-        raise ValueError("theta_samples must be a nonempty list of angle lists.")
-    for row in samples:
-        for theta in row:
-            _finite(theta, "theta")
-    if len({tuple(row) for row in samples}) != len(samples):
-        raise ValueError("theta_samples must not contain duplicate samples.")
     if not isinstance(config["cases"], list) or not config["cases"]:
         raise ValueError("cases must be a nonempty list.")
     ids, conditions, layouts = set(), set(), {}
@@ -98,8 +93,6 @@ def validate_config(config: dict, *, online: bool = False) -> dict:
         ids.add(case["id"])
         for key in ("M", "N"):
             _integer(case[key], key, 1)
-        if any(len(row) != case["M"] for row in samples):
-            raise ValueError("Every theta sample must have M entries for every case.")
         factors = case["receiver_delay_factors"]
         if not isinstance(factors, list) or len(factors) != case["N"]:
             raise ValueError("receiver_delay_factors must have N entries.")
@@ -124,7 +117,99 @@ def validate_config(config: dict, *, online: bool = False) -> dict:
         if signature in conditions:
             raise ValueError("Duplicate case conditions; use repeats for independent repeats.")
         conditions.add(signature)
+    _validate_phases(config)
     return config
+
+
+def _validate_samples(samples, senders):
+    if (not isinstance(samples, list) or not samples or
+            any(not isinstance(row, list) or len(row) != senders for row in samples)):
+        raise ValueError(f"Each theta sample must have M={senders} entries.")
+    for row in samples:
+        for theta in row:
+            _finite(theta, "theta")
+    if len({tuple(row) for row in samples}) != len(samples):
+        raise ValueError("theta samples must not contain duplicate samples.")
+
+
+def _validate_phases(config):
+    senders = {case["M"] for case in config["cases"]}
+    if config["schema_version"] == 1:
+        for m in senders:
+            _validate_samples(config["theta_samples"], m)
+        return
+    design = config["phase_design"]
+    if not isinstance(design, dict):
+        raise ValueError("phase_design must be a dictionary.")
+    if design.get("kind") == "seeded_random":
+        _keys(design, {"kind", "seed", "samples_per_repeat", "low", "high"}, "Random phase design")
+        _integer(design["seed"], "phase seed")
+        _integer(design["samples_per_repeat"], "samples_per_repeat", 1)
+        if _finite(design["low"], "low") >= _finite(design["high"], "high"):
+            raise ValueError("phase low must be less than high.")
+    elif design.get("kind") == "fixed":
+        _keys(design, {"kind", "samples_by_m"}, "Fixed phase design")
+        samples = design["samples_by_m"]
+        if not isinstance(samples, dict) or set(samples) != {str(m) for m in senders}:
+            raise ValueError("samples_by_m must contain exactly the configured sender counts as string keys.")
+        for m in senders:
+            _validate_samples(samples[str(m)], m)
+        if len({len(rows) for rows in samples.values()}) != 1:
+            raise ValueError("Every sender count must have the same number of theta samples.")
+    else:
+        raise ValueError("phase_design kind must be seeded_random or fixed.")
+
+
+def _phase_schedule(config):
+    """Draw a full sender vector once per repeat/sample and share prefixes across N."""
+    if config["schema_version"] == 1:
+        return [{"kind": "fixed", "phase_seed": None,
+                 "theta_samples_by_case": [config["theta_samples"] for _ in config["cases"]]}
+                for _ in range(config["repeats"])]
+    design = config["phase_design"]
+    if design["kind"] == "fixed":
+        return [{"kind": "fixed", "phase_seed": None,
+                 "theta_samples_by_case": [design["samples_by_m"][str(case["M"])] for case in config["cases"]]}
+                for _ in range(config["repeats"])]
+    rng = random.Random(design["seed"])
+    largest_m = max(case["M"] for case in config["cases"])
+    schedule = []
+    for _ in range(config["repeats"]):
+        vectors = [[rng.uniform(design["low"], design["high"]) for _ in range(largest_m)]
+                   for _ in range(design["samples_per_repeat"])]
+        schedule.append({"kind": "seeded_random", "phase_seed": design["seed"],
+                         "theta_samples_by_case": [[row[:case["M"]] for row in vectors]
+                                                   for case in config["cases"]]})
+    return schedule
+
+
+def make_campaign_config(kind: str, *, runtime_account="EDIT_ME", backend="EDIT_ME",
+                         campaign_id=None, repeats=3, seed=20260908,
+                         sender_counts=(1, 2, 3), receiver_counts=(1, 2, 3, 4),
+                         tau_values_dt=None) -> dict:
+    """Build editable notebook defaults; this function is entirely offline.
+
+    Delay repeats use M=1,N=2 and 10,000 shots at each of 121 delays.
+    Scaling uses the explicit sender/receiver matrix and 8,192 shots at zero delay.
+    Both vary phases across repeats and share phases across N within a repeat.
+    """
+    if kind not in ("delay", "scaling"):
+        raise ValueError("kind must be delay or scaling.")
+    pairs = [(1, 2)] if kind == "delay" else [(m, n) for m in sender_counts for n in receiver_counts]
+    config = {
+        "schema_version": 2, "campaign_id": campaign_id or f"broadcasting-{kind}-repeats",
+        "runtime_account": runtime_account, "backend": backend,
+        "shots": 10000 if kind == "delay" else 8192, "repeats": repeats,
+        "seed": seed, "seed_transpiler": seed, "optimization_level": 3,
+        "alpha": 1 / math.sqrt(2),
+        "phase_design": {"kind": "seeded_random", "seed": seed + 1,
+                         "samples_per_repeat": 1, "low": 0.0, "high": 2 * math.pi},
+        "tau_values_dt": (list(range(0, 6001, 50)) if kind == "delay" else [0])
+                         if tau_values_dt is None else list(tau_values_dt),
+        "cases": [{"id": f"m{m}_n{n}", "M": m, "N": n,
+                   "receiver_delay_factors": [1] * n, "initial_layout": None} for m, n in pairs],
+    }
+    return validate_config(config)
 
 
 def read_config(path: str | Path) -> dict:
@@ -139,7 +224,8 @@ def plan_campaign(config: dict) -> dict:
     """Seeded block randomization interleaves every case at each theta/delay."""
     validate_config(config)
     rng = random.Random(config["seed"])
-    points = [(ti, di) for ti in range(len(config["theta_samples"]))
+    phases = _phase_schedule(config)
+    points = [(ti, di) for ti in range(len(phases[0]["theta_samples_by_case"][0]))
               for di in range(len(config["tau_values_dt"]))]
     repeats = []
     for repeat in range(config["repeats"]):
@@ -154,14 +240,24 @@ def plan_campaign(config: dict) -> dict:
                               "theta_index": ti, "tau_index": di,
                               "tau_dt": config["tau_values_dt"][di],
                               "canonical_index": ti * len(config["tau_values_dt"]) + di})
-        repeats.append({"repeat_index": repeat, "pub_order": order})
+        entry = {"repeat_index": repeat, "pub_order": order}
+        if config["schema_version"] == 2:
+            entry["phases"] = phases[repeat]
+            for pub in order:
+                pub["thetas"] = phases[repeat]["theta_samples_by_case"][pub["case_index"]][pub["theta_index"]]
+        repeats.append(entry)
     pubs = len(points) * len(config["cases"])
+    cases = [{"id": case["id"], "M": case["M"], "N": case["N"],
+              "logical_qubits": case["M"] * math.ceil(math.log2(case["N"] + 1)) + case["N"],
+              "shots_per_repeat": len(points) * config["shots"]} for case in config["cases"]]
     return {"campaign_id": config["campaign_id"], "backend": config["backend"],
             "runtime_account": config["runtime_account"], "config_sha256": _digest(config),
             "jobs": config["repeats"], "pubs_per_job": pubs,
             "total_pubs": pubs * config["repeats"],
             "total_shots": pubs * config["repeats"] * config["shots"],
-            "shots_per_pub": config["shots"], "order_note": ORDER_NOTE, "repeats": repeats}
+            "shots_per_pub": config["shots"], "optimization_level": config["optimization_level"],
+            "cases": cases, "phase_design": config.get("phase_design", {"kind": "fixed"}),
+            "order_note": ORDER_NOTE, "repeats": repeats}
 
 
 def _service(config):
@@ -204,7 +300,17 @@ def prepare_campaign(config: dict, run_dir: str | Path, *, service=None) -> dict
     dt = getattr(getattr(backend, "target", None), "dt", None)
     if dt is None or not math.isfinite(dt) or dt <= 0:
         raise ValueError("Backend must publish a positive dt before preparing this dt-based campaign.")
+    target = backend.target
+    delay_step = math.lcm(getattr(target, "granularity", 1) or 1,
+                          getattr(target, "pulse_alignment", 1) or 1)
+    if any(tau % delay_step for tau in config["tau_values_dt"]):
+        raise ValueError(f"This backend requires delays in multiples of {delay_step} dt. "
+                         "Edit tau_values_dt explicitly and prepare a new directory; delays are never rounded.")
+    for case in plan["cases"]:
+        if case["logical_qubits"] > backend.num_qubits:
+            raise ValueError(f"{case['id']} needs {case['logical_qubits']} qubits; backend has {backend.num_qubits}.")
     cases = []
+    circuit_review = []
     shared_layouts = {}
     for case in config["cases"]:
         key = (case["M"], case["N"])
@@ -212,49 +318,82 @@ def prepare_campaign(config: dict, run_dir: str | Path, *, service=None) -> dict
             if key in shared_layouts and shared_layouts[key] != case["initial_layout"]:
                 raise ValueError("Matched M,N cases must use the same initial_layout.")
             shared_layouts[key] = case["initial_layout"]
-    for case in config["cases"]:
-        key = (case["M"], case["N"])
-        hardware = HardwareBackend(
-            service, config["backend"], shots=config["shots"],
-            optimization_level=config["optimization_level"],
-            seed_transpiler=config["seed_transpiler"], initial_layout=shared_layouts.get(key),
-        )
-        protocol = ProtocolConfig(M=case["M"], N=case["N"], alpha=config["alpha"],
-                                  thetas=config["theta_samples"][0], use_qec=False)
-        cases.append(hardware.prepare_tau_sweep(
-            protocol, config["tau_values_dt"], theta_samples=config["theta_samples"],
-            receiver_delay_factors=case["receiver_delay_factors"], backend=backend,
-        ))
-        shared_layouts[key] = cases[-1]["metadata"]["initial_layout"]
-    mapping_review = []
-    receiver_mappings = {}
-    for case, compiled in zip(config["cases"], cases):
-        for index, archived in enumerate(compiled["metadata"]["compiled_circuits"]):
-            layout = archived["layout"]
-            mapping = layout["final_index_layout"][-case["N"]:] if layout else None
-            mapping_review.append({"case_id": case["id"], "canonical_index": index,
-                                   "receiver_output_qubits": mapping})
-            receiver_mappings.setdefault((case["M"], case["N"]), set()).add(tuple(mapping) if mapping else None)
+    # Prepare each distinct case/phase pair once. v1 fixed-phase bundles retain
+    # their original cases layout; v2 records the template chosen for each repeat.
+    phases = _phase_schedule(config)
+    template_cache, repeat_case_indices = {}, []
+    mapping_review, receiver_mappings = [], {}
+    for ri, phase in enumerate(phases):
+        indices = []
+        for ci, case in enumerate(config["cases"]):
+            samples = phase["theta_samples_by_case"][ci]
+            signature = (ci, tuple(tuple(row) for row in samples))
+            if signature not in template_cache:
+                key = (case["M"], case["N"])
+                hardware = HardwareBackend(
+                    service, config["backend"], shots=config["shots"],
+                    optimization_level=config["optimization_level"],
+                    seed_transpiler=config["seed_transpiler"], initial_layout=shared_layouts.get(key),
+                )
+                protocol = ProtocolConfig(M=case["M"], N=case["N"], alpha=config["alpha"],
+                                          thetas=samples[0], use_qec=False)
+                compiled = hardware.prepare_tau_sweep(
+                    protocol, config["tau_values_dt"], theta_samples=samples,
+                    receiver_delay_factors=case["receiver_delay_factors"], backend=backend,
+                )
+                shared_layouts[key] = compiled["metadata"]["initial_layout"]
+                template_cache[signature] = len(cases)
+                cases.append(compiled)
+                depths = [row["depth"] for row in compiled["metadata"]["compiled_circuits"]]
+                circuit_review.append({"case_id": case["id"], "first_repeat_index": ri,
+                                       "theta_samples": samples, "depth_min": min(depths),
+                                       "depth_max": max(depths),
+                                       "pubs": len(compiled["metadata"]["compiled_circuits"]),
+                                       "compilation": compiled["metadata"]["compilation"]})
+                for index, archived in enumerate(compiled["metadata"]["compiled_circuits"]):
+                    layout = archived["layout"]
+                    mapping = layout["final_index_layout"][-case["N"]:] if layout else None
+                    mapping_review.append({"case_id": case["id"], "first_repeat_index": ri,
+                                           "prepared_case_index": len(cases) - 1,
+                                           "canonical_index": index, "receiver_output_qubits": mapping})
+                    receiver_mappings.setdefault(key, set()).add(tuple(mapping) if mapping else None)
+            indices.append(template_cache[signature])
+        repeat_case_indices.append(indices)
     warnings = [f"M={m},N={n}: receiver output mappings differ between compiled conditions; inspect mapping_review before comparing controls."
                 for (m, n), mappings in receiver_mappings.items() if len(mappings) > 1 or None in mappings]
-    prepared = {"schema_version": 1, "run_id": uuid.uuid4().hex,
+    prepared = {"schema_version": config["schema_version"], "run_id": uuid.uuid4().hex,
                 "prepared_at": _now(), "config": config, "plan": plan, "cases": cases,
-                "review": {"dt_seconds": dt,
+                "review": {"dt_seconds": dt, "required_delay_step_dt": delay_step,
+                           "circuit_review": circuit_review,
                            "delay_seconds": [tau * dt for tau in config["tau_values_dt"]],
                            "shared_initial_layouts": {f"M{m}N{n}": layout for (m, n), layout in shared_layouts.items()},
                            "mapping_review": mapping_review, "comparison_warnings": warnings}}
+    if config["schema_version"] == 2:
+        prepared["repeat_case_indices"] = repeat_case_indices
     _durable_json(prepared, run_dir / "prepared.json")
     _durable_json({"sha256": _digest(prepared)}, run_dir / "prepared.sha256.json")
     return prepared
 
 
-def _load_prepared(run_dir):
+def load_prepared_campaign(run_dir, *, expected_config=None):
+    """Read and validate a frozen bundle offline, including its checksum."""
     run_dir = Path(run_dir)
     prepared = json.loads((run_dir / "prepared.json").read_text())
     checksum = json.loads((run_dir / "prepared.sha256.json").read_text())["sha256"]
     if _digest(prepared) != checksum or _digest(prepared["config"]) != prepared["plan"]["config_sha256"]:
         raise ValueError("Prepared campaign checksum mismatch; prepare a new directory for changes.")
     validate_config(prepared["config"], online=True)
+    if prepared["schema_version"] != prepared["config"]["schema_version"]:
+        raise ValueError("Prepared bundle/config schema versions do not match.")
+    if prepared["schema_version"] == 2:
+        mapping = prepared.get("repeat_case_indices")
+        if (not isinstance(mapping, list) or len(mapping) != prepared["config"]["repeats"] or
+                any(not isinstance(row, list) or len(row) != len(prepared["config"]["cases"]) or
+                    any(type(index) is not int or not 0 <= index < len(prepared["cases"]) for index in row)
+                    for row in mapping)):
+            raise ValueError("Invalid repeat/case mapping in prepared v2 bundle.")
+    if expected_config is not None and prepared["config"] != validate_config(expected_config):
+        raise ValueError("Notebook/config differs from this frozen preparation. Restore the original config or use a new run directory.")
     return prepared
 
 
@@ -287,9 +426,81 @@ def _load_record(run_dir, prepared, repeat, *, receipt=False):
     return record
 
 
+def _result_path(run_dir, repeat, case):
+    return Path(run_dir) / "results" / f"repeat_{repeat:03d}_{case['id']}.json"
+
+
+def _case_pub_indices(order, case_index):
+    return sorted((index for index, pub in enumerate(order) if pub["case_index"] == case_index),
+                  key=lambda index: order[index]["canonical_index"])
+
+
+def _validated_result_exists(path, prepared, receipt, case_index):
+    """Trust a completed filename only after checking its identity and data grid."""
+    if not path.exists():
+        return False
+    config = prepared["config"]
+    repeat = receipt["repeat_index"]
+    case = config["cases"][case_index]
+    compiled = _prepared_case(prepared, repeat, case_index)
+    samples = compiled["metadata"]["theta_samples"]
+    expected_campaign = {
+        "campaign_id": config["campaign_id"], "run_id": prepared["run_id"],
+        "repeat_index": repeat, "case_id": case["id"],
+        "config_sha256": prepared["plan"]["config_sha256"],
+        "receiver_delay_factors": case["receiver_delay_factors"],
+        "submitted_pub_indices": _case_pub_indices(receipt["submitted_pub_order"], case_index),
+    }
+    extra_campaign = {"case_index": case_index, "job_id": receipt["job_id"],
+                      "theta_samples": samples, "phase_design": config.get("phase_design", {"kind": "fixed"}),
+                      "phase_seed": config.get("phase_design", {}).get("seed")}
+    try:
+        run = json.loads(path.read_text())
+        campaign = run["metadata"]["campaign"]
+        # Original v1 results predate the redundant phase/job fields. Their
+        # protocol and receipt still supply these identities; validate any
+        # additional fields when present and require them for v2 results.
+        expected_campaign.update({key: value for key, value in extra_campaign.items()
+                                  if prepared["schema_version"] == 2 or key in campaign})
+        checks = [
+            (run, {"experiment_type": "hardware", "job_id": receipt["job_id"],
+                   "backend": config["backend"], "shots": config["shots"],
+                   "optimization_level": config["optimization_level"]}),
+            (run["protocol"], {"M": case["M"], "N": case["N"], "alpha": config["alpha"],
+                               "use_qec": False, "theta_samples": samples}),
+            (run["sweep"], {"axis": "tau", "values": config["tau_values_dt"]}),
+            (campaign, expected_campaign),
+            (run["metadata"]["execution"], {key: receipt[key] for key in
+             ("job_id", "run_id", "repeat_index", "shots", "submitted_pub_order")}),
+        ]
+        if any(actual.get(key) != value for actual, expected in checks for key, value in expected.items()):
+            raise ValueError("identity, configuration, phase, or submitted order differs")
+        counts = run["counts"]
+        if len(counts) != len(samples) or any(len(row) != len(config["tau_values_dt"]) for row in counts):
+            raise ValueError("incomplete theta/delay count grid")
+        for row in counts:
+            for histogram in row:
+                if (not isinstance(histogram, dict) or sum(histogram.values()) != config["shots"] or
+                        any(not isinstance(bits, str) or len(bits) != case["N"] or set(bits) - {"0", "1"}
+                            or type(count) is not int or count < 0 for bits, count in histogram.items())):
+                    raise ValueError("malformed counts or shot count differs")
+        fidelities = run["fidelities"]
+        if len(fidelities) != len(config["tau_values_dt"]) or any(len(row) != case["N"] for row in fidelities):
+            raise ValueError("incomplete fidelity grid")
+        for di, values in enumerate(fidelities):
+            local = [HardwareBackend._fidelities_from_counts(row[di], case["N"]) for row in counts]
+            if any(not math.isclose(value, sum(row[receiver] for row in local) / len(samples),
+                                    rel_tol=0, abs_tol=1e-12) for receiver, value in enumerate(values)):
+                raise ValueError("fidelities disagree with saved counts")
+    except (ValueError, KeyError, TypeError, IndexError, AttributeError) as exc:
+        raise ValueError(f"Saved result does not match its prepared campaign: {path} ({exc}). "
+                         "Restore the original file or move it aside before collecting again; it will not be overwritten.") from exc
+    return True
+
+
 def campaign_status(run_dir: str | Path) -> dict:
     """Report durable local state without contacting IBM."""
-    prepared = _load_prepared(run_dir)
+    prepared = load_prepared_campaign(run_dir)
     states = []
     for repeat in range(prepared["config"]["repeats"]):
         receipt = _receipt_path(run_dir, repeat)
@@ -298,10 +509,11 @@ def campaign_status(run_dir: str | Path) -> dict:
         job_id = None
         if receipt.exists():
             _load_record(run_dir, prepared, repeat)
-            job_id = _load_record(run_dir, prepared, repeat, receipt=True)["job_id"]
-            count = sum((Path(run_dir) / "results" / f"repeat_{repeat:03d}_{case['id']}.json").exists()
-                        for case in prepared["config"]["cases"])
-            state = "collected" if count == len(prepared["cases"]) else "submitted"
+            record = _load_record(run_dir, prepared, repeat, receipt=True)
+            job_id = record["job_id"]
+            count = sum(_validated_result_exists(_result_path(run_dir, repeat, case), prepared, record, ci)
+                        for ci, case in enumerate(prepared["config"]["cases"]))
+            state = "collected" if count == len(prepared["config"]["cases"]) else "submitted"
         elif attempt.exists():
             _load_record(run_dir, prepared, repeat)
             state = "ambiguous: reconcile the attempt; submission will not retry"
@@ -309,15 +521,22 @@ def campaign_status(run_dir: str | Path) -> dict:
     return {"run_id": prepared["run_id"], "campaign_id": prepared["config"]["campaign_id"], "repeats": states}
 
 
-def _ordered_circuits(prepared, order):
-    circuits = [HardwareBackend.replay_prepared(case) for case in prepared["cases"]]
+def _prepared_case(prepared, repeat, case_index):
+    index = (prepared["repeat_case_indices"][repeat][case_index]
+             if prepared["schema_version"] == 2 else case_index)
+    return prepared["cases"][index]
+
+
+def _ordered_circuits(prepared, order, repeat):
+    circuits = [HardwareBackend.replay_prepared(_prepared_case(prepared, repeat, ci))
+                for ci in range(len(prepared["config"]["cases"]))]
     return [circuits[pub["case_index"]][pub["canonical_index"]] for pub in order]
 
 
 def submit_campaign(run_dir: str | Path, *, service=None, sampler_factory=None) -> list[str]:
     """Submit only never-attempted repeats; save each job ID before continuing."""
     with _locked(run_dir):
-        prepared = _load_prepared(run_dir)
+        prepared = load_prepared_campaign(run_dir)
         config = prepared["config"]
         for repeat in range(config["repeats"]):
             if _receipt_path(run_dir, repeat).exists():
@@ -339,7 +558,7 @@ def submit_campaign(run_dir: str | Path, *, service=None, sampler_factory=None) 
         jobs = []
         for repeat in pending:
             ri, order = repeat["repeat_index"], repeat["pub_order"]
-            circuits = _ordered_circuits(prepared, order)
+            circuits = _ordered_circuits(prepared, order, ri)
             HardwareBackend._validate_target(circuits, backend)
             if sampler_factory is None:
                 from qiskit_ibm_runtime import SamplerV2
@@ -382,7 +601,7 @@ def _verify_job(job, prepared, repeat, circuits):
 def attach_job(run_dir, repeat: int, job_id: str, *, service=None):
     """Recover an interrupted submit by explicitly linking its matching job ID."""
     with _locked(run_dir):
-        prepared = _load_prepared(run_dir)
+        prepared = load_prepared_campaign(run_dir)
         _integer(repeat, "repeat")
         if repeat >= prepared["config"]["repeats"]:
             raise ValueError("repeat index is outside this campaign.")
@@ -392,7 +611,7 @@ def attach_job(run_dir, repeat: int, job_id: str, *, service=None):
         service = _service(prepared["config"]) if service is None else service
         job = service.job(job_id)
         order = prepared["plan"]["repeats"][repeat]["pub_order"]
-        _verify_job(job, prepared, repeat, _ordered_circuits(prepared, order))
+        _verify_job(job, prepared, repeat, _ordered_circuits(prepared, order, repeat))
         return _durable_json({**attempt, "job_id": job_id, "recovered_at": _now(),
                               "submitted_pub_order": order, "actual_device_order_note": ORDER_NOTE},
                              _receipt_path(run_dir, repeat))
@@ -401,36 +620,39 @@ def attach_job(run_dir, repeat: int, job_id: str, *, service=None):
 def collect_campaign(run_dir: str | Path, *, service=None) -> list[Path]:
     """Retrieve known jobs by ID, preserving each repeat and case separately."""
     with _locked(run_dir):
-        prepared = _load_prepared(run_dir)
+        prepared = load_prepared_campaign(run_dir)
         config = prepared["config"]
         receipts = []
         for ri in range(config["repeats"]):
             if _receipt_path(run_dir, ri).exists():
                 _load_record(run_dir, prepared, ri)
                 receipts.append(_load_record(run_dir, prepared, ri, receipt=True))
-        if not receipts:
+        pending = []
+        for receipt in receipts:
+            outputs = [_result_path(run_dir, receipt["repeat_index"], case) for case in config["cases"]]
+            complete = [_validated_result_exists(path, prepared, receipt, ci) for ci, path in enumerate(outputs)]
+            if not all(complete):
+                pending.append((receipt, outputs, complete))
+        if not pending:
             return []
         service = _service(config) if service is None else service
         paths = []
-        for receipt in receipts:
+        for receipt, outputs, complete in pending:
             ri = receipt["repeat_index"]
-            outputs = [Path(run_dir) / "results" / f"repeat_{ri:03d}_{case['id']}.json" for case in config["cases"]]
-            if all(path.exists() for path in outputs):
-                continue
             job = service.job(receipt["job_id"])
             order = receipt["submitted_pub_order"]
-            _verify_job(job, prepared, ri, _ordered_circuits(prepared, order))
+            _verify_job(job, prepared, ri, _ordered_circuits(prepared, order, ri))
             container = job.result()
             results = list(container)
             if len(results) != len(order):
                 raise ValueError("Job returned a different number of PUB results than submitted.")
             for ci, (case, output) in enumerate(zip(config["cases"], outputs)):
-                if output.exists():
+                if complete[ci]:
                     continue
-                indices = sorted((index for index, pub in enumerate(order) if pub["case_index"] == ci),
-                                 key=lambda index: order[index]["canonical_index"])
+                indices = _case_pub_indices(order, ci)
+                compiled_case = _prepared_case(prepared, ri, ci)
                 result = HardwareBackend.collect_prepared(
-                    prepared["cases"][ci], [results[index] for index in indices], job_id=receipt["job_id"],
+                    compiled_case, [results[index] for index in indices], job_id=receipt["job_id"],
                     execution={**receipt, "collected_at": _now()},
                 )
                 # Full-container metadata includes execution spans for all PUBs.
@@ -443,8 +665,12 @@ def collect_campaign(run_dir: str | Path, *, service=None) -> list[Path]:
                     "config_sha256": prepared["plan"]["config_sha256"],
                     "receiver_delay_factors": case["receiver_delay_factors"],
                     "submitted_pub_indices": indices,
+                    "phase_design": config.get("phase_design", {"kind": "fixed"}),
+                    "phase_seed": config.get("phase_design", {}).get("seed"),
+                    "theta_samples": compiled_case["metadata"]["theta_samples"],
+                    "case_index": ci, "job_id": receipt["job_id"],
                 }
-                path = save_run(result, ProtocolConfig(**prepared["cases"][ci]["config"]), filepath=output)
+                path = save_run(result, ProtocolConfig(**compiled_case["config"]), filepath=output)
                 descriptor = os.open(output.parent, os.O_RDONLY | os.O_DIRECTORY)
                 try:
                     os.fsync(descriptor)

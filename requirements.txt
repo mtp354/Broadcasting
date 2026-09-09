@@ -5,3 +5,6 @@ qiskit-aer
 qiskit-ibm-runtime
 matplotlib
 pytest
+ipykernel
+nbclient
+nbformat

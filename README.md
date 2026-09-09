@@ -2,92 +2,88 @@
 
 Simulation, dynamic circuits, and IBM Quantum experiments for the M-sender,
 N-receiver broadcasting protocol with optional `[[5,1,3]]` error correction.
-This is the single working reference for setup, experiment operation, validated
-behaviour, and remaining work. Superseded reviews and action plans remain in Git
-history at commit `62e35aa`; their unresolved items are consolidated below.
-The [manuscript](manuscript/apstemplate.tex), [derived hardware report](analysis/hardware/report.md),
-and [figure source manifest](figures/sources.json) retain the scientific evidence.
+This is the single working reference. Superseded reviews and plans remain in Git
+history; the [manuscript](manuscript/apstemplate.tex),
+[derived hardware report](analysis/hardware/report.md), and
+[figure source manifest](figures/sources.json) retain the scientific evidence.
 
-[Setup](#setup) · [Hardware repeats and scaling](#hardware-repeats-and-scaling) ·
-[Recovery](#recover-an-interrupted-campaign) · [Analysis](#analyze-saved-data) ·
-[Protocol contracts](#protocol-contracts) · [HPC](#hpc-simulations) ·
-[Remaining work](#current-status-and-remaining-work)
+Start with [run_broadcast.ipynb](run_broadcast.ipynb). It controls hardware campaigns,
+displays existing results, and runs the restored Monte Carlo convergence study.
+**No HPC scripts are required for this notebook workflow. All figure exports are PNG.**
+
+[Setup](#setup) · [Notebook campaigns](#notebook-campaigns) ·
+[Convergence](#monte-carlo-to-exact-convergence) · [Recovery](#recovery-and-optional-cli) ·
+[Analysis and manuscript](#analysis-and-manuscript) · [Protocol](#protocol-contracts) ·
+[HPC](#hpc-simulations) · [Remaining work](#current-status-and-remaining-work)
 
 ## Setup
 
-Use Linux or macOS with Bash and Python 3.12. The tested dependency snapshot was
-validated on Linux with CPython 3.12.3; other platforms are not yet verified.
-From this checkout:
+Use Bash and Python 3.12. The tested environment is Linux / CPython 3.12.3.
+From the project root:
 
 ```bash
 bash scripts/setup.sh
 source .venv/bin/activate
 ```
 
-The script creates or reuses `.venv`, installs `requirements-tested.txt`, checks
-dependency compatibility, and runs the local tests excluding `slow`. It does not
-contact IBM or submit experiments. Installation needs access to the Python package
-index. Use `BROADCAST_PYTHON=/path/to/python3.12` to select Python, or
-`BROADCAST_VENV=/absolute/path` to use a different environment.
+Setup creates or reuses `.venv`, installs `requirements-tested.txt`, checks dependency
+compatibility, and runs tests excluding `slow`. Installation needs package-index
+access. It does not contact IBM or submit experiments. Use
+`BROADCAST_PYTHON=/path/to/python3.12` or `BROADCAST_VENV=/absolute/path` to override
+Python or the environment directory. `requirements.txt` lists direct dependencies;
+keep the tested environment unchanged between preparation and collection.
+
+Open `run_broadcast.ipynb` in your notebook editor and select `.venv/bin/python` as
+its kernel. Setup includes the Jupyter kernel and notebook execution dependencies;
+the editor supplies the notebook interface. Run from this project root.
+**Run All with the checked-in settings reads saved data, prints plans, and writes
+three derived PNGs; it makes no IBM requests and collects no new simulation data.**
 
 ```bash
-# Check an existing environment without installing anything.
-bash scripts/setup.sh --check
-
-# Full validation, including the larger QEC simulations.
-python -m pytest -q
+bash scripts/setup.sh --check   # Check an installed environment, without installing.
+python -m pytest -q            # Full validation, including larger QEC simulations.
 ```
 
-`requirements.txt` lists direct dependencies without pins. Use the tested snapshot
-for campaigns, and keep the environment unchanged between preparation and collection.
+## Notebook campaigns
 
-## Hardware repeats and scaling
+### What will run
 
-The CLI handles broadcasting repeats without running a notebook. It deliberately
-has separate planning, preparation, submission, and collection commands. **Only
-`submit` submits new hardware jobs.** `prepare` reads the selected backend and
-compiles locally; `collect` retrieves existing jobs. `plan` and `status` are offline.
-Hardware account access and device compatibility are checked when you prepare;
-no particular backend is assumed available.
+| Notebook section | Default experiment | Per-circuit shots | Total budget |
+|---|---|---:|---|
+| Zero-delay scaling | M=1,2,3 × N=1,2,3,4; 12 cases; 3 repeats | 8,192 | 3 jobs, 36 evaluations, 294,912 shots |
+| Receiver fidelity versus time | M=1,N=2; 121 delays; 3 different random-angle sweeps | 10,000 | 3 jobs, 363 evaluations, 3,630,000 shots |
 
-### 1. Choose the experiment
+Together these are **6 jobs and 3,924,912 shots**. Both use optimization level 3,
+real equatorial amplitude, linear feedforward, and unencoded receivers. Each repeat
+is one job containing every case/delay for that campaign in a reproducibly shuffled
+order. Submitted order need not equal device execution order. Shot counts are a
+measurement budget, not a device-time or monetary quote.
 
-| Configuration | Measurements | Default budget |
-|---|---|---|
-| [hardware_repeats.json](configs/hardware_repeats.json) | M=1, N=2; uniform delays, receiver-0-only delays, receiver-1-only delays; 2 sender phases; 9 delays; 3 repeats | 3 jobs, 162 circuit readouts, 663,552 shots |
-| [hardware_scaling.json](configs/hardware_scaling.json) | M=1; N=1,2,3; zero added delay; 2 sender phases; 3 repeats | 3 jobs, 18 circuit readouts, 73,728 shots |
+Scaling defaults to `SCALING_SENDERS=[1,2,3]` and `SCALING_RECEIVERS=[1,2,3,4]`.
+Within a repeat, equal-M cases share angles across N; smaller M uses the prefix of
+the same random phase vector. Repeats have different seeded phases. The largest
+case needs 13 logical qubits. Generic state preparation can produce deep circuits
+and expensive compilation; inspect the actual depths and mappings before submitting.
 
-Both use real equatorial amplitude, 4,096 shots per circuit, optimization level 3,
-linear feedforward, fixed transpiler and ordering seeds, and unencoded receivers.
-Each repeat is one job containing all cases, with a separately shuffled circuit
-order. The order is reproducible and archived. Submitted order is not a guarantee
-of chronological execution on the device; execution metadata is retained when
-provided. IBM describes timing spans in its [Sampler output documentation](https://quantum.cloud.ibm.com/docs/en/guides/sampler-input-output).
+Delay uses one random angle held constant across each complete sweep, with a new
+angle for each repeat. `TAU_VALUES_DT=0,50,…,6000` matches the historical 121-point
+grid. Delays are in backend-specific **dt** units, applied to both receivers.
+Preparation reports physical times and rejects unsupported timing alignment.
+If a target rejects a 50-dt step, explicitly edit the grid and prepare a new folder;
+no delays are rounded or silently rescaled. Different phases and acquisition times
+mean repeat variation includes both phase dependence and device drift.
 
-The delay grid is `0, 768, …, 6144` in **backend dt units**. Preparation reports its
-actual time conversion. For a 4 ns dt this is a 3.072 µs step and 24.576 µs span.
-This is a coarse repeat/asymmetry pilot; it cannot resolve the previously observed
-near-0.5 µs spectral peaks. A dedicated periodicity study needs a finer, separately
-budgeted grid and independent repetitions. Three repeats provide an initial view
-of variation, not a precise drift model or guaranteed statistical power.
+### Select the account and settings
 
-Receiver-specific delays diagnose sensitivity to where idle time is inserted;
-other operations and scheduler-induced idle time still contribute. The small
-scaling cohort holds backend, shots, phases, and compilation settings fixed, but
-changing N changes the resource, circuit, and potentially physical-qubit mapping.
-It does not establish a size-only causal effect.
-
-### 2. Save an IBM account and select a backend
-
-If you already have a named saved Runtime account, use its name. Otherwise, run
-this once in your activated environment; the token is entered without echo and
-stays out of the command history and repository:
+The notebook preserves `IBM_PROFILE="mprest1"`. Set `IBM_BACKEND` to an explicit
+backend available to that saved profile, then review the phase seed, repeat count,
+size lists, delay grid, and campaign directories. No automatic backend is chosen.
+If a saved account is needed, run this once in the activated environment:
 
 ```bash
 python -c '
 from getpass import getpass
 from qiskit_ibm_runtime import QiskitRuntimeService
-
 QiskitRuntimeService.save_account(
     channel="ibm_quantum_platform",
     name=input("Account profile name: ").strip(),
@@ -97,128 +93,162 @@ QiskitRuntimeService.save_account(
 '
 ```
 
-The SDK saves credentials in its user account store. See IBM's
-[credential setup](https://quantum.cloud.ibm.com/docs/en/guides/save-credentials)
-for account/instance details. Select a backend accessible to that instance with
-[dynamic-circuit support](https://quantum.cloud.ibm.com/docs/en/guides/execute-dynamic-circuits).
-The campaign never selects the least-busy device automatically.
+Credentials stay in the SDK account store, outside notebooks and the repository.
+Preparation checks account access, qubit capacity, target instructions, and timing.
+
+### Prepare, review, submit, collect
+
+Run the notebook sections in order; each action switch initially equals `False`.
+
+1. **Preview:** inspect both plans, total shots, each case, and every repeat's actual
+   phase samples. This is offline and works before setting a backend.
+2. **Prepare:** enable `PREPARE_SCALING` and/or `PREPARE_DELAY`, then run that cell.
+   It fetches the target and compiles locally; it submits no job. It freezes each
+   distinct phase's circuits, shares initial layouts across matching sizes, and
+   archives source hashes, environment versions, calibration, and circuit mappings.
+3. **Review:** inspect dt conversion, compiled depths, layouts, and warnings in the
+   following cell. Full per-circuit receiver mappings remain in `bundle["review"]`.
+4. **Submit:** enable `SUBMIT_SCALING` and/or `SUBMIT_DELAY` in their separate cells.
+   These cells submit the complete configured campaigns at the shot counts above.
+   Each attempt is recorded before its request; each job ID is saved immediately.
+5. **Collect:** enable `COLLECT_SCALING` and/or `COLLECT_DELAY`. Collection retrieves
+   existing jobs and can wait for them to finish. It never submits another job.
+6. **Plot:** rerun the saved-data cells. Set `WRITE_ANALYSIS=True` for the detailed
+   per-campaign report. Reset action switches to `False` before a later general Run All.
+
+Default bundles are `campaigns/scaling_01/` and `campaigns/delay_01/`. Use the same
+folder to resume; completed submissions/results are skipped. Changed settings fail
+against a frozen bundle: restore the old settings or choose a new folder and campaign
+ID. Failed preparation retains its diagnostic plan; correct the error and use a new
+folder. Preserve the whole bundle, including compiled circuits, attempts, receipts,
+and `results/repeat_###_case.json`. Local campaign directories are Git-ignored.
+Collected campaign dates identify submission time (the original attempt time for a
+recovered job); `timestamp_source` states that meaning. Preparation time is retained
+separately. These dates do not claim the exact device execution time.
+
+## Monte Carlo-to-exact convergence
+
+The notebook displays the restored **log–log** curve immediately, then has a separate
+`RUN_CONVERGENCE=False` cell to add **two independent seed repetitions, 1 and 2**.
+It repeats the original physical scenario and full grid:
+
+- M=1, N=2, alpha=1/√2, theta=[0], QEC enabled, sender outcome [0].
+- 21 equally spaced depolarizing probabilities from 0 to 1.
+- Trajectory counts 50, 100, 200, 500, 1,000, 2,000, 5,000, 10,000, 50,000, 100,000.
+- Error is the sum over receivers of the trapezoidal integral over p of absolute
+  sampled-minus-exact fidelity error. Both axes use logarithmic scales.
+
+The original seed-0 errors were recovered from the May 14 notebook at commit
+`0b3735a51f779a77ac706de52255477fd7f5536f` and are preserved with source/hash evidence
+in [historical_summary.json](analysis/convergence/historical_summary.json).
+Those are printed summaries rounded to eight decimal places, not reconstructed raw
+fidelity grids. A bounded current-code regression reproduces the original 50-trajectory
+point within that precision. The later withdrawn plot reused one effective seed and
+remains excluded; it is separate from this valid historical size sweep.
+
+Enable `RUN_CONVERGENCE` and run that cell when ready for new local CPU computation.
+The 100,000-trajectory point retains about **4.9 GB of encoded vectors alone**, plus
+working buffers, and can take substantial time. Keep sufficient free memory.
+HPC is optional if more resources are needed; no cluster scripts are invoked here.
+
+`results/convergence/repeats_01/` stores the exact reference, study settings, and each
+completed trajectory-count sweep immediately. Rerun the same batch directory and
+seeds to resume; completed files are validated and preserved. An interrupted
+individual sweep restarts from that sweep. For additional independent curves, use
+new seeds and a new batch directory. The plot overlays each seed separately alongside
+the historical curve. Its n⁻¹ᐟ² line is an anchored reference, not a fitted claim or
+an uncertainty estimate; sample counts within one seed curve are correlated.
+
+## Recovery and optional CLI
+
+The notebook and CLI use the same campaign implementation. Offline status is:
+
+```bash
+python scripts/hardware_campaign.py status campaigns/delay_01
+```
+
+If submission stopped after requesting a job but before saving its receipt, it is
+**ambiguous** and automatic resubmission stops. Find the existing job using the tags
+in the attempted bundle and attach it to the **zero-based** repeat index:
+
+```bash
+python scripts/hardware_campaign.py attach-job campaigns/delay_01 --repeat 0 --job-id YOUR_JOB_ID
+python scripts/hardware_campaign.py collect campaigns/delay_01
+```
+
+The notebook equivalent is `attach_job(DELAY_RUN_DIR, repeat=0, job_id="...")`.
+Attachment verifies the job against the archived submission. Do not remove attempt
+files or create a duplicate campaign to retry an ambiguous request. If a job failed,
+was cancelled, or does not exist, reconcile its remote status before preparing a
+clearly identified replacement cohort. Local status reports receipts, not the live queue.
+
+For operation without a notebook, copy either checked-in configuration, edit its
+account/backend, and use a fresh folder:
 
 ```bash
 cp configs/hardware_repeats.json configs/hardware_repeats.local.json
-```
-
-Edit `runtime_account` and `backend` in that local JSON, replacing `EDIT_ME` with
-the saved profile name and explicit backend name. Review shots, repeats, phases,
-and delays. JSON accepts numbers, not Python expressions such as `pi/4`.
-`seed` controls submitted order; `seed_transpiler` controls circuit compilation.
-Each case's `initial_layout` can specify physical qubits in logical input-qubit
-order; leave it `null` for the automatic shared-layout preparation.
-
-### 3. Plan and prepare — no hardware jobs
-
-```bash
 python scripts/hardware_campaign.py plan configs/hardware_repeats.local.json
-python scripts/hardware_campaign.py prepare configs/hardware_repeats.local.json --run-dir campaigns/repeats_01
-python scripts/hardware_campaign.py status campaigns/repeats_01
+python scripts/hardware_campaign.py prepare configs/hardware_repeats.local.json --run-dir campaigns/delay_01
+python scripts/hardware_campaign.py submit campaigns/delay_01
+python scripts/hardware_campaign.py collect campaigns/delay_01
 ```
 
-`plan` validates the configuration and reports the budget; add `--full` to inspect
-the complete submitted circuit order. `prepare` uses a new
-run directory, validates delay alignment and target instructions, freezes compiled
-circuits, and records configuration, source hashes, dependency versions, layout and available
-calibration. It shares an initial layout across matching sizes and records output
-mapping differences. Review the printed physical delay range, layouts, comparison
-warnings, and counts before submission. An unavailable dynamic-circuit duration
-is reported as unavailable; the shot count is not an execution-time or cost quote.
+`configs/hardware_scaling.json` provides the other campaign. These schema-v2
+configurations archive a seeded random phase schedule by repeat and case. Fixed
+phase designs and old schema-v1 configurations/prepared bundles remain supported.
 
-The campaign bundle contains the frozen plan/circuits, submission attempts and
-receipts, and collected results. Repeats replay the archived bound circuits without
-retranspilation. Editing the original config after preparation does not alter the
-bundle. To change the experiment, prepare a new directory and keep the old one.
-If preparation fails after creating its directory, correct the reported account,
-target or timing problem and retry with a new directory. No job was submitted.
+## Analysis and manuscript
 
-### 4. Submit and collect — these commands are for new hardware data
+`run_broadcast.ipynb` and `visualizations.ipynb` load historical records and collected
+campaign records together. Receipts and analysis JSON are excluded. Separate jobs,
+cases, and angles remain separate; duplicate saves of the same observation are removed.
+
+The campaign notebook exports to `figures/campaigns/`:
+
+| PNG | Meaning | Manuscript use |
+|---|---|---|
+| `hardware_scaling_opt3.png` | Fidelity y, receiver count N x, sender count M colour; opt3/tau0 only. Points are receiver means; vertical bars span receiver min–max. | Candidates for Figure 5 |
+| `receiver_fidelity_vs_time_repeats.png` | Separate receiver curves for each repeat/angle, recorded time units, and Wilson shot intervals; latest two historical sweeps plus the selected campaign. | Candidates for Figure 4 |
+| `mc_sampling_convergence.png` | Restored historical curve plus compatible new seed curves, on log–log axes. | Figure 6 convergence analysis |
+
+Receiver-range bars describe receiver variation, not confidence intervals. Historical
+backend/date/shot differences remain visible or archived in plotted-point metadata.
+Changing N also changes the resource/circuit and may change physical layout, so the
+plot alone does not establish a size-only causal effect. Phase changes across delay
+jobs are deliberate and must be retained in comparisons.
+
+For full statistics without notebook execution:
 
 ```bash
-python scripts/hardware_campaign.py submit campaigns/repeats_01
-python scripts/hardware_campaign.py status campaigns/repeats_01
-python scripts/hardware_campaign.py collect campaigns/repeats_01
+python scripts/analyze_saved_hardware.py --results-dir campaigns/delay_01/results
+# Combined historical and collected comparison, written to a separate derived folder:
+python scripts/analyze_saved_hardware.py --include-results-dir campaigns --output-dir analysis/combined
 ```
 
-`submit` records an attempt before each request and saves its job ID immediately.
-Already recorded jobs are skipped on subsequent invocations. `collect` retrieves
-known jobs and writes one immutable result per repeat and case under
-`campaigns/repeats_01/results/`. It can be run again after an interruption without
-submitting more jobs or replacing completed results.
-Collection may wait while a job is queued or running; interrupting that wait is
-safe. `status` reports local receipts and files, not the live IBM queue state.
+The report includes per-histogram local, joint and worst-receiver fidelity, receiver
+pairs/covariance, exploratory spectra, plotted scaling-point provenance, and separate
+delay PNGs. Marginal/joint intervals use Wilson scores; worst-receiver bounds use
+Bonferroni adjustment; mean/paired uncertainties retain within-histogram covariance.
+These assume independent shots with fixed probabilities within each histogram.
+They do not estimate between-job drift or establish a periodic physical mechanism.
 
-Use the same sequence with `hardware_scaling.json`, a local copy, and a separate
-bundle such as `campaigns/scaling_01`. Run on the same chosen backend and record
-collection dates; separate campaigns are not necessarily acquired in one calibration
-window. Archive the **whole campaign directory**, including receipts and compiled
-circuits, rather than copying only the final result JSONs. Local campaign bundles
-and local config copies are ignored by Git.
-
-### Recover an interrupted campaign
-
-```bash
-python scripts/hardware_campaign.py status campaigns/repeats_01
-python scripts/hardware_campaign.py collect campaigns/repeats_01
-```
-
-If interruption occurred after the submission request but before its receipt was
-saved, status reports an ambiguous attempt. Automatic resubmission stops because
-the remote job may already exist. Find the tagged job in the IBM dashboard, then
-attach that existing job to its **zero-based** repeat index:
-
-```bash
-python scripts/hardware_campaign.py attach-job campaigns/repeats_01 --repeat 0 --job-id YOUR_JOB_ID
-python scripts/hardware_campaign.py collect campaigns/repeats_01
-```
-
-Attachment checks the archived identity against the existing job. Do not delete an
-attempt file to force a retry. If no corresponding job exists, or a job failed or
-was cancelled, preserve the attempted bundle and explicitly plan a replacement
-cohort after reconciling its status. A replacement is additional acquisition and
-must remain distinguishable from the originally intended repetitions.
-
-## Analyze saved data
-
-Analyze a collected campaign without submitting anything:
-
-```bash
-python scripts/analyze_saved_hardware.py --results-dir campaigns/repeats_01/results
-```
-
-This writes `campaigns/repeats_01/analysis/report.md`, `summary.json`, `points.json`,
-and figures. `--output-dir PATH` selects another derived-output directory.
-Distinct cases in the same job remain separate. The output preserves repeat/case,
-job, theta and delay identities; it reports local, joint and worst-receiver
-fidelity, paired receiver differences, and receiver-success covariance. Compare
-matched points across repeats to assess run variation. The conditional shot
-intervals do not themselves estimate between-job variation, and multiple cases in
-one job are not independent job repetitions.
-
-For the historical collection and existing publication figures:
+Regenerate the historical publication assets from saved data only:
 
 ```bash
 python scripts/analyze_saved_hardware.py
-python scripts/generate_figures.py --formats png,pdf
+python scripts/generate_figures.py
 ```
 
-These commands read saved data only. Figure generation checks selected input
-records against the 25-record SHA-256 manifest in `figures/sources.json`. New campaign data are not
-silently added to the publication manifest. Review new results before selecting
-sources and revising manuscript claims.
+Hardware/memory publication sources remain explicitly pinned by the 25-record SHA-256
+manifest. Convergence uses the recovered historical summary and overlays compatible
+saved repetitions. Review new data, select hardware sources, and revise captions and
+claims before the final manuscript update. The hardware campaigns do not regenerate
+Figure 1's separate QEC memory benchmark, Figure 2's circuit diagram, or Figure 3's
+QEC crossover simulation evidence.
 
-Marginal/joint intervals use Wilson scores; worst-receiver bounds use Bonferroni
-adjustment; mean and paired uncertainties retain within-histogram covariance.
-These calculations assume fixed probabilities and independent shots within a
-histogram. They do not identify physical noise correlations or establish a
-periodic mechanism. Missing historical timing or encoding flags are handled by
-explicit evidence-backed manifest overrides, never by modifying raw records.
+The manuscript embeds PNGs. All 15 existing generated PDF figures were removed;
+external reference papers and the complete compiled manuscript PDF are retained.
+PNG is the sole supported shared figure-save format, including notebook exports.
 
 ## Protocol contracts
 
@@ -226,7 +256,7 @@ explicit evidence-backed manifest overrides, never by modifying raw records.
 and `HPCBackend`. The first two use native-qudit numerical evolution; hardware
 uses binary sender encoding and dynamic circuits. `HPCBackend` returns a submission
 receipt, not completed fidelities. Direct `HardwareBackend.run` / `run_tau_sweep`
-submit immediately; use the campaign CLI for the prepared repeat workflow.
+submit immediately; use the campaign notebook or CLI for the prepared repeat workflow.
 
 - M,N are positive integers; the high-level API accepts real alpha in [-1,1] and
   M finite real sender phases. Low-level state constructors have broader amplitude
@@ -311,77 +341,63 @@ Incomplete or mixed groups fail before any output is written.
 
 | Path | Responsibility |
 |---|---|
-| `broadcasting/` | Protocol, numerical/circuit implementations, backends, campaign orchestration, storage and analysis |
-| `configs/`, `scripts/` | Hardware campaign definitions, setup/operation, saved-data analysis, figure generation and merging |
-| `tests/` | Offline numerical, circuit, data and execution regressions |
-| `hpc/` | Simulation CLI, cluster setup, snapshot submission and archive transfer |
-| `run_broadcast.ipynb` | Interactive simulation and exploratory single-job hardware workflows |
-| `qec_testing.ipynb` | Separate encoded/bare memory benchmark; hardware flag defaults off |
-| `visualizations.ipynb` | Saved-result exploration |
-| `results/` | Historical raw evidence, including `legacy/` and `qec513/` |
-| `analysis/`, `figures/` | Derived reports/figures and explicit publication provenance |
-| `manuscript/` | Current paper, bibliography and publication figure assets |
-| `docs/*.pdf` | External reference literature, retained separately from project guidance |
+| `broadcasting/` | Protocol, numerical/circuit backends, campaign orchestration, convergence, storage and plots |
+| `configs/`, `scripts/` | Campaign definitions, setup, CLI, saved-data analysis and figure generation |
+| `tests/` | Offline numerical, circuit, notebook, provenance and execution regressions |
+| `hpc/` | Optional simulation CLI and cluster/archive tools |
+| `run_broadcast.ipynb` | Main hardware campaign and convergence workflow |
+| `visualizations.ipynb` | Additional saved-result exploration |
+| `qec_testing.ipynb` | Separate encoded/bare memory benchmark; hardware defaults off |
+| `results/`, `campaigns/*/results/` | Historical raw evidence and new immutable records |
+| `analysis/`, `figures/` | Derived outputs and explicit source provenance |
+| `manuscript/`, `docs/*.pdf` | Current paper/PNG assets and external reference literature |
 
-Never overwrite, delete, rename or hand-repair raw experiment files. `write_run_json`
-and `save_run` publish complete JSON atomically and refuse existing paths; default
-filenames include unique IDs. The 97 historical JSON files are preserved.
-`load_run` reads the unified schema and adds convenience aliases for plotting;
-original pre-migration and standalone memory schemas require their respective
-analysis adapters. The obsolete in-place migration utility has been removed.
-
-The three [withdrawn convergence assets](figures/withdrawn/) remain historical
-evidence only. Their alleged independent repetitions shared one effective seed.
-They are excluded from the manuscript and default generator; other unattributed
-historical assets are preserved. No derived plot repairs a raw record.
+Never overwrite, delete, rename, or hand-repair raw experiment files. JSON publication
+is atomic and refuses existing paths. All 97 historical JSON files retain their paths
+and hashes. Historical metadata corrections are evidence-backed loader overrides;
+no derived plot repairs a raw record. The two withdrawn convergence PNGs remain
+historical evidence only, excluded from publication. Their redundant PDF was removed.
 
 ## Current status and remaining work
 
-The numerical corrections, general factorization proof, independent QEC oracle,
-execution/provenance fixes, historical reanalysis and supported figure/manuscript
-corrections are complete. Historical analysis covers **16 broadcasting jobs,
+The numerical corrections, factorization proof, independent QEC oracle, execution
+provenance, historical reanalysis, notebook campaign setup, and PNG/manuscript
+corrections are implemented. Historical analysis covers **16 broadcasting jobs,
 819 per-theta/per-delay histograms, and 5 unique standalone memory jobs**. Hardware
-QEC evidence is a separate memory benchmark, not a demonstrated full QEC-enhanced
-broadcasting experiment. The classical transcript is phase-independent; receiver
-quantum states carry the aggregate phase. This is not a general security proof.
+QEC evidence is a separate memory benchmark; full QEC-enhanced broadcasting has not
+been demonstrated. Phase-independent classical transcripts are not a general
+security proof.
 
-The hardware campaign setup and readability cleanup are locally validated;
-**no new experimental data or IBM/SLURM submissions were made during this work**.
-Live backend and cluster execution remain to be checked. Missing calibration
-values and dynamic timing estimates stay explicitly unavailable.
+**No new experimental datasets or IBM/SLURM jobs were collected/submitted during
+this revision.** Validation uses saved data, small local regression calculations,
+Aer/fake targets, and notebook execution with acquisition disabled. Live target
+compatibility and cluster execution remain unverified.
 
-Validation on 2026-09-08: **278 tests passed** in the complete suite, including
-local Aer circuit replay, fake-target layout checks, interruption recovery,
-receipt/shot validation, and the independent numerical oracles. All 819 historical
-histogram statistics agree with the earlier analysis to floating-point precision;
-all 97 raw files retain their original paths and SHA-256 hashes. Dependency and
-diff checks pass. The LaTeX comment cleanup preserves the rendered manuscript
-text exactly: both versions build to 12 pages without warnings.
+Validation on 2026-09-08: **327 tests passed**. Both main notebooks executed in a
+real Jupyter kernel with acquisition disabled (30 and 18 cells, zero errors).
+The manuscript builds to 12 pages without warnings; all rendered pages were
+inspected. The 819 historical histogram summaries retain their earlier statistics
+to floating-point precision, and all 97 raw files retain their paths and SHA-256
+hashes. Dependency and diff checks pass.
 
-Remaining work, in order:
+Remaining work:
 
-1. Select the account/backend, prepare and inspect the two hardware campaigns,
-   then collect the bounded repeats/scaling cohort using the commands above.
-2. Assess receiver asymmetry, control/layout differences and repeat variation.
-   Plan finer delay sampling or component ablations only if the evidence calls
-   for them. Preserve negative or inconclusive conclusions.
-3. Collect independent simulation convergence repetitions with explicit seeds and
-   saved raw errors: `python scripts/generate_figures.py --collect-convergence`.
-   This is **new data collection**, separate from figure regeneration. `--quick`
-   reduces the development collection. The current fit is descriptive; estimate
-   exponent uncertainty across independent repetitions before restoring the
-   manuscript's empirical convergence claim.
-4. Review and pin selected new data, regenerate supported figures, and update the
-   manuscript. Conditional shot intervals do not replace repetition-based uncertainty.
-5. Confirm the complete author/affiliation details, finalize the archive deposit
-   and DOI, then perform final manuscript/artifact checks and release packaging.
+1. Select the backend; prepare and inspect the notebook's scaling and delay campaigns,
+   then submit and collect the requested repetitions.
+2. Run the two matching local Monte Carlo repetitions on a sufficiently large machine.
+3. Assess size/layout effects, receiver asymmetry, phase dependence, and run variation.
+   Preserve negative or inconclusive results. Additional controls or delay ablations
+   should follow the evidence.
+4. Select and pin the new hardware sources; review convergence overlays and statistical
+   claims; regenerate PNGs and update the manuscript captions/text. Conditional shot
+   intervals do not replace repetition-based uncertainty.
+5. Finalize author/affiliation details, archive deposit/DOI, and release checks.
 
-Keep generic resource preparation and Gram–Schmidt decoding. Structured resource
-preparation, a structured Clifford decoder, streaming/logical-frame simulation
-tiers, and dynamical-decoupling ablations are closed scope decisions, not outstanding
-implementation commitments.
+Generic resource preparation and Gram–Schmidt decoding remain the selected methods.
+Structured synthesis/decoding, streaming simulation tiers, and dynamical-decoupling
+ablations are closed scope decisions, not outstanding implementation commitments.
 
-Build the manuscript after regenerating its selected figures:
+Build the manuscript after regenerating its selected PNGs:
 
 ```bash
 cd manuscript
@@ -391,5 +407,5 @@ pdflatex -interaction=nonstopmode apstemplate.tex
 pdflatex -interaction=nonstopmode apstemplate.tex
 ```
 
-The compiled PDF is a local preview; the source and embedded figure PDFs are
-versioned. Before release, run the complete tests and inspect the final PDF.
+The compiled PDF is a local whole-paper preview. Source and PNG figure assets are
+versioned. Before release, run the complete tests and inspect the final paper layout.

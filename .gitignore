@@ -17,11 +17,8 @@ slurm_logs/
 *Notes.bib
 *.out
 manuscript/*.pdf
-# Publication figure sources are versioned; the compiled manuscript stays ignored.
-!manuscript/delay time vs fidelity 121 opt0.pdf
-!manuscript/delay time vs fidelity 121 opt3.pdf
-!manuscript/fidelity scaling hardware.pdf
-!manuscript/qec vs no qec vs sampling.pdf
-!manuscript/qec513_delay_sweep_idle.pdf
+# Figures use PNG; keep generated PDF figures out of the checkout.
+figures/**/*.pdf
+analysis/**/*.pdf
 *.synctex.gz
 *.toc

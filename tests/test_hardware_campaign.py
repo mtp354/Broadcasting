@@ -11,7 +11,7 @@ from qiskit_aer import AerSimulator
 from broadcasting.backend import HardwareBackend
 from broadcasting.hardware_campaign import (
     attach_job, campaign_status, collect_campaign, plan_campaign, prepare_campaign,
-    read_config, submit_campaign, validate_config,
+    read_config, submit_campaign, validate_config, make_campaign_config, load_prepared_campaign,
 )
 from broadcasting.results import load_run
 
@@ -22,9 +22,13 @@ ROOT = Path(__file__).resolve().parents[1]
 @pytest.fixture
 def config():
     data = read_config(ROOT / "configs/hardware_repeats.json")
-    data.update(runtime_account="offline-test", backend="aer_simulator", shots=16, repeats=2,
+    data.pop("phase_design")
+    data.update(schema_version=1, runtime_account="offline-test", backend="aer_simulator", shots=16, repeats=2,
                 optimization_level=0, theta_samples=[[0.3], [0.8]], tau_values_dt=[0, 768])
-    data["cases"] = data["cases"][:2]
+    data["cases"] = [
+        {"id": "uniform", "M": 1, "N": 2, "receiver_delay_factors": [1, 1], "initial_layout": None},
+        {"id": "receiver0", "M": 1, "N": 2, "receiver_delay_factors": [1, 0], "initial_layout": None},
+    ]
     return data
 
 
@@ -104,8 +108,8 @@ def prepared(tmp_path, config, monkeypatch):
 
 
 def test_checked_in_campaign_budgets_and_interleaving():
-    for filename, pubs, shots in [("hardware_repeats.json", 162, 663552),
-                                  ("hardware_scaling.json", 18, 73728)]:
+    for filename, pubs, shots in [("hardware_repeats.json", 363, 3630000),
+                                  ("hardware_scaling.json", 36, 294912)]:
         config = read_config(ROOT / "configs" / filename)
         plan = plan_campaign(config)
         assert plan["total_pubs"] == pubs
@@ -253,7 +257,7 @@ def test_cli_default_and_plan_cannot_submit(monkeypatch, capsys):
         main([])
     assert exc.value.code == 2
     main(["plan", str(ROOT / "configs/hardware_scaling.json")])
-    assert json.loads(capsys.readouterr().out)["total_pubs"] == 18
+    assert json.loads(capsys.readouterr().out)["total_pubs"] == 36
 
 
 def test_real_aer_accepts_bound_qpy_replay(prepared):
@@ -361,3 +365,252 @@ def test_truncated_hardware_counts_cannot_be_saved_as_complete(prepared):
     with pytest.raises(ValueError, match="requested shots"):
         collect_campaign(run_dir, service=service)
     assert campaign_status(run_dir)["repeats"][0]["state"] == "submitted"
+
+
+def test_random_phase_plan_is_reproducible_and_pairs_sender_prefixes():
+    config = make_campaign_config("scaling")
+    plan = plan_campaign(config)
+    assert plan == plan_campaign(deepcopy(config))
+    phase_rows = []
+    for repeat in plan["repeats"]:
+        samples = repeat["phases"]["theta_samples_by_case"]
+        largest = samples[-1][0]
+        for case, rows in zip(config["cases"], samples):
+            assert rows == [largest[:case["M"]]]
+        for pub in repeat["pub_order"]:
+            assert pub["thetas"] == samples[pub["case_index"]][pub["theta_index"]]
+        phase_rows.append(tuple(largest))
+    assert len(set(phase_rows)) == config["repeats"]
+    assert plan["cases"][-1]["logical_qubits"] == 13
+    changed_order = deepcopy(config)
+    changed_order["seed"] += 1
+    assert [row["phases"] for row in plan_campaign(changed_order)["repeats"]] == [row["phases"] for row in plan["repeats"]]
+    assert plan_campaign(changed_order)["repeats"] != plan["repeats"]
+
+
+@pytest.mark.parametrize("design", [
+    {"kind": "unknown"},
+    {"kind": "seeded_random", "seed": True, "samples_per_repeat": 1, "low": 0, "high": 6},
+    {"kind": "seeded_random", "seed": 4, "samples_per_repeat": 0, "low": 0, "high": 6},
+    {"kind": "seeded_random", "seed": 4, "samples_per_repeat": 1, "low": 1, "high": 1},
+    {"kind": "fixed", "samples_by_m": {"1": [[0.1]]}},
+    {"kind": "fixed", "samples_by_m": {"1": [[0.1]], "2": [[0.1, 0.2]], "3": [[0.1]]}},
+])
+def test_invalid_v2_phases_rejected_without_network(design):
+    config = make_campaign_config("scaling")
+    config["phase_design"] = design
+    with pytest.raises(ValueError):
+        plan_campaign(config)
+
+
+def test_random_repeat_mixed_senders_replay_and_collect_their_actual_phases(tmp_path):
+    config = make_campaign_config("scaling", backend="aer_simulator", runtime_account="offline-test",
+                                  repeats=2, sender_counts=(1, 2), receiver_counts=(1, 2), tau_values_dt=[0, 50])
+    config.update(shots=32, optimization_level=0)
+    service = OfflineService()
+    directory = tmp_path / "random-mixed"
+    bundle = prepare_campaign(config, directory, service=service)
+    assert bundle["schema_version"] == 2
+    assert len(bundle["cases"]) == 8
+    assert bundle["repeat_case_indices"] == [[0, 1, 2, 3], [4, 5, 6, 7]]
+    submit_campaign(directory, service=service, sampler_factory=service.sampler)
+    paths = collect_campaign(directory, service=service)
+    assert len(paths) == 8
+    assert collect_campaign(directory, service=service) == []
+    assert submit_campaign(directory, service=service, sampler_factory=service.sampler) == []
+    for path in paths:
+        run = load_run(path)
+        metadata = run["metadata"]["campaign"]
+        repeat, ci = metadata["repeat_index"], metadata["case_index"]
+        samples = bundle["plan"]["repeats"][repeat]["phases"]["theta_samples_by_case"][ci]
+        assert metadata["theta_samples"] == samples == run["theta_samples"]
+        assert len(samples[0]) == run["M"]
+        assert metadata["phase_seed"] == config["phase_design"]["seed"]
+        for di, counts in enumerate(run["counts"][0]):
+            position = metadata["submitted_pub_indices"][di]
+            assert counts["0" * run["N"]] == 32 - position
+            compiled = bundle["cases"][bundle["repeat_case_indices"][repeat][ci]]
+            assert service.jobs[metadata["job_id"]].inputs["pubs"][position][0] == HardwareBackend.replay_prepared(compiled)[di]
+    assert all(row["state"] == "collected" for row in campaign_status(directory)["repeats"])
+
+
+def test_v2_fixed_phases_reuse_compilation_and_are_compatible_with_recovery(tmp_path):
+    config = make_campaign_config("scaling", backend="aer_simulator", runtime_account="offline-test",
+                                  repeats=2, sender_counts=(1, 2), receiver_counts=(1,))
+    config.update(shots=16, optimization_level=0,
+                  phase_design={"kind": "fixed", "samples_by_m": {"1": [[0.3]], "2": [[0.3, 0.6]]}})
+    directory = tmp_path / "fixed-mixed"
+    service = OfflineService()
+    bundle = prepare_campaign(config, directory, service=service)
+    assert len(bundle["cases"]) == 2
+    assert bundle["repeat_case_indices"] == [[0, 1], [0, 1]]
+    service.fail_after_submit = True
+    with pytest.raises(RuntimeError, match="Connection lost"):
+        submit_campaign(directory, service=service, sampler_factory=service.sampler)
+    attach_job(directory, 0, "job-1", service=service)
+    service.fail_after_submit = False
+    assert submit_campaign(directory, service=service, sampler_factory=service.sampler) == ["job-2"]
+    assert len(collect_campaign(directory, service=service)) == 4
+
+
+def test_historical_delay_grid_rejects_incompatible_timing_without_rounding(tmp_path, monkeypatch):
+    config = make_campaign_config("delay", backend="timed", runtime_account="offline-test")
+    target = SimpleNamespace(dt=2e-9, granularity=16, pulse_alignment=16)
+    service = SimpleNamespace(backend=lambda _: SimpleNamespace(target=target, num_qubits=100))
+    monkeypatch.setattr(HardwareBackend, "prepare_tau_sweep", lambda *args, **kwargs: pytest.fail("Must reject before compilation"))
+    with pytest.raises(ValueError, match="multiples of 16 dt"):
+        prepare_campaign(config, tmp_path / "bad-timing", service=service)
+    assert config["tau_values_dt"] == list(range(0, 6001, 50))
+    assert not (tmp_path / "bad-timing" / "prepared.json").exists()
+
+
+def test_random_phase_case_circuits_execute_on_aer_with_unit_fidelity(tmp_path):
+    from qiskit_aer.primitives import SamplerV2
+    config = make_campaign_config("scaling", backend="aer_simulator", runtime_account="offline-test",
+                                  repeats=2, sender_counts=(1, 2), receiver_counts=(1,))
+    config.update(shots=16, optimization_level=0)
+    bundle = prepare_campaign(config, tmp_path / "aer-phases", service=OfflineService())
+    for case in bundle["cases"]:
+        circuits = HardwareBackend.replay_prepared(case)
+        measured = SamplerV2(seed=22).run(circuits, shots=16).result()
+        result = HardwareBackend.collect_prepared(case, measured, job_id="test-aer")
+        assert result.fidelities == [[1.0]]
+
+
+def test_v2_bundle_version_is_validated_even_with_consistent_digest(tmp_path):
+    from broadcasting.hardware_campaign import _digest
+    config = make_campaign_config("delay", backend="aer_simulator", runtime_account="offline-test", repeats=1, tau_values_dt=[0])
+    config["optimization_level"] = 0
+    directory = tmp_path / "versioned"
+    bundle = prepare_campaign(config, directory, service=OfflineService())
+    bundle["schema_version"] = 1
+    (directory / "prepared.json").write_text(json.dumps(bundle))
+    (directory / "prepared.sha256.json").write_text(json.dumps({"sha256": _digest(bundle)}))
+    with pytest.raises(ValueError, match="versions"):
+        load_prepared_campaign(directory)
+
+
+def test_frozen_bundle_rejects_changed_notebook_settings(prepared):
+    directory, bundle, service = prepared
+    assert load_prepared_campaign(directory, expected_config=bundle["config"])["run_id"] == bundle["run_id"]
+    edited = deepcopy(bundle["config"])
+    edited["shots"] += 1
+    with pytest.raises(ValueError, match="Notebook/config differs"):
+        load_prepared_campaign(directory, expected_config=edited)
+    assert service.calls == 0
+
+
+def test_older_v1_bundle_without_new_review_fields_still_resumes(prepared):
+    from broadcasting.hardware_campaign import _digest
+    directory, bundle, service = prepared
+    for key in ("cases", "phase_design", "optimization_level"):
+        bundle["plan"].pop(key)
+    for key in ("circuit_review", "required_delay_step_dt"):
+        bundle["review"].pop(key)
+    (directory / "prepared.json").write_text(json.dumps(bundle))
+    (directory / "prepared.sha256.json").write_text(json.dumps({"sha256": _digest(bundle)}))
+    assert submit_campaign(directory, service=service, sampler_factory=service.sampler) == ["job-1", "job-2"]
+    assert len(collect_campaign(directory, service=service)) == 4
+    assert all(row["state"] == "collected" for row in campaign_status(directory)["repeats"])
+
+
+def test_collected_dates_follow_each_submission_and_preserve_preparation(prepared, monkeypatch):
+    from broadcasting.hardware_campaign import _digest
+    directory, bundle, service = prepared
+    preparation_time = "2030-01-01T10:00:00+00:00"
+    for case in bundle["cases"]:
+        case["metadata"]["timestamp"] = preparation_time
+    (directory / "prepared.json").write_text(json.dumps(bundle))
+    (directory / "prepared.sha256.json").write_text(json.dumps({"sha256": _digest(bundle)}))
+    times = iter(["2030-01-03T10:00:00+00:00", "2030-01-03T10:01:00+00:00",
+                  "2030-01-04T11:00:00+00:00", "2030-01-04T11:01:00+00:00"])
+    monkeypatch.setattr("broadcasting.hardware_campaign._now", lambda: next(times))
+    submit_campaign(directory, service=service, sampler_factory=service.sampler)
+    monkeypatch.setattr("broadcasting.hardware_campaign._now", lambda: "2030-01-06T12:00:00+00:00")
+    for path in collect_campaign(directory, service=service):
+        run = load_run(path)
+        repeat = run["metadata"]["campaign"]["repeat_index"]
+        assert run["timestamp"] == ["2030-01-03T10:01:00+00:00", "2030-01-04T11:01:00+00:00"][repeat]
+        assert run["metadata"]["prepared_at"] == preparation_time
+        assert run["metadata"]["timestamp_source"] == "execution.submitted_at"
+        assert run["metadata"]["execution"]["collected_at"] == "2030-01-06T12:00:00+00:00"
+
+
+def test_recovered_job_date_uses_original_attempt_not_recovery(prepared, monkeypatch):
+    directory, bundle, service = prepared
+    attempted = "2030-01-03T10:00:00+00:00"
+    monkeypatch.setattr("broadcasting.hardware_campaign._now", lambda: attempted)
+    service.fail_after_submit = True
+    with pytest.raises(RuntimeError, match="Connection lost"):
+        submit_campaign(directory, service=service, sampler_factory=service.sampler)
+    monkeypatch.setattr("broadcasting.hardware_campaign._now", lambda: "2030-01-06T12:00:00+00:00")
+    attach_job(directory, 0, "job-1", service=service)
+    paths = collect_campaign(directory, service=service)
+    assert len(paths) == 2
+    for path in paths:
+        run = load_run(path)
+        assert run["timestamp"] == attempted
+        assert run["metadata"]["timestamp_source"] == "execution.attempted_at"
+        case_index = run["metadata"]["campaign"]["case_index"]
+        assert run["metadata"]["prepared_at"] == bundle["cases"][case_index]["metadata"]["timestamp"]
+
+
+@pytest.mark.parametrize("damage", ["invalid_json", "copied_case", "job_id", "shots", "phase", "tau", "run_id", "config_hash", "counts", "fidelities"])
+def test_corrupt_existing_results_never_count_as_completed_or_get_overwritten(prepared, monkeypatch, damage):
+    directory, bundle, service = prepared
+    submit_campaign(directory, service=service, sampler_factory=service.sampler)
+    paths = collect_campaign(directory, service=service)
+    target = paths[-1]
+    if damage == "invalid_json":
+        target.write_text('{"truncated":')
+    elif damage == "copied_case":
+        target.write_bytes(paths[-2].read_bytes())
+    else:
+        run = json.loads(target.read_text())
+        if damage == "job_id":
+            run["job_id"] = "another-job"
+        elif damage == "shots":
+            run["shots"] += 1
+        elif damage == "phase":
+            run["protocol"]["theta_samples"][0][0] += 0.1
+        elif damage == "tau":
+            run["sweep"]["values"][1] += 1
+        elif damage == "run_id":
+            run["metadata"]["campaign"]["run_id"] = "another-campaign-run"
+        elif damage == "config_hash":
+            run["metadata"]["campaign"]["config_sha256"] = "wrong-hash"
+        elif damage == "counts":
+            run["counts"][0][0]["00"] += 1
+        else:
+            run["fidelities"][0][0] = 0.123
+        target.write_text(json.dumps(run))
+    before = target.read_bytes()
+    with pytest.raises(ValueError, match="Saved result does not match"):
+        campaign_status(directory)
+    # Even when another output is missing, inspect every existing result before
+    # retrieving any job or writing a partial collection.
+    paths[0].unlink()
+    monkeypatch.setattr(service, "job", lambda _: pytest.fail("Retrieved a job before validating saved files"))
+    monkeypatch.setattr("broadcasting.hardware_campaign._service", lambda _: pytest.fail("Network lookup"))
+    for operation in (lambda: collect_campaign(directory, service=service), lambda: collect_campaign(directory)):
+        with pytest.raises(ValueError, match="will not be overwritten"):
+            operation()
+    assert target.read_bytes() == before
+    assert not paths[0].exists()
+
+
+def test_valid_collected_results_resume_offline_including_original_v1_metadata(prepared, monkeypatch):
+    directory, bundle, service = prepared
+    submit_campaign(directory, service=service, sampler_factory=service.sampler)
+    paths = collect_campaign(directory, service=service)
+    # Simulate original v1 results that predate redundant phase/identity fields.
+    for path in paths:
+        run = json.loads(path.read_text())
+        for key in ("case_index", "job_id", "theta_samples", "phase_design", "phase_seed"):
+            run["metadata"]["campaign"].pop(key)
+        path.write_text(json.dumps(run))
+    before = {path: path.read_bytes() for path in paths}
+    monkeypatch.setattr("broadcasting.hardware_campaign._service", lambda _: pytest.fail("Complete campaign must resume offline"))
+    assert collect_campaign(directory) == []
+    assert all(row["state"] == "collected" for row in campaign_status(directory)["repeats"])
+    assert all(path.read_bytes() == before[path] for path in paths)

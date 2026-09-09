@@ -10,7 +10,7 @@ Four execution backends, all sharing the same `Backend.run(config)` interface:
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import asdict
 import subprocess
 import shlex
@@ -634,6 +634,19 @@ class HardwareBackend(Backend):
         from qiskit_ibm_runtime import RuntimeEncoder
 
         metadata = deepcopy(prepared["metadata"])
+        metadata["prepared_at"] = metadata.get("prepared_at", metadata.get("timestamp"))
+        execution = execution or {}
+        # Plot dates identify submission, not compilation or retrieval. A
+        # recovered receipt has only the durable attempt time; it is labelled
+        # explicitly and never presented as actual device execution time.
+        for field in ("submitted_at", "submission_time", "attempted_at", "collected_at"):
+            if execution.get(field):
+                metadata["timestamp"] = execution[field]
+                metadata["timestamp_source"] = f"execution.{field}"
+                break
+        else:
+            metadata["timestamp"] = datetime.now(timezone.utc).isoformat()
+            metadata["timestamp_source"] = "result_collection_time"
         results = list(result_container)
         compiled_pubs = metadata["compiled_pubs"]
         if len(results) != len(compiled_pubs):

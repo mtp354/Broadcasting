@@ -21,11 +21,10 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from broadcasting.analysis import delay_axis, joint_success_statistics, periodicity_summary
-from broadcasting.plotting import save_figure
-from broadcasting.results import load_run
+from broadcasting.plotting import plot_delay_repeats, plot_hardware_scaling, save_figure
+from broadcasting.results import load_run, run_paths
 from broadcasting.validation import dedupe_by_job, find_duplicate_jobs
 from scripts.figure_sources import load_source, source_manifest
-from scripts.generate_figures import plot_hardware_tau0
 
 
 def _relative_source(path):
@@ -39,6 +38,20 @@ def _source_run(path, manifest):
     if relative in manifest["runs"]:
         return load_source(relative, manifest=manifest)
     return load_run(path)
+
+
+def load_hardware_runs(*results_dirs):
+    """Load historical and campaign hardware with source overlays, read-only.
+
+    Search supplied directories recursively for run/repeat experiment records.
+    Repeated paths and duplicate job/case saves are included only once. The
+    default root includes historical records and any campaigns saved beneath it.
+    """
+    manifest = source_manifest()
+    paths = sorted({path.resolve() for directory in (results_dirs or [ROOT / "results"])
+                    for path in run_paths(directory)})
+    runs = [_source_run(path, manifest) for path in paths]
+    return dedupe_by_job([run for run in runs if run["experiment_type"] == "hardware"])
 
 
 def _histogram_points(run):
@@ -135,12 +148,14 @@ def _memory_summaries(results_dir, manifest):
     return summaries, duplicates
 
 
-def analyze(output_dir, *, results_dir=ROOT / "results"):
-    """Analyze one saved-data directory, retaining separate job/case/theta records."""
+def analyze(output_dir, *, results_dir=ROOT / "results", additional_results_dirs=()):
+    """Analyze saved directories, retaining separate job/case/theta records."""
     output_dir, results_dir = Path(output_dir), Path(results_dir).resolve()
     manifest = source_manifest()
     hardware = []
-    for path in sorted(results_dir.glob("*.json")):
+    paths = sorted({path.resolve() for directory in [results_dir, *additional_results_dirs]
+                    for path in run_paths(directory)})
+    for path in paths:
         run = _source_run(path, manifest)
         if run["experiment_type"] == "hardware":
             if run["sweep"]["axis"] != "tau":
@@ -160,6 +175,7 @@ def analyze(output_dir, *, results_dir=ROOT / "results"):
         "method": "Finite-shot statistics per job, case, theta, and delay; no pooling across settings or dates.",
         "limitations": "Wilson and multinomial delta-method intervals assume independent shots with fixed probabilities. Drift, shot autocorrelation, and calibration variation are not quantified by these intervals. Spectral peaks are exploratory.",
         "source_directory": str(results_dir),
+        "additional_source_directories": [str(Path(path).resolve()) for path in additional_results_dirs],
         "historical_sources": results_dir == ROOT / "results",
         "broadcasting_jobs": len({run["job_id"] for run in hardware}),
         "broadcasting_records": len(hardware),
@@ -173,12 +189,21 @@ def analyze(output_dir, *, results_dir=ROOT / "results"):
     output_dir.mkdir(parents=True, exist_ok=True)
     for name, data in [("points", points), ("summary", summary)]:
         (output_dir / f"{name}.json").write_text(json.dumps(data, indent=2, allow_nan=False) + "\n")
-    if any(run["tau0"] for run in summaries):
-        fig = plot_hardware_tau0(hardware)
-        for fmt in ["png", "pdf"]:
-            save_figure(fig, output_dir / f"tau0_fidelities.{fmt}")
+    if any(run["tau0"] and run["optimization_level"] == 3 for run in summaries):
+        fig = plot_hardware_scaling(hardware)
+        save_figure(fig, output_dir / "tau0_fidelities.png")
+        (output_dir / "scaling_points.json").write_text(
+            json.dumps(fig.broadcasting_points, indent=2, allow_nan=False) + "\n")
         plt.close(fig)
+    if any(run["tau0"] for run in summaries):
         _derived_joint_figure(summaries, output_dir)
+    # One file per job/case keeps large repeat campaigns readable and preserves
+    # the individual random-angle traces instead of averaging them together.
+    for run in hardware:
+        if len(run["sweep"]["values"]) > 1:
+            fig = plot_delay_repeats([run])
+            save_figure(fig, output_dir / "delay_sweeps" / f"{Path(run['filename']).stem}.png")
+            plt.close(fig)
     _write_report(summary, output_dir)
     print(f"Analyzed {summary['broadcasting_jobs']} broadcasting jobs / {len(hardware)} case records "
           f"({len(points)} histograms), {len(memory)} unique memory jobs.")
@@ -208,8 +233,7 @@ def _derived_joint_figure(runs, output_dir):
     ax.grid(axis="x", alpha=0.2)
     ax.legend(fontsize=7, loc="lower left")
     fig.tight_layout()
-    for fmt in ["png", "pdf"]:
-        save_figure(fig, output_dir / f"joint_and_worst_tau0.{fmt}")
+    save_figure(fig, output_dir / "joint_and_worst_tau0.png")
     plt.close(fig)
 
 
@@ -286,8 +310,14 @@ def _write_report(summary, output_dir):
         "preparation, feedforward, readout, and drift can contribute. Zero covariance in this "
         "basis also does not rule out correlated noise.", "",
         "## Tau-zero broadcasting results", "",
-        "Rows remain separate by job/case/theta. Receiver ranges in `tau0_fidelities.png` "
-        "describe heterogeneity; `joint_and_worst_tau0.png` shows finite-shot intervals.", "",
+        "Rows remain separate by job/case/theta. `tau0_fidelities.png` uses opt3 only: "
+        "x is the number of receivers, y is fidelity, and color is the number of senders. "
+        "Each point is a receiver mean and its vertical bar spans the receiver minimum/maximum. "
+        "Small horizontal offsets separate observations; `scaling_points.json` records every plotted identity. "
+        "These receiver ranges describe heterogeneity, not statistical uncertainty. "
+        "`joint_and_worst_tau0.png` retains all optimization levels with finite-shot intervals. "
+        "The `delay_sweeps/` PNGs show each job/case/theta separately with receiver Wilson 95% intervals "
+        "and recorded time units.", "",
         "| Run or repeat/case / theta | Backend / opt / shots | M,N | Mean | Worst (95%) | Joint (95%) | Receiver range |",
         "|---|---|---|---:|---|---|---:|",
     ]
@@ -382,8 +412,8 @@ def _write_report(summary, output_dir):
             "The duplicate memory save for job d82dopugbeec73allus0 is excluded. Encoded May13 "
             "and bare May18/June18 records were collected on different dates, so they do not "
             "provide a controlled same-session advantage comparison. Fez remains a separate "
-            "cohort. The invalid multi-seed convergence image remains withdrawn; the README "
-            "records the remaining data requirements.",
+            "cohort. These historical hardware records are retained alongside future opt3 repeats; "
+            "the README records the remaining data requirements.",
         ]
     (output_dir / "report.md").write_text("\n".join(lines) + "\n")
 
@@ -391,7 +421,9 @@ def _write_report(summary, output_dir):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", type=Path, default=ROOT / "results",
-                        help="Directory containing unified result JSON files (not recursive).")
+                        help="Root searched recursively for run/repeat experiment JSON files.")
+    parser.add_argument("--include-results-dir", type=Path, action="append", default=[],
+                        help="Additional saved-data root; repeat to compare historical and campaign results.")
     parser.add_argument("--output-dir", type=Path,
                         help="Derived output directory; defaults to analysis/hardware or beside campaign results.")
     args = parser.parse_args()
@@ -399,7 +431,7 @@ def main():
     if output_dir is None:
         output_dir = (ROOT / "analysis/hardware" if args.results_dir.resolve() == ROOT / "results"
                       else args.results_dir.resolve().parent / "analysis")
-    analyze(output_dir, results_dir=args.results_dir)
+    analyze(output_dir, results_dir=args.results_dir, additional_results_dirs=args.include_results_dir)
 
 
 if __name__ == "__main__":

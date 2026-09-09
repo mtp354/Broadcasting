@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "purpose": "Read-only figure source inventory; explicit historical overlays never mutate raw results. Source hashes prevent silent changes. Outputs are stems exported as PNG/PDF.",
+  "purpose": "Read-only figure source inventory; explicit historical overlays never mutate raw results. Source hashes prevent silent changes. Outputs are stems exported as PNG only.",
   "runs": {
     "results/run_20260408_160814.json": {
       "sha256": "5e30374895a32ffcc39989047161271573338f0c844cd68c4606b2f84d1703fa",
@@ -1696,19 +1696,27 @@
   },
   "figures": {
     "convergence": {
-      "status": "withdrawn_pending_new_collection",
-      "manuscript_output": null,
+      "status": "restored_historical_summary_with_optional_independent_repeats",
+      "manuscript_output": "mc_sampling_convergence",
       "retired_outputs": [
         "figures/sampling_convergence.png",
-        "figures/sampling_convergence.pdf",
         "manuscript/mc_sampling_convergence.png"
       ],
-      "reason": "Config seed=0 overrode changing backend seeds; stored image has unsupported multi-seed uncertainty. No independent convergence measurement archive exists. Regeneration requires explicit --collect-convergence, outside the present pre-data work.",
+      "reason": "The later multi-seed implementation held config seed=0 fixed, so its uncertainty claims remain withdrawn. The original single-seed notebook summaries have now been restored separately with explicit precision and provenance.",
       "withdrawn_assets": {
         "figures/sampling_convergence.png": "figures/withdrawn/figures_sampling_convergence.png",
-        "figures/sampling_convergence.pdf": "figures/withdrawn/figures_sampling_convergence.pdf",
         "manuscript/mc_sampling_convergence.png": "figures/withdrawn/manuscript_mc_sampling_convergence.png"
-      }
+      },
+      "figure_output": "mc_sampling_convergence",
+      "sources": [],
+      "historical_summary": {
+        "path": "analysis/convergence/historical_summary.json",
+        "sha256": "008197ef845bb18b93f82207d8f089076547696e2dfd1ac13dd62c8ab6985c03",
+        "git_source": "0b3735a51f779a77ac706de52255477fd7f5536f:run_broadcast.ipynb",
+        "precision": "Eight decimal places per receiver; raw fidelity grids not saved."
+      },
+      "note": "Restored original single-seed printed error summaries. Invalid later multi-seed figures remain withdrawn; new independent seeds are archived separately and overlaid without an OLS exponent confidence interval.",
+      "withdrawal_scope": "Withdrawn assets preserve the former invalid multi-seed content. The active mc_sampling_convergence.png filename now contains the restored original single-seed summary and any compatible independently collected repetitions. PDF figure copies have been removed."
     },
     "qec_memory": {
       "manuscript_output": "qec513_delay_sweep_idle",
@@ -1768,7 +1776,7 @@
         "results/run_20260908_132738_ef85f542.json",
         "results/run_20260908_153150_79eab41b.json"
       ],
-      "scope": "All unique saved broadcasting hardware jobs; theta samples displayed separately. Per-record identities include backend, date/time, M,N, optimization and shots. Receiver mean and range, no controlled scaling inference or pooled trend."
+      "scope": "Opt3 broadcasting records only, with each job/case/theta displayed separately. X is integer receiver count N (modest offsets separate observations), Y is receiver fidelity, color is sender count M, and marker is backend. Points show receiver means; vertical bars show receiver minimum/maximum, not uncertainty. Historical and campaign records are not pooled into a controlled scaling trend."
     },
     "circuit": {
       "manuscript_output": "m1n2qec0_circ",

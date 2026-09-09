@@ -38,4 +38,4 @@ fi
 "${VENV_DIR}/bin/python" -m pytest -q -m "not slow"
 echo "Setup verified. Activate this environment:"
 printf '  source %q\n' "${VENV_DIR}/bin/activate"
-echo "Next: python scripts/hardware_campaign.py plan configs/hardware_repeats.json"
+echo "Next: open run_broadcast.ipynb and select this environment as its Python kernel."

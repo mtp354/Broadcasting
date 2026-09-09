@@ -20,41 +20,24 @@ def test_convergence_refuses_implicit_collection():
         figures.collect_sampling_convergence([])
 
 
-def test_convergence_sets_effective_seed_and_count_and_archives_measurements(monkeypatch, tmp_path):
-    observed = []
-
-    class Exact:
-        def run(self, config):
-            return SimpleNamespace(fidelities=np.full((len(config.p_list), 2), 0.5))
-
-    class Sampled:
-        def run(self, config):
-            observed.append((config.seed, config.n_samples))
-            assert config.seed is not None
-            assert config.n_samples is not None
-            return SimpleNamespace(
-                fidelities=np.full((len(config.p_list), 2), 0.5 + (config.seed + 1) / config.n_samples),
-                metadata={"seed": config.seed, "n_samples": config.n_samples, "software": {"test": "fixture"}},
-            )
-
-    monkeypatch.setattr(figures, "ExactBackend", Exact)
-    monkeypatch.setattr(figures, "SamplingBackend", Sampled)
-    path = figures.collect_sampling_convergence([], collect=True, quick=True, archive_dir=tmp_path)
-    archive = json.loads(path.read_text())
-    assert observed == [(seed, n) for seed in [0, 1, 2] for n in [50, 100, 200, 500, 1000]]
-    assert len(archive["measurements"]) == len(observed)
-    for measurement, (seed, count) in zip(archive["measurements"], observed):
-        assert measurement["seed"] == seed
-        assert measurement["n_samples"] == count
-        assert measurement["execution_metadata"]["software"] == {"test": "fixture"}
-        assert measurement["error_area"] == pytest.approx(2 * (seed + 1) / count)
+def test_convergence_cli_delegates_original_grid_and_explicit_two_repeats(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(figures, "collect_convergence_repeats", lambda study, **kwargs: calls.append((study, kwargs)) or tmp_path)
+    monkeypatch.setattr(figures, "generate_sampling_convergence", lambda *args, **kwargs: None)
+    path = figures.collect_sampling_convergence([], collect=True, archive_dir=tmp_path)
+    assert path == tmp_path
+    study, settings = calls[0]
+    assert settings["repeats"] == 2
+    assert settings["sample_counts"] == study.sample_counts
+    assert settings["sample_counts"][-1] == 100000
+    assert study.config.seed == 0 and study.config.thetas == [0.0]
 
 
 def test_default_figure_cli_never_collects(monkeypatch):
     monkeypatch.setattr("sys.argv", ["generate_figures.py", "--all"])
     monkeypatch.setattr(figures, "collect_sampling_convergence", lambda *a, **k: pytest.fail("Implicit collection"))
     calls = []
-    names = ["qec_memory", "qec_crossover", "delay_sweeps", "hardware_tau0"]
+    names = ["sampling_convergence", "qec_memory", "qec_crossover", "delay_sweeps", "hardware_tau0"]
     for name in names:
         monkeypatch.setattr(figures, f"generate_{name}", lambda *a, n=name, **k: calls.append(n))
     figures.main()
@@ -69,7 +52,7 @@ def test_manifest_sources_are_intact_and_qec_attributions_are_explicit():
     assert [r["use_qec"] for r in memory] == [True, True, False, False]
     assert all(r["historical_provenance"]["dt"]["evidence"] for r in memory)
     assert manifest["figures"]["qec_memory"]["manuscript_output"] == "qec513_delay_sweep_idle"
-    assert manifest["figures"]["convergence"]["status"] == "withdrawn_pending_new_collection"
+    assert manifest["figures"]["convergence"]["status"] == "restored_historical_summary_with_optional_independent_repeats"
 
 
 def test_source_overlay_fills_null_but_rejects_conflicting_record(monkeypatch, tmp_path):
@@ -111,27 +94,6 @@ def test_all_notebook_code_cells_compile(name):
     for index, cell in enumerate(notebook["cells"]):
         if cell["cell_type"] == "code":
             compile(_notebook_cell(name, index), f"{name}:{index}", "exec")
-
-
-def test_optional_periodicity_cell_loads_existing_flat_schema(monkeypatch):
-    monkeypatch.chdir(ROOT)
-    monkeypatch.setattr(plt, "show", lambda: None)
-    namespace = {"SAVE_FIGURES": False}
-    exec(_notebook_cell("run_broadcast.ipynb", 1), namespace)
-    code = _notebook_cell("run_broadcast.ipynb", 13).replace("RUN_PERIODICITY_ANALYSIS = False", "RUN_PERIODICITY_ANALYSIS = True")
-    exec(code, namespace)
-    assert namespace["target_run"]["N"] == 2
-    assert namespace["target_run"]["sweep"]["axis"] == "tau"
-    assert namespace["unit"] == "us"
-    plt.close("all")
-
-
-def test_optional_convergence_notebook_delegates_to_explicit_collection(monkeypatch):
-    calls = []
-    monkeypatch.setattr(figures, "collect_sampling_convergence", lambda *args, **kwargs: calls.append(kwargs))
-    code = _notebook_cell("run_broadcast.ipynb", 11).replace("RUN_CONVERGENCE = False", "RUN_CONVERGENCE = True")
-    exec(code, {"SAVE_FIGURES": False})
-    assert calls == [{"quick": False, "collect": True}]
 
 
 def test_qec_saved_comparison_and_disabled_hardware_cells_execute(monkeypatch):

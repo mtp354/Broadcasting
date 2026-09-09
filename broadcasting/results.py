@@ -282,15 +282,28 @@ def load_run(filepath: str | Path) -> dict[str, Any]:
 
 
 def list_runs(results_dir: str | Path = RESULTS_DIR) -> list[dict[str, Any]]:
-    """List immediate ``run_*.json`` files, skipping unreadable records."""
-    results_dir = Path(results_dir)
+    """Recursively load saved runs and campaign cases, skipping unreadable files.
+
+    Only ``run_*.json`` and ``repeat_*.json`` are experiment records; campaign
+    plans, prepared circuits, receipts, and derived analysis JSON are excluded.
+    """
     runs = []
-    for f in sorted(results_dir.glob("run_*.json")):
+    for f in run_paths(results_dir):
         try:
             runs.append(load_run(f))
         except Exception as e:
             print(f"Skipping {f.name}: {e}")
     return runs
+
+
+def run_paths(results_dir: str | Path = RESULTS_DIR) -> list[Path]:
+    """Find saved experiment filenames, including nested campaign results."""
+    root = Path(results_dir)
+    # Campaign receipts/attempts are named repeat_000.json; a result also has
+    # the case ID, for example repeat_000_m1_n2.json.
+    return sorted({path for pattern in ("run_*.json", "repeat_[0-9]*_*.json")
+                   for path in root.rglob(pattern)
+                   if "legacy" not in path.relative_to(root).parts})
 
 
 # ---------------------------------------------------------------------------

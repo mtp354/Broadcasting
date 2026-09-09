@@ -4,9 +4,11 @@ from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 
-from .analysis import autocorrelation_from_run, delay_axis, periodogram_from_run
+from .analysis import autocorrelation_from_run, delay_axis, joint_success_statistics, periodogram_from_run
+from .validation import dedupe_by_job
 
 FIGURES_DIR = Path("figures")
 
@@ -28,16 +30,20 @@ def save_figure(
     path: str | Path,
     *,
     strip_titles: bool = True,
-    dpi: int = 150,
+    dpi: int = 200,
     bbox_inches: str = "tight",
     **savefig_kwargs: Any,
 ) -> Path:
-    """Save *fig*, stripping plot titles by default."""
+    """Save a PNG, stripping plot titles by default for publication exports."""
     path = Path(path)
+    if path.suffix.lower() != ".png":
+        raise ValueError("Figures are saved as PNG only; use a .png filename.")
+    if str(savefig_kwargs.pop("format", "png")).lower() != "png":
+        raise ValueError("Figures are saved as PNG only.")
     path.parent.mkdir(parents=True, exist_ok=True)
     if strip_titles:
         clear_titles(fig)
-    fig.savefig(path, dpi=dpi, bbox_inches=bbox_inches, **savefig_kwargs)
+    fig.savefig(path, format="png", dpi=dpi, bbox_inches=bbox_inches, **savefig_kwargs)
     return path
 
 
@@ -108,6 +114,156 @@ def _add_meta_box(ax: plt.Axes, text: str) -> None:
 # ---------------------------------------------------------------------------
 # Hardware / delay plots
 # ---------------------------------------------------------------------------
+
+def hardware_scaling_points(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return one opt3, zero-delay point per job/case/theta, without pooling.
+
+    Fidelity and receiver ranges are recomputed from saved joint counts. Small,
+    deterministic horizontal offsets separate observations with the same N;
+    the integer receiver count remains available as ``N`` alongside ``x``.
+    """
+    points = []
+    for run in dedupe_by_job(runs):
+        if (run.get("experiment_type") != "hardware"
+                or run.get("optimization_level") != 3
+                or run.get("sweep", {}).get("axis") != "tau"):
+            continue
+        zero = np.flatnonzero(np.asarray(run["sweep"]["values"]) == 0)
+        if len(zero) != 1 or not run.get("counts"):
+            continue
+        for theta_index, row in enumerate(run["counts"]):
+            stats = joint_success_statistics(row[int(zero[0])], run["N"])
+            local = stats["local_fidelities"]
+            points.append({
+                "M": run["M"], "N": run["N"], "backend": run.get("backend", "unknown"),
+                "timestamp": run.get("timestamp", ""), "job_id": run.get("job_id"),
+                "filename": run.get("filename", ""), "shots": stats["shots"],
+                "theta_index": theta_index,
+                "thetas": run.get("theta_samples", [[]])[theta_index],
+                "campaign": (run.get("metadata") or {}).get("campaign", {}),
+                "mean": stats["mean_local"]["estimate"],
+                "minimum": min(local), "maximum": max(local),
+            })
+    points.sort(key=lambda point: (point["N"], point["M"], point["backend"],
+                                   point["timestamp"], str(point["job_id"]),
+                                   point["campaign"].get("run_id", ""),
+                                   point["campaign"].get("repeat_index", -1),
+                                   point["campaign"].get("case_id", ""),
+                                   point["filename"], point["theta_index"]))
+    for receivers in sorted({point["N"] for point in points}):
+        group = [point for point in points if point["N"] == receivers]
+        offsets = np.linspace(-0.22, 0.22, len(group)) if len(group) > 1 else [0.0]
+        for point, offset in zip(group, offsets):
+            point["x"] = float(receivers + offset)
+    return points
+
+
+def plot_hardware_scaling(runs: list[dict[str, Any]]) -> plt.Figure:
+    """Opt3 hardware fidelity versus receivers; color identifies sender count.
+
+    Dots show the receiver mean and capped vertical bars show the receiver
+    minimum/maximum, not statistical uncertainty. Backend marker shapes and
+    horizontal offsets retain distinct observations. ``fig.broadcasting_points``
+    contains the complete plotted identities and values for notebook inspection.
+    """
+    points = hardware_scaling_points(runs)
+    if not points:
+        raise ValueError("No opt3 saved joint receiver counts at tau=0.")
+    fig, ax = plt.subplots(figsize=(7.5, 4.8))
+    fig.broadcasting_points = points
+    senders = sorted({point["M"] for point in points})
+    backends = sorted({point["backend"] for point in points})
+    colors = {sender: plt.cm.tab10((sender - 1) % 10) for sender in senders}
+    marker_options = ["o", "s", "^", "D", "v", "P", "X"]
+    markers = {backend: marker_options[index % len(marker_options)]
+               for index, backend in enumerate(backends)}
+    for point in points:
+        mean = point["mean"]
+        ax.errorbar(point["x"], mean,
+                    yerr=[[max(0.0, mean - point["minimum"])],
+                          [max(0.0, point["maximum"] - mean)]],
+                    fmt=markers[point["backend"]], color=colors[point["M"]],
+                    markersize=5.5, capsize=3, linewidth=1.4, alpha=0.85)
+    handles = [Line2D([], [], color=colors[m], marker="o", linestyle="none",
+                      label=f"M = {m} sender{'s' if m != 1 else ''}") for m in senders]
+    handles += [Line2D([], [], color="0.3", marker=markers[backend], linestyle="none",
+                       label=backend.removeprefix("ibm_")) for backend in backends]
+    ax.legend(handles=handles, fontsize=8, loc="lower center", bbox_to_anchor=(0.5, 1.02),
+              ncol=min(4, len(handles)), frameon=False)
+    receivers = sorted({point["N"] for point in points})
+    ax.set_xticks(range(min(receivers), max(receivers) + 1))
+    ax.set(xlabel="Number of receivers, N", ylabel="Receiver fidelity at zero delay",
+           xlim=(min(receivers) - 0.5, max(receivers) + 0.5), ylim=(0, 1.02))
+    ax.axhline(0.5, color="0.6", linestyle=":", linewidth=1)
+    ax.grid(axis="y", alpha=0.2)
+    fig.text(0.5, 0.015,
+             "Opt3 only · point = receiver mean · bar = receiver range\n"
+             "Horizontal offsets separate jobs, cases and phase samples; observations are not pooled.",
+             ha="center", fontsize=8, color="0.3")
+    fig.tight_layout(rect=(0, 0.075, 1, 1))
+    return fig
+
+
+def plot_delay_repeats(runs: list[dict[str, Any]], *, max_columns: int = 2) -> plt.Figure:
+    """Plot each saved delay sweep and phase sample in its own labelled panel.
+
+    Receivers retain separate curves and marginal 95% Wilson shot intervals.
+    Time uses each record's archived dt; unknown conversions remain native dt.
+    No averaging across random angles, jobs, or repeats is performed.
+    """
+    if max_columns < 1:
+        raise ValueError("max_columns must be positive.")
+    traces = []
+    for run in dedupe_by_job(runs):
+        if (run.get("experiment_type") == "hardware"
+                and run.get("sweep", {}).get("axis") == "tau"
+                and len(run["sweep"]["values"]) > 1 and run.get("counts")):
+            traces.extend((run, index, row) for index, row in enumerate(run["counts"]))
+    if not traces:
+        raise ValueError("No saved hardware delay sweeps with receiver counts.")
+    columns = min(max_columns, len(traces))
+    rows = int(np.ceil(len(traces) / columns))
+    fig, axes = plt.subplots(rows, columns, figsize=(6.3 * columns, 4.2 * rows),
+                             squeeze=False, sharey=True)
+    for ax, (run, theta_index, counts) in zip(axes.flat, traces):
+        scale, unit = delay_axis(run)
+        delays = np.asarray(run["sweep"]["values"], dtype=float)
+        order = np.argsort(delays)
+        statistics = [joint_success_statistics(counts[index], run["N"]) for index in order]
+        local = np.asarray([point["local_fidelities"] for point in statistics])
+        intervals = np.asarray([point["local_ci95"] for point in statistics])
+        for receiver in range(run["N"]):
+            values = local[:, receiver]
+            errors = np.maximum(0, np.vstack((values - intervals[:, receiver, 0],
+                                             intervals[:, receiver, 1] - values)))
+            ax.errorbar(scale * delays[order], values, yerr=errors, fmt="o-",
+                        color=plt.cm.tab10(receiver % 10), markersize=2.5,
+                        linewidth=1, elinewidth=0.5, alpha=0.85,
+                        label=f"Receiver {receiver + 1}")
+        ax.plot(scale * delays[order], local.mean(axis=1), "k--", linewidth=1.2, label="Mean")
+        campaign = (run.get("metadata") or {}).get("campaign", {})
+        identity = f"job {run.get('job_id', '?')}"
+        if campaign:
+            identity += f" · repeat {campaign['repeat_index']} · {campaign['case_id']}"
+        thetas = run.get("theta_samples", [[]])[theta_index]
+        phase = ", ".join(f"{theta:.3f}" for theta in thetas)
+        label = (f"{run.get('backend')} · M={run['M']}, N={run['N']} · opt{run.get('optimization_level')} "
+                 f"· {run.get('shots', '?')} shots\nθ{theta_index} = [{phase}] rad · {run.get('timestamp', '')[:10]}\n"
+                 f"{identity}")
+        factors = campaign.get("receiver_delay_factors")
+        if factors:
+            label += f"\nReceiver delay factors: {factors}; x is the base delay"
+        ax.text(0, 1.025, label, transform=ax.transAxes, fontsize=7, va="bottom")
+        ax.set(xlabel=f"Idle delay ({unit})", ylabel="Receiver fidelity", ylim=(0, 1.02))
+        ax.axhline(0.5, color="0.6", linestyle=":", linewidth=1)
+        ax.grid(alpha=0.2)
+        ax.legend(fontsize=7, loc="best")
+    for ax in list(axes.flat)[len(traces):]:
+        ax.set_visible(False)
+    fig.text(0.5, 0.005, "Error bars: marginal 95% Wilson shot intervals; device drift is not included.",
+             ha="center", fontsize=8, color="0.3")
+    fig.tight_layout(rect=(0, 0.025, 1, 1), h_pad=4)
+    return fig
 
 def plot_fidelity_vs_delay(
     run: dict[str, Any],
