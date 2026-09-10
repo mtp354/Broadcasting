@@ -3,6 +3,7 @@
 
 Reads results/ by default. Writes JSON and Markdown only; all figures are
 created in visualizations.ipynb. No hardware access or new experiment data.
+Run with ``python -m broadcasting.analyze_saved_hardware``.
 """
 from __future__ import annotations
 
@@ -10,17 +11,16 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-import sys
 
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "hardware_analysis"
 
-from broadcasting.analysis import hardware_scaling_points, joint_success_statistics, periodicity_summary
-from broadcasting.provenance import execution_summary
-from broadcasting.results import RESULTS_DIR, list_runs
-from broadcasting.validation import dedupe_by_job, find_duplicate_jobs
+from .analysis import hardware_scaling_points, joint_success_statistics, periodicity_summary
+from .provenance import execution_summary
+from .results import RESULTS_DIR, list_runs
+from .validation import dedupe_by_job, find_duplicate_jobs
 
 
 def _hardware_records(*results_dirs):
@@ -260,7 +260,7 @@ def _write_report(summary, output_dir):
         f"{summary['broadcasting_histograms']} per-theta, per-delay histograms** and "
         f"**{summary['memory_jobs']} unique standalone memory jobs**. "
         "This analysis collected no data and did not change raw JSON files.", "",
-        "Use `scripts/analyze_saved_hardware.py --results-dir RESULTS --output-dir OUTPUT` "
+        "Use `python -m broadcasting.analyze_saved_hardware --results-dir RESULTS --output-dir OUTPUT` "
         "to reproduce. `summary.json` records source hashes, configuration, execution case/repeat "
         "identities, tau-zero estimates, and each trace's spectral summary. `points.json` "
         "contains every broadcasting and memory histogram's statistics. See the project README for setup "
@@ -447,17 +447,16 @@ def _write_report(summary, output_dir):
     (output_dir / "report.md").write_text("\n".join(lines) + "\n")
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", type=Path, default=ROOT / RESULTS_DIR,
                         help="Directory of measured run records and collected execution JSON files.")
     parser.add_argument("--include-results-dir", type=Path, action="append", default=[],
                         help="Additional saved-data root; repeat to compare separately stored records.")
-    parser.add_argument("--output-dir", type=Path,
-                        help="Derived JSON and Markdown directory; defaults to analysis/hardware.")
-    args = parser.parse_args()
-    output_dir = args.output_dir or ROOT / "analysis/hardware"
-    analyze(output_dir, results_dir=args.results_dir, additional_results_dirs=args.include_results_dir)
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR,
+                        help="Derived JSON and Markdown directory; defaults to broadcasting/hardware_analysis.")
+    args = parser.parse_args(argv)
+    analyze(args.output_dir, results_dir=args.results_dir, additional_results_dirs=args.include_results_dir)
 
 
 if __name__ == "__main__":

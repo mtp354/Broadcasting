@@ -1,7 +1,7 @@
 __pycache__/
 .pytest_cache/
 .venv/
-# Verified archives of superseded files.
+# Original result archives referenced by measurement provenance.
 .local-archive/
 slurm_logs/
 

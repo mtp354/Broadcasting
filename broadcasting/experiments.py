@@ -3,9 +3,11 @@
 One file owns each Runtime job's frozen circuits, submission attempt, receipt,
 and measured cases. Atomic transitions prevent ambiguous jobs from being retried;
 completed measurements are immutable. Planning and status are entirely offline.
+Inspect and resume saved jobs with ``python -m broadcasting.experiments``.
 """
 from __future__ import annotations
 
+import argparse
 from contextlib import contextmanager
 from copy import deepcopy
 from datetime import datetime, timezone
@@ -875,3 +877,33 @@ def collect_experiment(paths, *, service=None):
             _validate_measurements(document)
             updated.append(_write_state(document, path))
     return updated
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    for name, help_text in [("status", "Inspect local state without account access"),
+                            ("submit", "Submit prepared jobs; never retry ambiguous attempts"),
+                            ("collect", "Collect submitted jobs and finalize their JSON files")]:
+        command = commands.add_parser(name, help=help_text)
+        command.add_argument("files", nargs="+", type=Path, help="Self-contained job JSON paths")
+    command = commands.add_parser("attach-job", help="Link an accepted job after an interrupted submission")
+    command.add_argument("file", type=Path)
+    command.add_argument("--job-id", required=True)
+    args = parser.parse_args(argv)
+    try:
+        if args.command == "status":
+            result = experiment_status(args.files)
+        elif args.command == "submit":
+            result = {"submitted_job_ids": submit_experiment(args.files)}
+        elif args.command == "collect":
+            result = {"updated_job_files": [str(path) for path in collect_experiment(args.files)]}
+        else:
+            result = {"updated_job_file": str(attach_job(args.file, args.job_id))}
+        print(json.dumps(result, indent=2))
+    except (ValueError, OSError, KeyError) as exc:
+        parser.exit(2, f"{args.command}: {exc}\n")
+
+
+if __name__ == "__main__":
+    main()

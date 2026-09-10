@@ -10,7 +10,7 @@ import pytest
 from broadcasting.protocol import BroadcastResult, ProtocolConfig
 from broadcasting.results import (configuration_from_record, load_run, load_runs,
                                   make_run_record, write_run_json)
-from scripts.merge_hpc_runs import _merge_group, main
+from broadcasting.merge_hpc_runs import _merge_group, main
 
 
 GRID = [0.0, 0.25, 1.0]
@@ -183,11 +183,11 @@ def test_remerging_preserves_original_derived_source_evidence(tmp_path):
     assert recovered["input_records"] == first["metadata"]["execution"]["input_records"]
 
 
-def test_archived_environment_pins_extend_executed_code_hashes_without_mismatch(tmp_path):
+def test_archived_requirements_extend_executed_code_hashes_without_mismatch(tmp_path):
     document = _job([_record([0], task=0), _record([0.25], task=1)])
     document.update(state="running", expected_tasks=3)
     hashes = document["prepared"]["source_snapshot"]["source_sha256"]
-    hashes["requirements-tested.txt"] = "environment-pin-evidence"
+    hashes["requirements.txt"] = "environment-requirements-evidence"
     document["prepared_sha256"] = hashlib.sha256(json.dumps(document["prepared"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()
     job = write_run_json(document, tmp_path / "hpc.json")
     standalone = write_run_json(_record([1], task=2), tmp_path / "standalone.json")

@@ -58,7 +58,7 @@ def test_slurm_script_keeps_one_json_and_frozen_source_for_each_submission(tmp_p
     global_dir, scratch = tmp_path / "global", tmp_path / "scratch"
     global_dir.mkdir()
     scratch.mkdir()
-    for folder in ("broadcasting", "hpc", "scripts"):
+    for folder in ("broadcasting", "hpc"):
         shutil.copytree(ROOT / folder, global_dir / folder, ignore=shutil.ignore_patterns("__pycache__"))
     marker = global_dir / "hpc/snapshot_marker.py"
     first = "generation = 'first'\n"
@@ -168,12 +168,10 @@ def test_fetch_merge_advances_partial_job_without_changing_completed_tasks(tmp_p
     assert (local / path.name).read_bytes() == before
 
 
-def test_source_archive_includes_environment_pins(tmp_path):
+def test_source_archive_includes_requirements(tmp_path):
     path = prepare_hpc(ROOT, tmp_path / "results", "pins", ["--M", "1", "--N", "1", "--p-values", "0"], array=False)
     document = load_hpc_job(path)
-    for name in ("requirements.txt", "requirements-tested.txt"):
-        if (ROOT / name).exists():
-            assert _source_text(document, name) == (ROOT / name).read_text()
+    assert _source_text(document, "requirements.txt") == (ROOT / "requirements.txt").read_text()
 
 
 def test_fetch_imports_all_saved_result_types_with_exact_source_bytes(tmp_path, monkeypatch):

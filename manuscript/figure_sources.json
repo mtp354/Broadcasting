@@ -11,12 +11,12 @@
     "figure.dpi": 120,
     "font.family": "DejaVu Sans",
     "font.size": 12,
-    "axes.labelsize": 12,
+    "axes.labelsize": 11,
     "axes.titlesize": 12,
     "axes.linewidth": 0.8,
     "xtick.labelsize": 12,
     "ytick.labelsize": 12,
-    "legend.fontsize": 8,
+    "legend.fontsize": 7.5,
     "lines.linewidth": 1.2,
     "lines.markersize": 4,
     "axes.spines.top": false,
@@ -97,7 +97,7 @@
         },
         "legend": {
           "loc": "best",
-          "fontsize": 8,
+          "fontsize": 7.5,
           "frameon": true
         },
         "layout": {
@@ -341,7 +341,7 @@
         "legend": {
           "loc": "lower center",
           "ncol": 2,
-          "fontsize": 8,
+          "fontsize": 7.5,
           "frameon": true,
           "columnspacing": 0.8,
           "handlelength": 1,
@@ -427,7 +427,7 @@
         "filename": "figure_04_qec_crossover.png",
         "figsize": [
           4.4,
-          4.4
+          3.4
         ],
         "sources": [
           "results/run_a5e7cf640b46986ea6c0aee3.json",
@@ -536,14 +536,11 @@
           "alpha": 0.2
         },
         "legend": {
-          "loc": "upper center",
-          "bbox_to_anchor": [
-            0.5,
-            -0.3
-          ],
-          "fontsize": 8,
-          "frameon": false,
-          "borderaxespad": 0
+          "loc": "lower left",
+          "fontsize": 7.5,
+          "frameon": true,
+          "framealpha": 0.9,
+          "borderaxespad": 0.6
         },
         "layout": {
           "pad": 1.1
@@ -656,7 +653,7 @@
           "ncol": 1,
           "frameon": true,
           "framealpha": 0.9,
-          "fontsize": 8
+          "fontsize": 7.5
         },
         "layout": {
           "pad": 1.1,
@@ -762,7 +759,7 @@
           ],
           "ncol": 6,
           "frameon": false,
-          "fontsize": 7,
+          "fontsize": 6.5,
           "columnspacing": 0.6,
           "handlelength": 0.8,
           "handletextpad": 0.3

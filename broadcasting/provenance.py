@@ -50,7 +50,7 @@ def _code_revision() -> str | None:
 
 def software_provenance() -> dict:
     """Identify installed dependencies and the exact checked-out source bytes."""
-    paths = sorted({p for folder in ("broadcasting", "hpc", "scripts")
+    paths = sorted({p for folder in ("broadcasting", "hpc")
                     for p in (ROOT / folder).rglob("*")
                     if p.suffix in {".py", ".sh"} and p.is_file()})
     versions = {}

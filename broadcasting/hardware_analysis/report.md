@@ -2,7 +2,7 @@
 
 Derived from **25 broadcasting jobs / 58 case records / 1581 per-theta, per-delay histograms** and **5 unique standalone memory jobs**. This analysis collected no data and did not change raw JSON files.
 
-Use `scripts/analyze_saved_hardware.py --results-dir RESULTS --output-dir OUTPUT` to reproduce. `summary.json` records source hashes, configuration, execution case/repeat identities, tau-zero estimates, and each trace's spectral summary. `points.json` contains every broadcasting and memory histogram's statistics. See the project README for setup and the collection workflow; `manuscript/figure_sources.json` pins publication inputs.
+Use `python -m broadcasting.analyze_saved_hardware --results-dir RESULTS --output-dir OUTPUT` to reproduce. `summary.json` records source hashes, configuration, execution case/repeat identities, tau-zero estimates, and each trace's spectral summary. `points.json` contains every broadcasting and memory histogram's statistics. See the project README for setup and the collection workflow; `manuscript/figure_sources.json` pins publication inputs.
 
 ## Execution identity and inserted delays
 

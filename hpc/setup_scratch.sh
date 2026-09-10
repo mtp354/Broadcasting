@@ -9,7 +9,7 @@ mkdir -p "${GLOBAL_DIR}/slurm_logs" "${SCRATCH_DIR}/slurm_logs"
 module purge
 module load "${BROADCAST_PYTHON_MODULE:-Compilers/Python/3.12.13}"
 BROADCAST_PYTHON=python BROADCAST_VENV="${SCRATCH_DIR}/.venv" \
-    bash "${GLOBAL_DIR}/scripts/setup.sh"
+    bash "${GLOBAL_DIR}/broadcasting/setup.sh"
 
 echo "Cluster environment ready at ${SCRATCH_DIR}/.venv."
 echo "See README.md for HPC paths and hpc/slurm_broadcast.sh for submission settings."

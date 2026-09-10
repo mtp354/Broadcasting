@@ -61,11 +61,12 @@ def _write_bytes(payload, path):
 
 
 def _source_snapshot(source_dir):
-    paths = sorted(path for folder in ("broadcasting", "hpc", "scripts")
+    paths = sorted(path for folder in ("broadcasting", "hpc")
                    for path in (source_dir / folder).rglob("*")
                    if path.is_file() and path.suffix in {".py", ".sh"} and "__pycache__" not in path.parts)
-    paths.extend(source_dir / name for name in ("requirements.txt", "requirements-tested.txt")
-                 if (source_dir / name).is_file())
+    requirements = source_dir / "requirements.txt"
+    if requirements.is_file():
+        paths.append(requirements)
     buffer = io.BytesIO()
     hashes = {}
     with tarfile.open(fileobj=buffer, mode="w:gz") as archive:

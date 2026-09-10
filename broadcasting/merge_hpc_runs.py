@@ -1,6 +1,6 @@
 """Merge complete simulation sweeps from flat result or HPC job JSON files.
 
-Usage: python scripts/merge_hpc_runs.py results/hpc_<submission>.json
+Usage: python -m broadcasting.merge_hpc_runs results/hpc_<submission>.json
 Records without a requested grid require --expected-p-values. Input subsets must
 cover that grid exactly once. Saved results include their source evidence.
 """
@@ -15,15 +15,13 @@ from datetime import datetime
 import hashlib
 import json
 from pathlib import Path
-import sys
 from typing import Any
 import uuid
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from broadcasting.results import (RESULTS_DIR, configuration_from_record, load_runs,
-                                  validate_run_record, write_run_json)
+from .results import (RESULTS_DIR, configuration_from_record, load_runs,
+                      validate_run_record, write_run_json)
 
 
 @dataclass

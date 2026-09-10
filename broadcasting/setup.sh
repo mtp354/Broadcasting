@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Install the tested environment or check an existing one. No experiments run.
+# Install the project environment or check an existing one. No experiments run.
 set -euo pipefail
 
 case "${1:-}" in
     "") INSTALL=1 ;;
     --check) INSTALL=0 ;;
     --help|-h)
-        echo "Usage: bash scripts/setup.sh [--check]"
+        echo "Usage: bash broadcasting/setup.sh [--check]"
         echo "BROADCAST_PYTHON selects Python (default python3.12)."
         echo "BROADCAST_VENV selects the environment (default .venv in this checkout)."
         exit 0 ;;
@@ -27,10 +27,10 @@ if [ "${INSTALL}" = 1 ]; then
         "${PYTHON_BIN}" -c 'import sys; sys.exit("Python 3.12 is required for the tested environment.") if sys.version_info[:2] != (3, 12) else None'
         "${PYTHON_BIN}" -m venv "${VENV_DIR}"
     fi
-    "${VENV_DIR}/bin/python" -c 'import sys; sys.exit("Use a Python 3.12 environment with requirements-tested.txt.") if sys.version_info[:2] != (3, 12) else None'
-    "${VENV_DIR}/bin/python" -m pip install -r requirements-tested.txt
+    "${VENV_DIR}/bin/python" -c 'import sys; sys.exit("Use a Python 3.12 environment with requirements.txt.") if sys.version_info[:2] != (3, 12) else None'
+    "${VENV_DIR}/bin/python" -m pip install -r requirements.txt
 elif [ ! -x "${VENV_DIR}/bin/python" ]; then
-    echo "Environment missing: ${VENV_DIR}. Run bash scripts/setup.sh first." >&2
+    echo "Environment missing: ${VENV_DIR}. Run bash broadcasting/setup.sh first." >&2
     exit 1
 fi
 

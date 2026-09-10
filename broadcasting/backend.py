@@ -222,7 +222,7 @@ class HPCBackend(Backend):
     This does not run the simulation itself and does not return fidelities --
     `run()` only prepares (and, if `submit=True`, launches) the job. Fetch
     results afterwards with `hpc/fetch_results.sh` and
-    `broadcasting.results.load_run`. Use `scripts/merge_hpc_runs.py` first if
+    `broadcasting.results.load_run`. Use `python -m broadcasting.merge_hpc_runs` first if
     `array=True` produced one file per sweep point.
 
     Parameters

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts.analyze_saved_hardware import analyze, load_hardware_runs
+from broadcasting.analyze_saved_hardware import analyze, load_hardware_runs
 
 
 def _write_case(directory: Path, case_id: str, *, tau_values=(0, 10), shots=100):
@@ -280,7 +280,7 @@ def test_inconsistent_sender_evidence_fails_before_outputs(tmp_path, change):
 
 
 def test_shared_file_views_preserve_distinct_record_ids(tmp_path, monkeypatch):
-    import scripts.analyze_saved_hardware as module
+    import broadcasting.analyze_saved_hardware as module
     path = tmp_path / "shared-job.json"
     records = [{"experiment_type": "hardware", "filepath": str(path),
                 "record_id": record_id, "job_id": "shared-job", "experiment_kind": "broadcasting",

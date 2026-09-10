@@ -98,9 +98,10 @@ def test_six_editable_figure_cells_share_preview_export_and_source_evidence(prev
                 assert all(alias.name != "broadcasting.plotting" for alias in node.names)
 
 
-def test_legends_and_inset_have_smaller_readable_text(preview):
-    size, legend_size = preview["FONT_SIZE"], preview["LEGEND_FONT_SIZE"]
-    assert legend_size < size
+def test_axis_labels_legends_and_inset_have_smaller_readable_text(preview):
+    size = preview["FONT_SIZE"]
+    axis_size, legend_size = preview["AXIS_LABEL_FONT_SIZE"], preview["LEGEND_FONT_SIZE"]
+    assert legend_size < axis_size < size
     for number, figure in preview["manuscript_figures"].items():
         figure.canvas.draw()
         for ax in figure.axes:
@@ -108,13 +109,21 @@ def test_legends_and_inset_have_smaller_readable_text(preview):
             if legend:
                 assert all(text.get_fontsize() < size for text in legend.get_texts())
             if ax.get_xlabel():
-                assert ax.xaxis.label.get_fontsize() == size
+                assert ax.xaxis.label.get_fontsize() == axis_size
             if ax.get_ylabel():
-                assert ax.yaxis.label.get_fontsize() == size
+                assert ax.yaxis.label.get_fontsize() == axis_size
     inset = preview["manuscript_figures"][4].axes[0].child_axes[0]
     assert len(inset.get_xticks()) >= 5 and len(inset.get_yticks()) >= 5
     assert all(text.get_fontsize() == preview["INSET_FONT_SIZE"]
                for text in inset.get_xticklabels() + inset.get_yticklabels())
+    crossover = preview["manuscript_figures"][4].axes[0]
+    axes_bounds = crossover.get_window_extent()
+    legend_bounds = crossover.get_legend().get_window_extent()
+    assert axes_bounds.x0 <= legend_bounds.x0 < legend_bounds.x1 <= axes_bounds.x1
+    assert axes_bounds.y0 <= legend_bounds.y0 < legend_bounds.y1 <= axes_bounds.y1
+    # The legend belongs just inside the bottom-left corner after layout/rendering.
+    assert legend_bounds.x0 - axes_bounds.x0 < 0.05 * axes_bounds.width
+    assert legend_bounds.y0 - axes_bounds.y0 < 0.05 * axes_bounds.height
     legend = preview["manuscript_figures"][6].axes[0].get_legend()
     bounds = [text.get_window_extent() for text in legend.get_texts()]
     centers = [(box.y0 + box.y1) / 2 for box in bounds]

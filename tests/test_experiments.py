@@ -456,7 +456,7 @@ def test_extracted_job_keeps_original_configuration_hash_and_recovery(config, tm
 
 
 def test_status_cli_reads_only_job_json(prepared, monkeypatch, capsys):
-    from scripts.experiments import main
+    from broadcasting.experiments import main
     paths, _ = prepared
     monkeypatch.setattr("broadcasting.experiments._service", lambda _: pytest.fail("Status accessed account"))
     main(["status", *map(str, paths)])
