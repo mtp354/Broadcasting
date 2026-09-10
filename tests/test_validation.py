@@ -1,6 +1,6 @@
 """Tests for broadcasting.validation dataset-hygiene helpers."""
 
-from broadcasting.validation import dedupe_by_job, find_duplicate_jobs, group_by_cohort
+from broadcasting.validation import dedupe_by_job, find_duplicate_jobs
 
 
 def _run(job_id=None, backend="ibm_kingston", shots=4096, filename="r.json"):
@@ -25,19 +25,6 @@ class TestFindDuplicateJobs:
     def test_missing_job_id_ignored(self):
         runs = [_run(job_id=None), _run(job_id=None)]
         assert find_duplicate_jobs(runs) == {}
-
-
-class TestGroupByCohort:
-    def test_groups_by_backend_and_shots(self):
-        runs = [
-            _run(backend="ibm_kingston", shots=4096),
-            _run(backend="ibm_kingston", shots=4096),
-            _run(backend="ibm_marrakesh", shots=8192),
-        ]
-        groups = group_by_cohort(runs)
-        assert len(groups) == 2
-        assert len(groups[("ibm_kingston", 4096)]) == 2
-        assert len(groups[("ibm_marrakesh", 8192)]) == 1
 
 
 class TestDedupeByJob:

@@ -1,6 +1,6 @@
 {
   "method": "Finite-shot statistics per job, case, theta, and delay; no pooling across settings or dates.",
-  "limitations": "Wilson and multinomial delta-method intervals assume independent shots with fixed probabilities. Drift, shot autocorrelation, and calibration variation are not quantified by these intervals. Spectral peaks are exploratory.",
+  "limitations": "Wilson and multinomial delta-method intervals assume independent shots with fixed probabilities. Drift, shot autocorrelation, and calibration variation are not quantified by these intervals.",
   "source_directory": "/home/matt/Projects/Qiskit Projects/Broadcasting/results",
   "additional_source_directories": [],
   "broadcasting_jobs": 25,
@@ -256,68 +256,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.07967527931561638,
-          "fraction_trend_residual_variance_explained": 0.964230408375021,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.09510266063012121,
-          "fraction_trend_residual_variance_explained": 0.9616742597959824,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.07948633453990578,
-          "fraction_trend_residual_variance_explained": 0.9699946571880593,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 121,
         "minimum_invalid_rate": 0.0172,
@@ -566,68 +504,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.06293036993051387,
-          "fraction_trend_residual_variance_explained": 0.9286397690941116,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.0854460373222652,
-          "fraction_trend_residual_variance_explained": 0.9433080542503546,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.06973354166246688,
-          "fraction_trend_residual_variance_explained": 0.9360994965127737,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -880,68 +756,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.07562932063161047,
-          "fraction_trend_residual_variance_explained": 0.9626847090445747,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.09952244182417817,
-          "fraction_trend_residual_variance_explained": 0.9726064699965074,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.06936640258472783,
-          "fraction_trend_residual_variance_explained": 0.9400703759891273,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 121,
         "minimum_invalid_rate": 0.0132,
@@ -1190,68 +1004,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.03892742426533265,
-          "fraction_trend_residual_variance_explained": 0.9165019677834718,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.03931497216088184,
-          "fraction_trend_residual_variance_explained": 0.9011958561236421,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.03853988045263897,
-          "fraction_trend_residual_variance_explained": 0.8928336023295382,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -1504,68 +1256,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.0413437933452834,
-          "fraction_trend_residual_variance_explained": 0.9563245512746787,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.041431148671470845,
-          "fraction_trend_residual_variance_explained": 0.9293716969723764,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.04125830332721013,
-          "fraction_trend_residual_variance_explained": 0.9448168070586932,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 121,
         "minimum_invalid_rate": 0.0167,
@@ -1816,68 +1506,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.03786557046460127,
-          "fraction_trend_residual_variance_explained": 0.9093194333780726,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.040802568603577456,
-          "fraction_trend_residual_variance_explained": 0.89580682786099,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.03521664735400129,
-          "fraction_trend_residual_variance_explained": 0.8932246760406808,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 121,
         "minimum_invalid_rate": 0.0184,
@@ -2070,26 +1698,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.2603759765625,
@@ -2238,20 +1846,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -2405,20 +1999,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -2656,32 +2236,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -2925,32 +2479,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.0,
@@ -3105,20 +2633,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -3309,26 +2823,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.0650634765625,
@@ -3510,26 +3004,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -3775,32 +3249,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -4126,38 +3574,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.6224365234375,
@@ -4469,38 +3885,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -4821,38 +4205,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.3896484375,
@@ -5166,38 +4518,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.102783203125,
@@ -5346,20 +4666,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -5548,26 +4854,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -5807,32 +5093,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.0,
@@ -5987,20 +5247,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -6244,32 +5490,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.0,
@@ -6462,26 +5682,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.260009765625,
@@ -6634,20 +5834,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -6893,32 +6079,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -7244,38 +6404,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.5947265625,
@@ -7594,38 +6722,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.3753662109375,
@@ -7809,26 +6905,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.016357421875,
@@ -7983,20 +7059,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -8244,32 +7306,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.0,
@@ -8511,32 +7547,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.0,
@@ -8729,26 +7739,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.239990234375,
@@ -8901,20 +7891,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -9098,26 +8074,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -9438,38 +8394,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.387451171875,
@@ -9656,26 +8580,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -9913,32 +8817,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -10252,38 +9130,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -10609,38 +9455,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 1,
         "minimum_invalid_rate": 0.592041015625,
@@ -10789,20 +9603,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -11026,68 +9826,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 1.9834710743801653,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 0.5041666666666667,
-          "cycles_in_observed_span": 47.60330578512397,
-          "few_cycles": false,
-          "samples_per_period": 2.520833333333333,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.021818091834837575,
-          "fraction_trend_residual_variance_explained": 0.06647420097533785,
-          "first_positive_ac_peak_lag": 0.4,
-          "first_positive_ac_peak": 0.7373582551180681,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 2.024793388429752,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 0.4938775510204081,
-          "cycles_in_observed_span": 48.59504132231406,
-          "few_cycles": false,
-          "samples_per_period": 2.4693877551020402,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.021414170723466346,
-          "fraction_trend_residual_variance_explained": 0.04442328963694231,
-          "first_positive_ac_peak_lag": 0.6,
-          "first_positive_ac_peak": 0.7370751338287307,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 1.9834710743801653,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 0.5041666666666667,
-          "cycles_in_observed_span": 47.60330578512397,
-          "few_cycles": false,
-          "samples_per_period": 2.520833333333333,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.03705326849776354,
-          "fraction_trend_residual_variance_explained": 0.05391961926908628,
-          "first_positive_ac_peak_lag": 0.4,
-          "first_positive_ac_peak": 0.512812322806276,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -11234,26 +9972,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -11475,68 +10193,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 2.272727272727273,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 0.43999999999999995,
-          "cycles_in_observed_span": 54.545454545454554,
-          "few_cycles": false,
-          "samples_per_period": 2.1999999999999997,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.022350551958819093,
-          "fraction_trend_residual_variance_explained": 0.048882927985518854,
-          "first_positive_ac_peak_lag": 0.4,
-          "first_positive_ac_peak": 0.6900501479808294,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 2.396694214876033,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 0.41724137931034483,
-          "cycles_in_observed_span": 57.5206611570248,
-          "few_cycles": false,
-          "samples_per_period": 2.086206896551724,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.028782058733109316,
-          "fraction_trend_residual_variance_explained": 0.05639862698335807,
-          "first_positive_ac_peak_lag": 0.4,
-          "first_positive_ac_peak": 0.6093904095401381,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.045143279437717176,
-          "fraction_trend_residual_variance_explained": 0.22569582687263212,
-          "first_positive_ac_peak_lag": 0.4,
-          "first_positive_ac_peak": 0.7344883217889132,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -12003,108 +10659,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 615.0,
-          "cycles_in_observed_span": 9.75609756097561,
-          "few_cycles": false,
-          "samples_per_period": 4.1,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.012599774859637262,
-          "fraction_trend_residual_variance_explained": 0.19884655537768192,
-          "first_positive_ac_peak_lag": 600.0,
-          "first_positive_ac_peak": 0.272645653139831,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0032520325203252032,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 307.5,
-          "cycles_in_observed_span": 19.51219512195122,
-          "few_cycles": false,
-          "samples_per_period": 2.05,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.013535033265860969,
-          "fraction_trend_residual_variance_explained": 0.052771393726536275,
-          "first_positive_ac_peak_lag": 450.0,
-          "first_positive_ac_peak": 0.19352658214186186,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0008130081300813008,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 1230.0,
-          "cycles_in_observed_span": 4.878048780487805,
-          "few_cycles": false,
-          "samples_per_period": 8.2,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.007467481558527337,
-          "fraction_trend_residual_variance_explained": 0.024399230895066237,
-          "first_positive_ac_peak_lag": 600.0,
-          "first_positive_ac_peak": 0.16431850283438165,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "exploratory",
-          "receiver": 2,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0006504065040650406,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 1537.5,
-          "cycles_in_observed_span": 3.902439024390244,
-          "few_cycles": false,
-          "samples_per_period": 10.25,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.019476807747444848,
-          "fraction_trend_residual_variance_explained": 0.13964761327022412,
-          "first_positive_ac_peak_lag": 450.0,
-          "first_positive_ac_peak": 0.3755942717047551,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "exploratory",
-          "receiver": 3,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 615.0,
-          "cycles_in_observed_span": 9.75609756097561,
-          "few_cycles": false,
-          "samples_per_period": 4.1,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.0359833471444481,
-          "fraction_trend_residual_variance_explained": 0.23433857412017567,
-          "first_positive_ac_peak_lag": 600.0,
-          "first_positive_ac_peak": 0.2710122852761607,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -12328,68 +10882,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0024390243902439024,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 410.0,
-          "cycles_in_observed_span": 14.634146341463415,
-          "few_cycles": false,
-          "samples_per_period": 2.7333333333333334,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.009542065525167957,
-          "fraction_trend_residual_variance_explained": 0.1760729816756187,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.03397109267475722,
-          "fraction_trend_residual_variance_explained": 0.3122769761570451,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0003252032520325203,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 3075.0,
-          "cycles_in_observed_span": 1.951219512195122,
-          "few_cycles": true,
-          "samples_per_period": 20.5,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.01460642999062995,
-          "fraction_trend_residual_variance_explained": 0.16274230408294155,
-          "first_positive_ac_peak_lag": 1200.0,
-          "first_positive_ac_peak": 0.2805523469448287,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -12603,68 +11095,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.12424430559035718,
-          "fraction_trend_residual_variance_explained": 0.9840293762628308,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.06437915146620647,
-          "fraction_trend_residual_variance_explained": 0.9232824348211296,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 121,
-          "time_unit": "us",
-          "frequency": 0.04132231404958678,
-          "frequency_resolution": 0.04132231404958678,
-          "dominant_period": 24.2,
-          "cycles_in_observed_span": 0.9917355371900827,
-          "few_cycles": true,
-          "samples_per_period": 121.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.1894911520849297,
-          "fraction_trend_residual_variance_explained": 0.987883373739213,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -13134,108 +11564,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0027642276422764228,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 361.7647058823529,
-          "cycles_in_observed_span": 16.585365853658537,
-          "few_cycles": false,
-          "samples_per_period": 2.411764705882353,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.003333169894000938,
-          "fraction_trend_residual_variance_explained": 0.2558316343724,
-          "first_positive_ac_peak_lag": 300.0,
-          "first_positive_ac_peak": 0.19782151706469306,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0008130081300813008,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 1230.0,
-          "cycles_in_observed_span": 4.878048780487805,
-          "few_cycles": false,
-          "samples_per_period": 8.2,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.005274281782560409,
-          "fraction_trend_residual_variance_explained": 0.15973503810068046,
-          "first_positive_ac_peak_lag": 1200.0,
-          "first_positive_ac_peak": 0.19336793165933866,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0006504065040650406,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 1537.5,
-          "cycles_in_observed_span": 3.902439024390244,
-          "few_cycles": false,
-          "samples_per_period": 10.25,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.0032824974367098095,
-          "fraction_trend_residual_variance_explained": 0.06908397930806465,
-          "first_positive_ac_peak_lag": 300.0,
-          "first_positive_ac_peak": 0.03337878496778704,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "exploratory",
-          "receiver": 2,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0027642276422764228,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 361.7647058823529,
-          "cycles_in_observed_span": 16.585365853658537,
-          "few_cycles": false,
-          "samples_per_period": 2.411764705882353,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.005274825955526552,
-          "fraction_trend_residual_variance_explained": 0.12812132013299005,
-          "first_positive_ac_peak_lag": 300.0,
-          "first_positive_ac_peak": 0.10902357140729771,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_3",
-          "status": "exploratory",
-          "receiver": 3,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0027642276422764228,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 361.7647058823529,
-          "cycles_in_observed_span": 16.585365853658537,
-          "few_cycles": false,
-          "samples_per_period": 2.411764705882353,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.00438505330356362,
-          "fraction_trend_residual_variance_explained": 0.14304885107236487,
-          "first_positive_ac_peak_lag": 300.0,
-          "first_positive_ac_peak": 0.10129074101128248,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -13454,68 +11782,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0036585365853658534,
-          "frequency_resolution": 0.00024390243902439024,
-          "dominant_period": 273.33333333333337,
-          "cycles_in_observed_span": 14.634146341463413,
-          "few_cycles": false,
-          "samples_per_period": 2.733333333333334,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.01196867530726497,
-          "fraction_trend_residual_variance_explained": 0.1136239552195143,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0004878048780487805,
-          "frequency_resolution": 0.00024390243902439024,
-          "dominant_period": 2050.0,
-          "cycles_in_observed_span": 1.951219512195122,
-          "few_cycles": true,
-          "samples_per_period": 20.5,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.023355784939654203,
-          "fraction_trend_residual_variance_explained": 0.2487109065080646,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.003902439024390244,
-          "frequency_resolution": 0.00024390243902439024,
-          "dominant_period": 256.25,
-          "cycles_in_observed_span": 15.609756097560975,
-          "few_cycles": false,
-          "samples_per_period": 2.5625,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.018594174188035464,
-          "fraction_trend_residual_variance_explained": 0.16403671648659857,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -13840,88 +12106,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0032520325203252032,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 307.5,
-          "cycles_in_observed_span": 19.51219512195122,
-          "few_cycles": false,
-          "samples_per_period": 2.05,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.003953937267942665,
-          "fraction_trend_residual_variance_explained": 0.0708324998098453,
-          "first_positive_ac_peak_lag": 450.0,
-          "first_positive_ac_peak": 0.15907899535427172,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0032520325203252032,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 307.5,
-          "cycles_in_observed_span": 19.51219512195122,
-          "few_cycles": false,
-          "samples_per_period": 2.05,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.008113207554841833,
-          "fraction_trend_residual_variance_explained": 0.11079023267845034,
-          "first_positive_ac_peak_lag": 300.0,
-          "first_positive_ac_peak": 0.23071079569168096,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0008130081300813008,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 1230.0,
-          "cycles_in_observed_span": 4.878048780487805,
-          "few_cycles": false,
-          "samples_per_period": 8.2,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.006989884528050034,
-          "fraction_trend_residual_variance_explained": 0.03401327848206692,
-          "first_positive_ac_peak_lag": 450.0,
-          "first_positive_ac_peak": 0.29040489733607144,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "exploratory",
-          "receiver": 2,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0026016260162601626,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 384.375,
-          "cycles_in_observed_span": 15.609756097560975,
-          "few_cycles": false,
-          "samples_per_period": 2.5625,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.010620354300832188,
-          "fraction_trend_residual_variance_explained": 0.09267336630461265,
-          "first_positive_ac_peak_lag": 300.0,
-          "first_positive_ac_peak": 0.1732636405608253,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -14148,68 +12332,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0032520325203252032,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 307.5,
-          "cycles_in_observed_span": 19.51219512195122,
-          "few_cycles": false,
-          "samples_per_period": 2.05,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.003296081640441782,
-          "fraction_trend_residual_variance_explained": 0.18059756623828316,
-          "first_positive_ac_peak_lag": 300.0,
-          "first_positive_ac_peak": 0.2620684664024869,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0032520325203252032,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 307.5,
-          "cycles_in_observed_span": 19.51219512195122,
-          "few_cycles": false,
-          "samples_per_period": 2.05,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.005616251816340332,
-          "fraction_trend_residual_variance_explained": 0.1595113351058508,
-          "first_positive_ac_peak_lag": 600.0,
-          "first_positive_ac_peak": 0.17055651364203975,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0022764227642276423,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 439.2857142857143,
-          "cycles_in_observed_span": 13.658536585365853,
-          "few_cycles": false,
-          "samples_per_period": 2.9285714285714284,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.005018287571912207,
-          "fraction_trend_residual_variance_explained": 0.1373376873730353,
-          "first_positive_ac_peak_lag": 450.0,
-          "first_positive_ac_peak": 0.25126149864061137,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -14428,68 +12550,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0027642276422764228,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 361.7647058823529,
-          "cycles_in_observed_span": 16.585365853658537,
-          "few_cycles": false,
-          "samples_per_period": 2.411764705882353,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.0309608651240562,
-          "fraction_trend_residual_variance_explained": 0.1345179616488813,
-          "first_positive_ac_peak_lag": 750.0,
-          "first_positive_ac_peak": 0.5101916428918035,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.002113821138211382,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 473.0769230769231,
-          "cycles_in_observed_span": 12.682926829268292,
-          "few_cycles": false,
-          "samples_per_period": 3.1538461538461537,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.028450787927540397,
-          "fraction_trend_residual_variance_explained": 0.08132200717976745,
-          "first_positive_ac_peak_lag": 750.0,
-          "first_positive_ac_peak": 0.4947815839156716,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0022764227642276423,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 439.2857142857143,
-          "cycles_in_observed_span": 13.658536585365853,
-          "few_cycles": false,
-          "samples_per_period": 2.9285714285714284,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.033336463706222036,
-          "fraction_trend_residual_variance_explained": 0.0847964581510785,
-          "first_positive_ac_peak_lag": 750.0,
-          "first_positive_ac_peak": 0.4112672234826603,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -14712,68 +12772,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.04248829775850979,
-          "fraction_trend_residual_variance_explained": 0.7837852928092113,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0011382113821138211,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 878.5714285714286,
-          "cycles_in_observed_span": 6.829268292682927,
-          "few_cycles": false,
-          "samples_per_period": 5.857142857142857,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.0692257898842732,
-          "fraction_trend_residual_variance_explained": 0.1606645201448541,
-          "first_positive_ac_peak_lag": 750.0,
-          "first_positive_ac_peak": 0.3193677363659517,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.0011382113821138211,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 878.5714285714286,
-          "cycles_in_observed_span": 6.829268292682927,
-          "few_cycles": false,
-          "samples_per_period": 5.857142857142857,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.06044859448984637,
-          "fraction_trend_residual_variance_explained": 0.13788754822039573,
-          "first_positive_ac_peak_lag": 1650.0,
-          "first_positive_ac_peak": 0.24487130443402058,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -14992,26 +12990,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Fewer than eight delay points."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Fewer than eight delay points."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Fewer than eight delay points."
         }
       ],
       "sender_diagnostics": {
@@ -15397,128 +13375,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.09512840786818717,
-          "fraction_trend_residual_variance_explained": 0.8392068061926484,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.001951219512195122,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 512.5,
-          "cycles_in_observed_span": 11.707317073170731,
-          "few_cycles": false,
-          "samples_per_period": 3.4166666666666665,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.03470018719202893,
-          "fraction_trend_residual_variance_explained": 0.06624354986387837,
-          "first_positive_ac_peak_lag": 450.0,
-          "first_positive_ac_peak": 0.6913040073657797,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.10942363403045412,
-          "fraction_trend_residual_variance_explained": 0.7210425264388429,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 1,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.0989042599702451,
-          "fraction_trend_residual_variance_explained": 0.8577055443480643,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 1,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.10189615417972048,
-          "fraction_trend_residual_variance_explained": 0.5316670692460252,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 1,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.09937746018628991,
-          "fraction_trend_residual_variance_explained": 0.5441484811183764,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -15665,26 +13521,6 @@
               }
             }
           ]
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "unavailable",
-          "reason": "Need at least two tau points for periodicity analysis."
         }
       ],
       "sender_diagnostics": {
@@ -16006,88 +13842,6 @@
           ]
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.05470926523331431,
-          "fraction_trend_residual_variance_explained": 0.6626793516617381,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.05295070036415055,
-          "fraction_trend_residual_variance_explained": 0.7966534190068204,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_1",
-          "status": "exploratory",
-          "receiver": 1,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.06959014716256608,
-          "fraction_trend_residual_variance_explained": 0.5473849075147816,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_2",
-          "status": "exploratory",
-          "receiver": 2,
-          "points": 41,
-          "time_unit": "dt",
-          "frequency": 0.00016260162601626016,
-          "frequency_resolution": 0.00016260162601626016,
-          "dominant_period": 6150.0,
-          "cycles_in_observed_span": 0.975609756097561,
-          "few_cycles": true,
-          "samples_per_period": 41.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.0683930677136658,
-          "fraction_trend_residual_variance_explained": 0.6143936523591086,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -16265,48 +14019,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.03968253968253968,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 25.2,
-          "cycles_in_observed_span": 0.9523809523809523,
-          "few_cycles": true,
-          "samples_per_period": 21.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.01220173179618205,
-          "fraction_trend_residual_variance_explained": 0.6477864129126505,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.03968253968253968,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 25.2,
-          "cycles_in_observed_span": 0.9523809523809523,
-          "few_cycles": true,
-          "samples_per_period": 21.0,
-          "near_nyquist": false,
-          "sinusoid_amplitude_at_selected_frequency": 0.01220173179618205,
-          "fraction_trend_residual_variance_explained": 0.6477864129126505,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -17896,48 +15608,6 @@
           "pairs": []
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.35714285714285715,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 2.8000000000000003,
-          "cycles_in_observed_span": 8.571428571428571,
-          "few_cycles": false,
-          "samples_per_period": 2.3333333333333335,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.0015668676741199157,
-          "fraction_trend_residual_variance_explained": 0.0890275065434255,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.35714285714285715,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 2.8000000000000003,
-          "cycles_in_observed_span": 8.571428571428571,
-          "few_cycles": false,
-          "samples_per_period": 2.3333333333333335,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.0015668676741199157,
-          "fraction_trend_residual_variance_explained": 0.0890275065434255,
-          "first_positive_ac_peak_lag": null,
-          "first_positive_ac_peak": null,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -19525,48 +17195,6 @@
           "pairs": []
         }
       ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.35714285714285715,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 2.8000000000000003,
-          "cycles_in_observed_span": 8.571428571428571,
-          "few_cycles": false,
-          "samples_per_period": 2.3333333333333335,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.0051159839693299776,
-          "fraction_trend_residual_variance_explained": 0.4293280337134858,
-          "first_positive_ac_peak_lag": 2.4,
-          "first_positive_ac_peak": 0.14893155728382426,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.35714285714285715,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 2.8000000000000003,
-          "cycles_in_observed_span": 8.571428571428571,
-          "few_cycles": false,
-          "samples_per_period": 2.3333333333333335,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.0051159839693299776,
-          "fraction_trend_residual_variance_explained": 0.4293280337134858,
-          "first_positive_ac_peak_lag": 2.4,
-          "first_positive_ac_peak": 0.14893155728382426,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        }
-      ],
       "sender_diagnostics": {
         "recorded_histograms": 0,
         "minimum_invalid_rate": null,
@@ -21148,48 +18776,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 21,
-          "time_unit": "dt",
-          "frequency": 0.0011111111111111111,
-          "frequency_resolution": 0.00015873015873015873,
-          "dominant_period": 900.0,
-          "cycles_in_observed_span": 6.666666666666667,
-          "few_cycles": false,
-          "samples_per_period": 3.0,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.009475132828132872,
-          "fraction_trend_residual_variance_explained": 0.2687741015912948,
-          "first_positive_ac_peak_lag": 900.0,
-          "first_positive_ac_peak": 0.28687478778966286,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 21,
-          "time_unit": "dt",
-          "frequency": 0.0011111111111111111,
-          "frequency_resolution": 0.00015873015873015873,
-          "dominant_period": 900.0,
-          "cycles_in_observed_span": 6.666666666666667,
-          "few_cycles": false,
-          "samples_per_period": 3.0,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.009475132828132872,
-          "fraction_trend_residual_variance_explained": 0.2687741015912948,
-          "first_positive_ac_peak_lag": 900.0,
-          "first_positive_ac_peak": 0.28687478778966286,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {
@@ -22781,48 +20367,6 @@
             ]
           },
           "pairs": []
-        }
-      ],
-      "periodicity": [
-        {
-          "theta_index": 0,
-          "trace": "receiver_mean",
-          "status": "exploratory",
-          "receiver": null,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.3968253968253968,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 2.52,
-          "cycles_in_observed_span": 9.523809523809524,
-          "few_cycles": false,
-          "samples_per_period": 2.1,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.004455338396673539,
-          "fraction_trend_residual_variance_explained": 0.4118037285199381,
-          "first_positive_ac_peak_lag": 2.4,
-          "first_positive_ac_peak": 0.2865738202273718,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
-        },
-        {
-          "theta_index": 0,
-          "trace": "receiver_0",
-          "status": "exploratory",
-          "receiver": 0,
-          "points": 21,
-          "time_unit": "us",
-          "frequency": 0.3968253968253968,
-          "frequency_resolution": 0.03968253968253968,
-          "dominant_period": 2.52,
-          "cycles_in_observed_span": 9.523809523809524,
-          "few_cycles": false,
-          "samples_per_period": 2.1,
-          "near_nyquist": true,
-          "sinusoid_amplitude_at_selected_frequency": 0.004455338396673539,
-          "fraction_trend_residual_variance_explained": 0.4118037285199381,
-          "first_positive_ac_peak_lag": 2.4,
-          "first_positive_ac_peak": 0.2865738202273718,
-          "method": "Hann periodogram, linear detrending; uncorrected exploratory peak selection, no physical-mechanism attribution"
         }
       ],
       "sender_diagnostics": {

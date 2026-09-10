@@ -1,14 +1,12 @@
-"""Small dataset-validation helpers for reasoning about saved run collections.
+"""Detect duplicate hardware measurements before analysis and figure generation.
 
-Used by the figure-generation notebooks to stratify by backend/shots and to
-flag duplicate hardware jobs before any aggregate statistic (mean, scaling
-trend, etc.) is computed across them -- read-only, never touches result files.
+These helpers filter loaded records without modifying the saved result files.
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Hashable
+from typing import Any
 
 
 def _record_identity(run: dict[str, Any]) -> str | None:
@@ -32,23 +30,6 @@ def find_duplicate_jobs(runs: list[dict[str, Any]]) -> dict[str, list[str]]:
         if identity:
             by_record[identity].append(run.get("filename", run.get("filepath", "?")))
     return {identity: files for identity, files in by_record.items() if len(files) > 1}
-
-
-def group_by_cohort(
-    runs: list[dict[str, Any]],
-    keys: tuple[str, ...] = ("backend", "shots"),
-) -> dict[tuple[Hashable, ...], list[dict[str, Any]]]:
-    """Group runs by the given top-level keys (e.g. backend, shots).
-
-    Use this before pooling runs into one aggregate plot/statistic, so that
-    incomparable cohorts (different backend, different shot count, different
-    optimization level, ...) are never silently averaged together.
-    """
-    groups: dict[tuple[Hashable, ...], list[dict[str, Any]]] = defaultdict(list)
-    for run in runs:
-        key = tuple(run.get(k) for k in keys)
-        groups[key].append(run)
-    return groups
 
 
 def dedupe_by_job(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:

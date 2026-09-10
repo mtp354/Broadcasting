@@ -2,11 +2,11 @@
 
 Derived from **25 broadcasting jobs / 58 case records / 1581 per-theta, per-delay histograms** and **5 unique standalone memory jobs**. This analysis collected no data and did not change raw JSON files.
 
-Use `python -m broadcasting.analyze_saved_hardware --results-dir RESULTS --output-dir OUTPUT` to reproduce. `summary.json` records source hashes, configuration, execution case/repeat identities, tau-zero estimates, and each trace's spectral summary. `points.json` contains every broadcasting and memory histogram's statistics. See the project README for setup and the collection workflow; `manuscript/figure_sources.json` pins publication inputs.
+Use `python -m broadcasting.analyze_saved_hardware --results-dir RESULTS --output-dir OUTPUT` to reproduce. `summary.json` records source hashes, configuration, execution case/repeat identities, zero-delay estimates, and trace endpoints. `points.json` contains every broadcasting and memory histogram's statistics. See the project README for setup and the collection workflow; `manuscript/figure_sources.json` pins publication inputs.
 
 ## Execution identity and inserted delays
 
-Case names are labels; the archived factor vector defines the intervention. For receiver i, `added delay = receiver_delay_factors[i] × tau_dt`, in backend dt units. A zero factor inserts no extra delay on that receiver. Other gates and scheduler-induced idle time still contribute. Spectral periods are reported against the sweep parameter tau, not each receiver's multiplied delay.
+Case names are labels; the archived factor vector defines the intervention. For receiver i, `added delay = receiver_delay_factors[i] × tau_dt`, in backend dt units. A zero factor inserts no extra delay on that receiver. Other gates and scheduler-induced idle time still contribute.
 
 | Run ID | Repeat (zero-based) | Runtime job ID | Case | Receiver delay factors |
 |---|---:|---|---|---|
@@ -241,74 +241,6 @@ An outcome is invalid when any sender's binary value exceeds N. When N+1 is a po
 | c529a7490b5bf79ddaf55820 | 0 | unrecorded | unrecorded |
 | da461d64d8ee22a3c723c96c | 0 | unrecorded | unrecorded |
 | de371f1284d64792dbec0f3f | 0 | unrecorded | unrecorded |
-
-## Delay periodicity
-
-Each receiver and receiver-mean trace is analyzed separately for each job/case/theta. Uniform sweeps with at least eight points use a linearly detrended Hann periodogram. Saved summaries include the dominant nonzero frequency, Fourier-bin resolution, cycles observed, selected-frequency sinusoid amplitude, and first positive autocorrelation peak. A peak selected from the same trace is exploratory, with no post-selection significance or physical-cause inference. Fewer than three observed cycles are poorly resolved against drift; fewer than four samples per cycle are near Nyquist and limited by sampling/aliasing. Independent repetitions are needed for frequency uncertainty.
-
-The table reports receiver-mean peaks. Recorded or evidence-attributed dt converts time to microseconds; otherwise native dt is retained. Frequency resolution is in cycles per displayed unit.
-
-| Run or repeat/case / theta | Dominant period | Frequency resolution | Cycles in span | Trend-residual variance explained |
-|---|---:|---:|---:|---:|
-| repeat 0 / m1_n2 / θ0 | 24.200 us | 0.041322 | 0.99 (few cycles) | 0.964 |
-| repeat 1 / m1_n2 / θ0 | 24.200 us | 0.041322 | 0.99 (few cycles) | 0.929 |
-| repeat 2 / m1_n2 / θ0 | 24.200 us | 0.041322 | 0.99 (few cycles) | 0.963 |
-| repeat 0 / m1_n2 / θ0 | 24.200 us | 0.041322 | 0.99 (few cycles) | 0.917 |
-| repeat 1 / m1_n2 / θ0 | 24.200 us | 0.041322 | 0.99 (few cycles) | 0.956 |
-| repeat 2 / m1_n2 / θ0 | 24.200 us | 0.041322 | 0.99 (few cycles) | 0.909 |
-| repeat 0 / m3_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m1_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m2_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m1_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m2_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m3_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m2_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m1_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m3_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m3_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m1_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 0 / m2_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m1_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m1_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m2_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m1_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m3_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m2_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m3_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m2_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m3_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m3_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m2_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 1 / m1_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m3_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m3_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m2_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m3_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m2_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m1_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m2_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m2_n2 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m1_n3 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m1_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m3_n4 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| repeat 2 / m1_n1 / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| 1ae607ae77f87dc162ba8f01 / θ0 | 0.504 us | 0.041322 | 47.60 (near Nyquist) | 0.066 |
-| 33f32cfedb0f423158c6e25d / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| 38cff65a6e2f2859f7eb55bd / θ0 | 0.440 us | 0.041322 | 54.55 (near Nyquist) | 0.049 |
-| 4376189d8a394b68adef32da / θ0 | 615.000 dt | 0.000163 | 9.76 | 0.199 |
-| 4d34aec3527ddb3d88d9dcff / θ0 | 410.000 dt | 0.000163 | 14.63 (near Nyquist) | 0.176 |
-| 543ec95c4cc789df373e4844 / θ0 | 24.200 us | 0.041322 | 0.99 (few cycles) | 0.984 |
-| 65b5b2a16ea8a1d85a8ad993 / θ0 | 361.765 dt | 0.000163 | 16.59 (near Nyquist) | 0.256 |
-| 7f4106c6a7d604ef0a1f4eae / θ0 | 273.333 dt | 0.000244 | 14.63 (near Nyquist) | 0.114 |
-| 974670afccc7483c79bca571 / θ0 | 307.500 dt | 0.000163 | 19.51 (near Nyquist) | 0.071 |
-| a39c3727abe65d9cc50d294b / θ0 | 307.500 dt | 0.000163 | 19.51 (near Nyquist) | 0.181 |
-| ba15591d96b69402dac7d118 / θ0 | 361.765 dt | 0.000163 | 16.59 (near Nyquist) | 0.135 |
-| c07774de7a0920cbd0535e08 / θ0 | 6150.000 dt | 0.000163 | 0.98 (few cycles) | 0.784 |
-| c4ba9ede78845082431371a0 / θ0 | Unavailable: Fewer than eight delay points. | — | — | — |
-| c529a7490b5bf79ddaf55820 / θ0 | 6150.000 dt | 0.000163 | 0.98 (few cycles) | 0.839 |
-| c529a7490b5bf79ddaf55820 / θ1 | 6150.000 dt | 0.000163 | 0.98 (few cycles) | 0.858 |
-| da461d64d8ee22a3c723c96c / θ0 | Unavailable: Need at least two tau points for periodicity analysis. | — | — | — |
-| de371f1284d64792dbec0f3f / θ0 | 6150.000 dt | 0.000163 | 0.98 (few cycles) | 0.663 |
 
 ## Standalone memory records
 

@@ -50,8 +50,8 @@ Broadcasting/
 │   ├── convergence.py          Sampled-to-exact convergence studies
 │   ├── results.py              Result validation, loading, and storage
 │   ├── provenance.py           Software, circuit, and calibration evidence
-│   ├── validation.py           Duplicate detection and cohort selection
-│   ├── analysis.py             Fidelity statistics and delay spectra
+│   ├── validation.py           Duplicate detection and record selection
+│   ├── analysis.py             Fidelity statistics and physical delay axes
 │   ├── analyze_saved_hardware.py  Saved-data analysis CLI
 │   ├── merge_hpc_runs.py       Complete simulation sweep merge CLI
 │   ├── setup.sh                Environment setup and checks
@@ -145,8 +145,8 @@ This refreshes `summary.json`, `points.json`, `scaling_points.json`, and
 `broadcasting/hardware_analysis/`. Use `--results-dir`, `--include-results-dir`,
 and `--output-dir` to select other saved inputs or an output location.
 The report covers local, mean, worst-receiver, and joint fidelity, covariance,
-receiver asymmetry, recorded invalid sender outcomes, and exploratory delay
-spectra. Shot intervals describe uncertainty conditional on each histogram;
+receiver asymmetry, and recorded invalid sender outcomes.
+Shot intervals describe uncertainty conditional on each histogram;
 they do not estimate variation between jobs or identify a physical noise mechanism.
 
 Convergence results embed their exact reference and error settings. Seed 0

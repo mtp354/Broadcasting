@@ -17,7 +17,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parent / "hardware_analysis"
 
-from .analysis import hardware_scaling_points, joint_success_statistics, periodicity_summary
+from .analysis import hardware_scaling_points, joint_success_statistics
 from .provenance import execution_summary
 from .results import RESULTS_DIR, list_runs
 from .validation import dedupe_by_job, find_duplicate_jobs
@@ -113,20 +113,11 @@ def _histogram_points(run):
     if per_theta is not None and (np.asarray(per_theta).shape != fidelities.shape
                                  or not np.allclose(per_theta, fidelities, atol=1e-10, rtol=0)):
         raise ValueError(f"Saved per-theta fidelities disagree with joint counts: {run['filename']}")
-    return points, fidelities
+    return points
 
 
 def _run_summary(run):
-    points, fidelities = _histogram_points(run)
-    spectra = []
-    for theta_index, theta_fidelities in enumerate(fidelities):
-        trace_run = dict(run, fidelities=theta_fidelities.tolist())
-        for receiver in [None, *range(run["N"])]:
-            spectra.append({
-                "theta_index": theta_index,
-                "trace": "receiver_mean" if receiver is None else f"receiver_{receiver}",
-                **periodicity_summary(trace_run, receiver=receiver),
-            })
+    points = _histogram_points(run)
     fields = ("record_id", "filename", "timestamp", "experiment_kind", "job_id", "backend", "optimization_level",
               "shots", "M", "N", "alpha", "use_qec", "theta_samples", "state_prep")
     metadata = run.get("metadata") or {}
@@ -173,7 +164,6 @@ def _run_summary(run):
         "sha256": hashlib.sha256(Path(run["filepath"]).read_bytes()).hexdigest(),
         "record_count": len(points),
         "tau0": [point for point in points if point["tau_dt"] == 0],
-        "periodicity": spectra,
         "sender_diagnostics": {
             "recorded_histograms": len(invalid_rates),
             "minimum_invalid_rate": min(invalid_rates) if invalid_rates else None,
@@ -209,7 +199,7 @@ def analyze(output_dir, *, results_dir=ROOT / RESULTS_DIR, additional_results_di
         (memory if run["experiment_kind"] == "memory" else summaries).append(summary)
     summary = {
         "method": "Finite-shot statistics per job, case, theta, and delay; no pooling across settings or dates.",
-        "limitations": "Wilson and multinomial delta-method intervals assume independent shots with fixed probabilities. Drift, shot autocorrelation, and calibration variation are not quantified by these intervals. Spectral peaks are exploratory.",
+        "limitations": "Wilson and multinomial delta-method intervals assume independent shots with fixed probabilities. Drift, shot autocorrelation, and calibration variation are not quantified by these intervals.",
         "source_directory": str(results_dir),
         "additional_source_directories": [str(Path(path).resolve()) for path in additional_results_dirs],
         "broadcasting_jobs": len({run["job_id"] for run in summaries}),
@@ -262,7 +252,7 @@ def _write_report(summary, output_dir):
         "This analysis collected no data and did not change raw JSON files.", "",
         "Use `python -m broadcasting.analyze_saved_hardware --results-dir RESULTS --output-dir OUTPUT` "
         "to reproduce. `summary.json` records source hashes, configuration, execution case/repeat "
-        "identities, tau-zero estimates, and each trace's spectral summary. `points.json` "
+        "identities, zero-delay estimates, and trace endpoints. `points.json` "
         "contains every broadcasting and memory histogram's statistics. See the project README for setup "
         "and the collection workflow; `manuscript/figure_sources.json` pins publication inputs.", "",
     ]
@@ -273,8 +263,7 @@ def _write_report(summary, output_dir):
             "Case names are labels; the archived factor vector defines the intervention. "
             "For receiver i, `added delay = receiver_delay_factors[i] × tau_dt`, in backend "
             "dt units. A zero factor inserts no extra delay on that receiver. Other gates "
-            "and scheduler-induced idle time still contribute. Spectral periods are "
-            "reported against the sweep parameter tau, not each receiver's multiplied delay.", "",
+            "and scheduler-induced idle time still contribute.", "",
             "| Run ID | Repeat (zero-based) | Runtime job ID | Case | Receiver delay factors |",
             "|---|---:|---|---|---|",
         ]
@@ -391,41 +380,6 @@ def _write_report(summary, output_dir):
             "unrecorded" if low is None else f"{low:.6f}",
             "unrecorded" if high is None else f"{high:.6f}",
         ))
-    lines += [
-        "", "## Delay periodicity", "",
-        "Each receiver and receiver-mean trace is analyzed separately for each job/case/theta. "
-        "Uniform sweeps with at least eight points use a linearly detrended Hann periodogram. "
-        "Saved summaries include the dominant nonzero frequency, Fourier-bin resolution, "
-        "cycles observed, selected-frequency sinusoid amplitude, and first positive "
-        "autocorrelation peak. A peak selected from the same trace is exploratory, with no "
-        "post-selection significance or physical-cause inference. Fewer than three observed "
-        "cycles are poorly resolved against drift; fewer than four samples per cycle are "
-        "near Nyquist and limited by sampling/aliasing. Independent repetitions are needed "
-        "for frequency uncertainty.", "",
-        "The table reports receiver-mean peaks. Recorded or evidence-attributed "
-        "dt converts time to microseconds; otherwise native dt is retained. Frequency "
-        "resolution is in cycles per displayed unit.", "",
-        "| Run or repeat/case / theta | Dominant period | Frequency resolution | Cycles in span | Trend-residual variance explained |",
-        "|---|---:|---:|---:|---:|",
-    ]
-    for run in summary["runs"]:
-        for spectrum in run["periodicity"]:
-            if spectrum["trace"] != "receiver_mean":
-                continue
-            label = _run_label(run, spectrum["theta_index"])
-            if spectrum["status"] != "exploratory":
-                lines.append(_table_row(label, f"Unavailable: {spectrum['reason']}", "—", "—", "—"))
-                continue
-            flags = [name for key, name in [("few_cycles", "few cycles"), ("near_nyquist", "near Nyquist")]
-                     if spectrum[key]]
-            cycles = f"{spectrum['cycles_in_observed_span']:.2f}"
-            if flags:
-                cycles += f" ({', '.join(flags)})"
-            lines.append(_table_row(
-                label, f"{spectrum['dominant_period']:.3f} {spectrum['time_unit']}",
-                f"{spectrum['frequency_resolution']:.6f}", cycles,
-                f"{spectrum['fraction_trend_residual_variance_explained']:.3f}",
-            ))
     if summary["memory_runs"]:
         lines += [
             "", "## Standalone memory records", "",

@@ -1,9 +1,9 @@
-"""Regression coverage for count statistics, uncertainty and exploratory spectra."""
+"""Regression coverage for count statistics, uncertainty and hardware scaling."""
 import numpy as np
 import pytest
 
 from broadcasting.analysis import (delay_axis, hardware_scaling_points,
-                                  joint_success_statistics, periodicity_summary)
+                                  joint_success_statistics)
 
 
 def test_independent_receivers_have_zero_covariance_and_correct_paired_uncertainty():
@@ -58,79 +58,6 @@ def test_unknown_dt_stays_native_and_recorded_dt_is_validated():
     assert units == "us"
     with pytest.raises(ValueError):
         delay_axis({"metadata": {"dt": -1}})
-
-
-def test_periodicity_detects_known_period_and_flags_unresolved_sweeps():
-    tau = np.arange(200) * 10
-    trace = 0.7 + 0.1 * np.cos(2 * np.pi * tau / 200) + 0.00001 * tau
-    run = {"N": 1, "sweep": {"axis": "tau", "values": tau.tolist()},
-           "fidelities": trace[:, None].tolist(), "metadata": {"dt": 4e-9}}
-    result = periodicity_summary(run)
-    assert result["dominant_period"] == pytest.approx(0.8)
-    assert result["frequency"] == pytest.approx(1.25)
-    assert result["sinusoid_amplitude_at_selected_frequency"] == pytest.approx(0.1)
-    assert not result["few_cycles"]
-    assert not result["near_nyquist"]
-    assert result["status"] == "exploratory"
-    short = dict(run, sweep={"axis": "tau", "values": [0, 10, 20]}, fidelities=[[0.8], [0.7], [0.6]])
-    assert periodicity_summary(short)["status"] == "unavailable"
-
-
-@pytest.mark.parametrize("trace", [np.full(20, 0.5), np.full(20, 0.8), np.full(20, 1.0), np.linspace(0.4, 0.9, 20)])
-def test_periodicity_does_not_promote_roundoff_of_constant_or_linear_trace(trace):
-    run = {"N": 1, "sweep": {"axis": "tau", "values": list(range(20))},
-           "fidelities": trace[:, None].tolist()}
-    result = periodicity_summary(run)
-    assert result["status"] == "unavailable"
-    assert "linear trend" in result["reason"]
-
-
-from broadcasting.analysis import autocorrelation_from_run, periodogram_from_run
-
-def _tau_run(fidelities):
-    tau = np.linspace(0, 6000, len(fidelities)).tolist()
-    return {
-        "N": 2,
-        "sweep": {"axis": "tau", "values": tau},
-        "fidelities": fidelities,
-    }
-
-def test_autocorrelation_from_run_normalized_at_zero_lag():
-    n = 40
-    tau = np.linspace(0, 6000, n)
-    trace = 0.8 + 0.1 * np.cos(2 * np.pi * tau / 1000)
-    run = _tau_run([[v, v] for v in trace])
-
-    lags, ac = autocorrelation_from_run(run)
-
-    assert lags[0] == 0.0
-    assert ac[0] == pytest.approx(1.0)
-    assert len(lags) == len(ac) == n
-
-def test_periodogram_from_run_detects_dominant_frequency():
-    n = 60
-    tau = np.linspace(0, 6000, n)
-    period = 1000.0
-    trace = 0.8 + 0.1 * np.cos(2 * np.pi * tau / period)
-    run = _tau_run([[v, v] for v in trace])
-
-    freqs, power = periodogram_from_run(run)
-    peak_freq = freqs[np.argmax(power)]
-
-    assert peak_freq == pytest.approx(1.0 / period, rel=0.15)
-
-def test_periodogram_from_run_requires_tau_axis():
-    run = {"N": 2, "sweep": {"axis": "p", "values": [0.0, 0.5]}, "fidelities": [[1.0, 1.0], [0.7, 0.75]]}
-
-    with pytest.raises(ValueError):
-        periodogram_from_run(run)
-
-@pytest.mark.parametrize("values", [[0, 0, 1], [0, 1, 3], [0, 1, float("nan")]])
-def test_periodicity_rejects_duplicate_irregular_or_nonfinite_grid(values):
-    run = {"N": 1, "sweep": {"axis": "tau", "values": values},
-           "fidelities": [[0.8], [0.7], [0.9]]}
-    with pytest.raises(ValueError):
-        periodogram_from_run(run)
 
 
 def _scaling_run(*, job="job", case="all", repeat=0, m=1, n=2,
