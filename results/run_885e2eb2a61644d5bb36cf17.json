@@ -1,0 +1,363 @@
+{
+  "experiment_kind": "memory",
+  "timestamp": "2026-05-07T08:46:54.517616",
+  "experiment_type": "hardware",
+  "backend": "ibm_fez",
+  "optimization_level": 0,
+  "job_id": "d7u8husinasc738sht6g",
+  "shots": 8192,
+  "seed": 42,
+  "n_samples": null,
+  "protocol": {
+    "M": 0,
+    "N": 1,
+    "alpha": null,
+    "use_qec": true,
+    "theta_samples": [
+      [
+        2.4314546363447995,
+        2.757554564287996
+      ]
+    ],
+    "state_prep": {
+      "theta": 2.4314546363447995,
+      "phi": 2.757554564287996,
+      "description": "Ry(theta) Rz(phi) |0>"
+    },
+    "linear_feedforward": null,
+    "outcomes_list": null
+  },
+  "sweep": {
+    "axis": "tau",
+    "unit": "dt",
+    "values": [
+      0,
+      300,
+      600,
+      900,
+      1200,
+      1500,
+      1800,
+      2100,
+      2400,
+      2700,
+      3000,
+      3300,
+      3600,
+      3900,
+      4200,
+      4500,
+      4800,
+      5100,
+      5400,
+      5700,
+      6000
+    ]
+  },
+  "fidelities": [
+    [
+      0.4661865234375
+    ],
+    [
+      0.4566650390625
+    ],
+    [
+      0.4647216796875
+    ],
+    [
+      0.4561767578125
+    ],
+    [
+      0.460205078125
+    ],
+    [
+      0.4947509765625
+    ],
+    [
+      0.4605712890625
+    ],
+    [
+      0.475341796875
+    ],
+    [
+      0.503173828125
+    ],
+    [
+      0.4700927734375
+    ],
+    [
+      0.47412109375
+    ],
+    [
+      0.485595703125
+    ],
+    [
+      0.464599609375
+    ],
+    [
+      0.4537353515625
+    ],
+    [
+      0.4674072265625
+    ],
+    [
+      0.453369140625
+    ],
+    [
+      0.479248046875
+    ],
+    [
+      0.4700927734375
+    ],
+    [
+      0.4854736328125
+    ],
+    [
+      0.466552734375
+    ],
+    [
+      0.4769287109375
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": [
+    [
+      {
+        "0": 3819,
+        "1": 4373
+      },
+      {
+        "1": 4451,
+        "0": 3741
+      },
+      {
+        "0": 3807,
+        "1": 4385
+      },
+      {
+        "1": 4455,
+        "0": 3737
+      },
+      {
+        "0": 3770,
+        "1": 4422
+      },
+      {
+        "0": 4053,
+        "1": 4139
+      },
+      {
+        "1": 4419,
+        "0": 3773
+      },
+      {
+        "1": 4298,
+        "0": 3894
+      },
+      {
+        "1": 4070,
+        "0": 4122
+      },
+      {
+        "1": 4341,
+        "0": 3851
+      },
+      {
+        "1": 4308,
+        "0": 3884
+      },
+      {
+        "1": 4214,
+        "0": 3978
+      },
+      {
+        "1": 4386,
+        "0": 3806
+      },
+      {
+        "1": 4475,
+        "0": 3717
+      },
+      {
+        "1": 4363,
+        "0": 3829
+      },
+      {
+        "1": 4478,
+        "0": 3714
+      },
+      {
+        "1": 4266,
+        "0": 3926
+      },
+      {
+        "1": 4341,
+        "0": 3851
+      },
+      {
+        "1": 4215,
+        "0": 3977
+      },
+      {
+        "0": 3822,
+        "1": 4370
+      },
+      {
+        "0": 3907,
+        "1": 4285
+      }
+    ]
+  ],
+  "metadata": {
+    "provenance": {
+      "attributions": {
+        "use_qec": {
+          "value": true,
+          "evidence": "12a9d00:qec_testing.ipynb contains only the encoded benchmark definition and lists this saved run; historical inference, no compiled circuit archived.",
+          "status": "historical notebook attribution; not an archived compiled-circuit verification"
+        }
+      },
+      "sources": [
+        {
+          "path": "results/qec513/qec513_delay_sweep_20260507_084654.json",
+          "sha256": "a105ab06c276c439796e407c4ed3e1c41ac069fce9ffc7cb548d6fa0e8754201"
+        }
+      ],
+      "archive": {
+        "path": ".local-archive/before-results-v2.tar.gz",
+        "sha256": "5210d00f69b739208253264e450135143911bf8fba5cca5a84bd8ae2f55b16a8",
+        "source_count": 215
+      },
+      "source_records": [
+        {
+          "path": "results/records/run_885e2eb2a61644d5bb36cf17.json",
+          "sha256": "f1719323199c5565539e97ec41d9e7482aac1a1949fef1ae61e01ec77c777b86"
+        }
+      ]
+    }
+  },
+  "reference_fidelities": {
+    "ideal": [
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        1.0
+      ]
+    ]
+  },
+  "schema_version": 2,
+  "record_id": "885e2eb2a61644d5bb36cf17",
+  "config": {
+    "experiment_kind": "memory",
+    "experiment_type": "hardware",
+    "backend": "ibm_fez",
+    "protocol": {
+      "M": 0,
+      "N": 1,
+      "alpha": null,
+      "use_qec": true,
+      "theta_samples": [
+        [
+          2.4314546363447995,
+          2.757554564287996
+        ]
+      ],
+      "state_prep": {
+        "theta": 2.4314546363447995,
+        "phi": 2.757554564287996,
+        "description": "Ry(theta) Rz(phi) |0>"
+      },
+      "linear_feedforward": null,
+      "outcomes_list": null
+    },
+    "sweep": {
+      "axis": "tau",
+      "unit": "dt",
+      "values": [
+        0,
+        300,
+        600,
+        900,
+        1200,
+        1500,
+        1800,
+        2100,
+        2400,
+        2700,
+        3000,
+        3300,
+        3600,
+        3900,
+        4200,
+        4500,
+        4800,
+        5100,
+        5400,
+        5700,
+        6000
+      ]
+    },
+    "shots": 8192,
+    "seed": 42,
+    "n_samples": null,
+    "optimization_level": 0
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "schema_version": 2,
+  "description": "Recovered existing printed convergence summaries; this is not newly collected data. Raw per-p sampled fidelity arrays were not saved by the original notebook.",
+  "source": {
+    "git_commit": "0b3735a51f779a77ac706de52255477fd7f5536f",
+    "path": "run_broadcast.ipynb",
+    "notebook_sha256": "d82554890fbad55e5165395141cf4a28ee9c50781573b368446f8b48b371d561",
+    "configuration_cell_index": 15,
+    "measurement_cell_index": 16,
+    "configuration_code": "# Fixed scenario for convergence study\nCONV_M, CONV_N = 1, 2\nCONV_USE_QEC = True\nCONV_ALPHA = 1.0 / np.sqrt(2)\nCONV_THETAS = np.zeros(CONV_M)           # deterministic for reproducibility\nCONV_OUTCOMES = [0] * CONV_M\nCONV_P_LIST = np.linspace(0, 1, 21).tolist()\nCONV_SEED = 0\n\nconv_config_exact = ProtocolConfig(\n    M=CONV_M, N=CONV_N, alpha=CONV_ALPHA, thetas=CONV_THETAS,\n    p_list=CONV_P_LIST, use_qec=CONV_USE_QEC,\n    outcomes_list=CONV_OUTCOMES, seed=CONV_SEED,\n)\n\n# Try to reuse a matching exact run; otherwise compute it.\ndef _matches_exact(run_path):\n    try:\n        r = load_run(run_path)\n    except Exception:\n        return False\n    meta = getattr(r, \"metadata\", {}) or {}\n    return (\n        str(meta.get(\"mode\", \"\")).lower() == \"exact\"\n        and meta.get(\"M\") == CONV_M\n        and meta.get(\"N\") == CONV_N\n        and bool(meta.get(\"use_qec\")) == CONV_USE_QEC\n        and list(meta.get(\"p_list\", [])) == CONV_P_LIST\n    )\n\nreused = next((p for p in reversed(list_runs()) if _matches_exact(p)), None)\nif reused is not None:\n    print(f\"Reusing exact run: {reused.name}\")\n    exact_conv = load_run(reused)\nelse:\n    print(\"No matching exact run found; computing now...\")\n    exact_conv = ExactBackend().run(conv_config_exact)\n    save_run(exact_conv, conv_config_exact)\n\nexact_fids = np.array(exact_conv.fidelities)  # shape (len(p_list), N)\nprint(f\"Exact fidelities shape: {exact_fids.shape}\")",
+    "measurement_code": "# Sweep over number of samples\nn_samples_sweep = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 50000, 100000]\n\np_arr = np.array(CONV_P_LIST)\nerrors_per_receiver = []   # list of arrays, shape (N,)\nsampling_results = []\n\nfor ns in n_samples_sweep:\n    cfg = ProtocolConfig(\n        M=CONV_M, N=CONV_N, alpha=CONV_ALPHA, thetas=CONV_THETAS,\n        p_list=CONV_P_LIST, use_qec=CONV_USE_QEC,\n        outcomes_list=CONV_OUTCOMES,\n        n_samples=ns, seed=CONV_SEED,\n    )\n    res = SamplingBackend(n_samples=ns, seed=CONV_SEED).run(cfg)\n    samp_fids = np.array(res.fidelities)  # (len(p), N)\n    # Area between curves per receiver (trapezoid over p)\n    diff = np.abs(samp_fids - exact_fids)\n    err = np.trapz(diff, p_arr, axis=0)   # shape (N,)\n    errors_per_receiver.append(err)\n    sampling_results.append(samp_fids)\n    print(f\"n_samples={ns:>6d}  per-receiver error={err}  total={err.sum():.4f}\")\n\nerrors_per_receiver = np.array(errors_per_receiver)  # (len(sweep), N)\ntotal_error = errors_per_receiver.sum(axis=1)",
+    "printed_output": "n_samples=    50  per-receiver error=[0.05112242 0.06406069]  total=0.1152\nn_samples=   100  per-receiver error=[0.03360319 0.04570696]  total=0.0793\nn_samples=   200  per-receiver error=[0.01823954 0.02867114]  total=0.0469\nn_samples=   500  per-receiver error=[0.01380007 0.01530059]  total=0.0291\nn_samples=  1000  per-receiver error=[0.00854257 0.00830293]  total=0.0168\nn_samples=  2000  per-receiver error=[0.00712716 0.00658012]  total=0.0137\nn_samples=  5000  per-receiver error=[0.00434473 0.00502932]  total=0.0094\nn_samples= 10000  per-receiver error=[0.00389442 0.00390928]  total=0.0078\nn_samples= 50000  per-receiver error=[0.00184828 0.00165912]  total=0.0035\nn_samples=100000  per-receiver error=[0.00127751 0.00120541]  total=0.0025\n"
+  },
+  "config": {
+    "M": 1,
+    "N": 2,
+    "alpha": 0.7071067811865475,
+    "thetas": [
+      0.0
+    ],
+    "p_list": [
+      0.0,
+      0.05,
+      0.1,
+      0.15000000000000002,
+      0.2,
+      0.25,
+      0.30000000000000004,
+      0.35000000000000003,
+      0.4,
+      0.45,
+      0.5,
+      0.55,
+      0.6000000000000001,
+      0.65,
+      0.7000000000000001,
+      0.75,
+      0.8,
+      0.8500000000000001,
+      0.9,
+      0.9500000000000001,
+      1.0
+    ],
+    "use_qec": true,
+    "outcomes_list": [
+      0
+    ],
+    "seed": 0
+  },
+  "noise_model": "independent_physical_depolarizing",
+  "metric": "sum_over_receivers_trapezoid_over_p_absolute_fidelity_error",
+  "sample_counts": [
+    50,
+    100,
+    200,
+    500,
+    1000,
+    2000,
+    5000,
+    10000,
+    50000,
+    100000
+  ],
+  "errors_per_receiver": [
+    [
+      0.05112242,
+      0.06406069
+    ],
+    [
+      0.03360319,
+      0.04570696
+    ],
+    [
+      0.01823954,
+      0.02867114
+    ],
+    [
+      0.01380007,
+      0.01530059
+    ],
+    [
+      0.00854257,
+      0.00830293
+    ],
+    [
+      0.00712716,
+      0.00658012
+    ],
+    [
+      0.00434473,
+      0.00502932
+    ],
+    [
+      0.00389442,
+      0.00390928
+    ],
+    [
+      0.00184828,
+      0.00165912
+    ],
+    [
+      0.00127751,
+      0.00120541
+    ]
+  ],
+  "precision_note": "Each receiver error was printed to 8 decimal places. Summed errors therefore have up to 1e-8 rounding uncertainty. One seed is not evidence of independent repetition variance.",
+  "record_id": "seed_zero",
+  "experiment_kind": "convergence_summary",
+  "experiment_type": "simulation",
+  "backend": "aer_sampling",
+  "fidelities": null,
+  "counts": null,
+  "raw_fidelity_grids_available": false,
+  "metadata": {
+    "provenance": {
+      "source_records": [
+        {
+          "path": "results/convergence/seed_zero.json",
+          "sha256": "008197ef845bb18b93f82207d8f089076547696e2dfd1ac13dd62c8ab6985c03"
+        }
+      ]
+    }
+  }
+}

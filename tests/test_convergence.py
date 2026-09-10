@@ -11,7 +11,7 @@ from broadcasting.protocol import BroadcastResult
 
 
 def test_seed_zero_retains_actual_grid_parameters_and_printed_errors(tmp_path):
-    study = conv.load_convergence(archive_dir=tmp_path)
+    study = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
     assert study.config.M == 1 and study.config.N == 2
     assert study.config.alpha == 1 / np.sqrt(2)
     assert study.config.seed == 0 and study.config.outcomes_list == [0]
@@ -62,11 +62,11 @@ def _fake_backends(monkeypatch, failures=None):
 
 def test_collection_persists_effective_seeds_counts_reference_and_resumes(monkeypatch, tmp_path):
     seen = _fake_backends(monkeypatch)
-    study = conv.load_convergence(archive_dir=tmp_path)
-    batch = tmp_path / "two_repeats"
-    conv.collect_convergence_repeats(study, seeds=[1, 2], sample_counts=[50, 100], batch_dir=batch, results_dir=tmp_path / "records")
+    study = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
+    identity = "two_repeats"
+    conv.collect_convergence_repeats(study, seeds=[1, 2], sample_counts=[50, 100], study_id=identity, results_dir=tmp_path)
     assert seen == [("exact", 0, None)] + [("sample", seed, count) for seed in [1, 2] for count in [50, 100]]
-    loaded = conv.load_convergence(archive_dir=tmp_path)
+    loaded = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
     assert len(loaded.repetitions) == 2
     for repetition in loaded.repetitions:
         assert repetition["complete"]
@@ -74,67 +74,124 @@ def test_collection_persists_effective_seeds_counts_reference_and_resumes(monkey
             assert sum(point["errors_per_receiver"]) == pytest.approx(2 * repetition["seed"] / point["n_samples"])
             raw = json.loads(open(point["path"]).read())
             assert raw["metadata"]["software"] == {"test": True}
-    checksums = {p: conv._digest(p) for p in tmp_path.rglob("*.json")}
-    conv.collect_convergence_repeats(loaded, seeds=[1, 2], sample_counts=[50, 100], batch_dir=batch, results_dir=tmp_path / "records")
+    checksums = {p: p.read_bytes() for p in tmp_path.glob("*.json")}
+    conv.collect_convergence_repeats(loaded, seeds=[1, 2], sample_counts=[50, 100], study_id=identity, results_dir=tmp_path)
     assert len(seen) == 5
-    assert checksums == {p: conv._digest(p) for p in tmp_path.rglob("*.json")}
+    assert checksums == {p: p.read_bytes() for p in tmp_path.glob("*.json")}
     with pytest.raises(ValueError, match="Study settings changed"):
-        conv.collect_convergence_repeats(loaded, seeds=[1, 2], sample_counts=[50], batch_dir=batch, results_dir=tmp_path / "records")
+        conv.collect_convergence_repeats(loaded, seeds=[1, 2], sample_counts=[50], study_id=identity, results_dir=tmp_path)
     with pytest.raises(ValueError, match="previously used"):
-        conv.collect_convergence_repeats(loaded, seeds=[1, 2], sample_counts=[50], batch_dir=tmp_path / "duplicate", results_dir=tmp_path / "records")
+        conv.collect_convergence_repeats(loaded, seeds=[1, 2], sample_counts=[50], study_id="duplicate", results_dir=tmp_path)
 
 
 def test_interruption_retains_finished_points_and_resumes(monkeypatch, tmp_path):
     failures = {(1, 100)}
     seen = _fake_backends(monkeypatch, failures)
-    study = conv.load_convergence(archive_dir=tmp_path)
+    study = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
     with pytest.raises(RuntimeError, match="interrupted"):
-        conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[50, 100], batch_dir=tmp_path / "resume", results_dir=tmp_path / "records")
-    loaded = conv.load_convergence(archive_dir=tmp_path)
+        conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[50, 100], study_id="resume", results_dir=tmp_path)
+    loaded = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
     assert len(loaded.repetitions[0]["points"]) == 1
     assert not loaded.repetitions[0]["complete"]
     failures.clear()
-    conv.collect_convergence_repeats(loaded, repeats=1, seeds=[1], sample_counts=[50, 100], batch_dir=tmp_path / "resume", results_dir=tmp_path / "records")
+    conv.collect_convergence_repeats(loaded, repeats=1, seeds=[1], sample_counts=[50, 100], study_id="resume", results_dir=tmp_path)
     assert seen.count(("exact", 0, None)) == 1
     assert seen.count(("sample", 1, 50)) == 1
     assert seen.count(("sample", 1, 100)) == 2
 
 
-def test_loader_rejects_changed_reference_and_excludes_other_physical_settings(monkeypatch, tmp_path):
+def test_sampled_result_is_independent_of_reference_files_and_detects_tampering(monkeypatch, tmp_path):
+    import shutil
     _fake_backends(monkeypatch)
-    study = conv.load_convergence(archive_dir=tmp_path)
-    batch = conv.collect_convergence_repeats(study, repeats=1, sample_counts=[50], batch_dir=tmp_path / "matching", results_dir=tmp_path / "records")
-    exact_path = conv._resolve_record(json.loads((batch / "study.json").read_text())["exact_path"])
-    exact = json.loads(exact_path.read_text())
-    exact["fidelities"][0][0] += 0.01
-    exact_path.write_text(json.dumps(exact))
-    with pytest.raises(ValueError, match="Incompatible convergence"):
-        conv.load_convergence(archive_dir=tmp_path)
-    manifest_path = batch / "study.json"
-    manifest = json.loads(manifest_path.read_text())
-    manifest["config"]["thetas"] = [1.0]
-    manifest_path.write_text(json.dumps(manifest))
-    assert conv.load_convergence(archive_dir=tmp_path).repetitions == []
+    source = tmp_path / "source"
+    study = conv.load_convergence(results_dir=source, seed_zero_path=conv.SEED_ZERO_PATH)
+    conv.collect_convergence_repeats(study, repeats=1, sample_counts=[50],
+                                     study_id="portable", results_dir=source)
+    copied_dir = tmp_path / "copied"
+    copied_dir.mkdir()
+    copied = copied_dir / "one_result.json"
+    shutil.copyfile(source / "run_portable_seed1_n50.json", copied)
+    shutil.rmtree(source)
+    loaded = conv.load_convergence(results_dir=copied_dir, seed_zero_path=conv.SEED_ZERO_PATH)
+    assert len(loaded.repetitions) == 1
+    assert loaded.repetitions[0]["points"][0]["errors_per_receiver"] == pytest.approx([0.02, 0.02])
+    sample = json.loads(copied.read_text())
+    sample["metadata"]["convergence"]["exact_reference"]["record"]["fidelities"][0][0] += 0.01
+    copied.write_text(json.dumps(sample))
+    with pytest.raises(ValueError, match="Incompatible convergence exact reference"):
+        conv.load_convergence(results_dir=copied_dir, seed_zero_path=conv.SEED_ZERO_PATH)
 
 
 def test_tiny_real_collection_round_trips_actual_backend(tmp_path):
-    study = conv.load_convergence(archive_dir=tmp_path)
+    study = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
     study.config = replace(study.config, N=1, p_list=[0.0, 0.2])
-    batch = conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[2], batch_dir=tmp_path / "tiny", results_dir=tmp_path / "records")
-    reference, digest = conv._reference(batch, study.config)
-    run, errors = conv._measurement(conv._measurement_path(batch, 1, 2), study.config, reference, digest)
+    identity = conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[2],
+                                               study_id="tiny", results_dir=tmp_path)
+    run = conv.load_run(tmp_path / f"run_{identity}_seed1_n2.json")
+    errors = conv._measurement(run, study.config)
     assert run["seed"] == 1 and run["n_samples"] == 2
     assert errors.shape == (1,)
+    assert conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH).repetitions == []
+
+
+def test_portable_sample_can_resume_without_the_original_exact_file(monkeypatch, tmp_path):
+    seen = _fake_backends(monkeypatch)
+    study = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
+    conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[50],
+                                     study_id="portable", results_dir=tmp_path)
+    (tmp_path / "run_portable_exact.json").unlink()
+    (tmp_path / "run_portable_seed1_n50.json").rename(tmp_path / "renamed.json")
+    loaded = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
+    before = (tmp_path / "renamed.json").read_bytes()
+    conv.collect_convergence_repeats(loaded, repeats=1, seeds=[1], sample_counts=[50],
+                                     study_id="portable", results_dir=tmp_path)
+    assert seen == [("exact", 0, None), ("sample", 1, 50)]
+    assert (tmp_path / "renamed.json").read_bytes() == before
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["renamed.json"]
 
 
 def test_original_seed_zero_curve_matches_current_physical_simulator(tmp_path):
     """A bounded 50-trajectory regression makes the seed-zero summary auditable."""
     from broadcasting.backend import SamplingBackend
     from broadcasting.simulation import logical_error_polynomial
-    study = conv.load_convergence(archive_dir=tmp_path)
+    study = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
     config = replace(study.config, seed=0, n_samples=50)
     sampled = SamplingBackend().run(config)
     exact_local = 1 - 2 * logical_error_polynomial(np.asarray(config.p_list)) / 3
     exact = np.repeat(exact_local[:, None], config.N, axis=1)
     errors = conv.fidelity_error(sampled.fidelities, exact, config.p_list)
     assert np.allclose(errors, study.seed_zero["errors_per_receiver"][0], rtol=0, atol=5e-9)
+
+
+def test_custom_store_uses_its_own_summary_without_repository_dependency(monkeypatch, tmp_path):
+    import shutil
+    _fake_backends(monkeypatch)
+    with pytest.raises(FileNotFoundError, match="supply seed_zero_path"):
+        conv.load_convergence(results_dir=tmp_path)
+    local_summary = tmp_path / "run_seed_zero.json"
+    shutil.copyfile(conv.SEED_ZERO_PATH, local_summary)
+    study = conv.load_convergence(results_dir=tmp_path)
+    conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[50],
+                                     study_id="portable", results_dir=tmp_path)
+    # An unrelated repository constant cannot become an implicit dependency.
+    monkeypatch.setattr(conv, "SEED_ZERO_PATH", tmp_path / "absent.json")
+    loaded = conv.load_convergence(results_dir=tmp_path)
+    assert len(loaded.repetitions) == 1
+    assert loaded.seed_zero["filepath"] == str(local_summary)
+    assert loaded.seed_zero["fidelities"] is None
+
+
+def test_interruption_before_first_sample_can_resume_a_renamed_exact_record(monkeypatch, tmp_path):
+    failures = {(1, 50)}
+    seen = _fake_backends(monkeypatch, failures)
+    study = conv.load_convergence(results_dir=tmp_path, seed_zero_path=conv.SEED_ZERO_PATH)
+    with pytest.raises(RuntimeError, match="interrupted"):
+        conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[50],
+                                         study_id="portable", results_dir=tmp_path)
+    (tmp_path / "run_portable_exact.json").rename(tmp_path / "renamed_exact.json")
+    failures.clear()
+    conv.collect_convergence_repeats(study, repeats=1, seeds=[1], sample_counts=[50],
+                                     study_id="portable", results_dir=tmp_path)
+    assert seen.count(("exact", 0, None)) == 1
+    assert (tmp_path / "renamed_exact.json").exists()
+    assert not (tmp_path / "run_portable_exact.json").exists()

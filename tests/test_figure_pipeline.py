@@ -31,7 +31,7 @@ def preview():
     required_paths = {
         node.value for source in cells.values() for node in ast.walk(ast.parse(source))
         if isinstance(node, ast.Constant) and isinstance(node.value, str)
-        and node.value.startswith("results/records/") and node.value.endswith(".json")
+        and node.value.startswith("results/") and node.value.endswith(".json")
     }
     if any(not (ROOT / path).is_file() for path in required_paths):
         pytest.skip("Manuscript integration requires the selected local measurement records.")
@@ -98,14 +98,49 @@ def test_six_editable_figure_cells_share_preview_export_and_source_evidence(prev
                 assert all(alias.name != "broadcasting.plotting" for alias in node.names)
 
 
-def test_rendered_typography_uses_shared_size(preview):
-    size = preview["FONT_SIZE"]
-    assert size == 12
+def test_legends_and_inset_have_smaller_readable_text(preview):
+    size, legend_size = preview["FONT_SIZE"], preview["LEGEND_FONT_SIZE"]
+    assert legend_size < size
     for number, figure in preview["manuscript_figures"].items():
         figure.canvas.draw()
-        for text in figure.findobj(Text):
-            if text.get_visible() and text.get_text():
-                assert text.get_fontsize() == size, (number, text.get_text(), text.get_fontsize())
+        for ax in figure.axes:
+            legend = ax.get_legend()
+            if legend:
+                assert all(text.get_fontsize() < size for text in legend.get_texts())
+            if ax.get_xlabel():
+                assert ax.xaxis.label.get_fontsize() == size
+            if ax.get_ylabel():
+                assert ax.yaxis.label.get_fontsize() == size
+    inset = preview["manuscript_figures"][4].axes[0].child_axes[0]
+    assert len(inset.get_xticks()) >= 5 and len(inset.get_yticks()) >= 5
+    assert all(text.get_fontsize() == preview["INSET_FONT_SIZE"]
+               for text in inset.get_xticklabels() + inset.get_yticklabels())
+    legend = preview["manuscript_figures"][6].axes[0].get_legend()
+    bounds = [text.get_window_extent() for text in legend.get_texts()]
+    centers = [(box.y0 + box.y1) / 2 for box in bounds]
+    assert max(centers) - min(centers) < 3
+    axes_bounds = preview["manuscript_figures"][6].axes[0].get_window_extent()
+    assert legend.get_window_extent().x0 >= axes_bounds.x0
+    assert legend.get_window_extent().x1 <= axes_bounds.x1
+
+
+def test_circuit_is_one_continuous_row_with_all_operations(preview):
+    figure = preview["manuscript_figures"][3]
+    assert len(figure.axes) == 1
+    original = preview["figure_3_source"]
+    drawing = preview["figure_3_drawing"]
+    assert len(drawing.data) == len(original.data)
+    assert sum(item.operation.name == "if_else" for item in drawing.data) == 3
+    # Only display labels and the initializer's presentation wrapper may differ.
+    for actual, expected in zip(drawing.data, original.data):
+        assert actual.qubits == expected.qubits and actual.clbits == expected.clbits
+        if expected.operation.name == "initialize":
+            assert actual.operation.definition.data[0].operation == expected.operation
+        elif expected.operation.name == "unitary":
+            np.testing.assert_array_equal(actual.operation.to_matrix(), expected.operation.to_matrix())
+        else:
+            assert actual.operation == expected.operation
+    assert figure.get_figwidth() > 3 * figure.get_figheight()
 
 
 def _receiver_fidelities(histogram, receivers):
@@ -206,10 +241,10 @@ def test_convergence_retains_independent_receiver_errors_and_component_totals(pr
 def test_scaling_retains_all_eligible_observations_and_receiver_ranges(preview):
     points, ax = preview["scaling_points"], preview["manuscript_figures"][6].axes[0]
     assert len(points) == len(ax.containers) == 58
-    records = {run["filename"]: run for run in preview["records"]}
-    assert len({(point["filename"], point["theta_index"]) for point in points}) == 58
+    records = {run["record_id"]: run for run in preview["records"]}
+    assert len({(point["record_id"], point["theta_index"]) for point in points}) == 58
     for point, container in zip(points, ax.containers):
-        run = records[point["filename"]]
+        run = records[point["record_id"]]
         assert run["experiment_kind"] == "broadcasting" and run["experiment_type"] == "hardware"
         assert run["optimization_level"] == 3 and run["use_qec"] is False
         zero, = np.flatnonzero(np.asarray(run["sweep"]["values"]) == 0)

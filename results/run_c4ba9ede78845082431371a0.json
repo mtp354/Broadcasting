@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-05-13T14:17:04.298172",
+  "experiment_type": "hardware",
+  "backend": "ibm_marrakesh",
+  "optimization_level": 3,
+  "job_id": "d82btog0bvlc73d240pg",
+  "shots": 8192,
+  "seed": 64,
+  "n_samples": null,
+  "protocol": {
+    "M": 1,
+    "N": 2,
+    "alpha": null,
+    "use_qec": false,
+    "theta_samples": [
+      [
+        5.92814419967864
+      ]
+    ]
+  },
+  "sweep": {
+    "axis": "tau",
+    "values": [
+      0,
+      3000,
+      6000
+    ],
+    "unit": "dt"
+  },
+  "fidelities": [
+    [
+      0.8990478515625,
+      0.8695068359375
+    ],
+    [
+      0.7620849609375,
+      0.5924072265625
+    ],
+    [
+      0.52197265625,
+      0.476318359375
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": [
+    [
+      {
+        "10": 739,
+        "00": 6626,
+        "01": 497,
+        "11": 330
+      },
+      {
+        "00": 3829,
+        "01": 1024,
+        "10": 2414,
+        "11": 925
+      },
+      {
+        "01": 1567,
+        "00": 2335,
+        "10": 1941,
+        "11": 2349
+      }
+    ]
+  ],
+  "metadata": {
+    "provenance": {
+      "sources": [
+        {
+          "path": "results/run_20260513_141704.json",
+          "sha256": "1baa8da9328886367544920a5f009aa689d07b583a948862073cd7d8b842d642"
+        },
+        {
+          "path": "results/legacy/run_20260513_141704.json",
+          "sha256": "a5b33675d38bb81314027fb3aed2fa512fc94671eeddc0a475595302126842be",
+          "relationship": "verified earlier save of same measurement"
+        }
+      ],
+      "archive": {
+        "path": ".local-archive/before-results-v2.tar.gz",
+        "sha256": "5210d00f69b739208253264e450135143911bf8fba5cca5a84bd8ae2f55b16a8",
+        "source_count": 215
+      },
+      "source_records": [
+        {
+          "path": "results/records/run_c4ba9ede78845082431371a0.json",
+          "sha256": "6c7c6c53a83b7e55018555f28564016cc7b9f265b1a239c0943d60a47e1b00e8"
+        }
+      ]
+    }
+  },
+  "experiment_kind": "broadcasting",
+  "schema_version": 2,
+  "record_id": "c4ba9ede78845082431371a0",
+  "config": {
+    "experiment_kind": "broadcasting",
+    "experiment_type": "hardware",
+    "backend": "ibm_marrakesh",
+    "protocol": {
+      "M": 1,
+      "N": 2,
+      "alpha": null,
+      "use_qec": false,
+      "theta_samples": [
+        [
+          5.92814419967864
+        ]
+      ]
+    },
+    "sweep": {
+      "axis": "tau",
+      "values": [
+        0,
+        3000,
+        6000
+      ],
+      "unit": "dt"
+    },
+    "shots": 8192,
+    "seed": 64,
+    "n_samples": null,
+    "optimization_level": 3
+  }
+}

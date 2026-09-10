@@ -19,8 +19,9 @@ import numpy as np
 from .protocol import BroadcastResult, ProtocolConfig
 
 SCHEMA_VERSION = 2
-RESULTS_DIR = Path("results/records")
+RESULTS_DIR = Path("results")
 DEFAULT_OPTIMIZATION_LEVEL = 3
+_EXECUTION_DOCUMENT_TYPES = {"execution", "hpc_execution"}
 
 
 def _default_run_suffix() -> str:
@@ -61,15 +62,14 @@ def write_run_json(data: dict[str, Any], filepath: str | Path) -> Path:
 # Save
 # ---------------------------------------------------------------------------
 
-def save_run(
+def make_run_record(
     result: BroadcastResult,
     config: ProtocolConfig,
-    filepath: str | Path | None = None,
-    results_dir: str | Path = RESULTS_DIR,
     *,
+    metadata: dict[str, Any] | None = None,
     optimization_level: int | None = None,
-) -> Path:
-    """Serialize a run to a timestamped JSON file using the unified schema.
+) -> dict[str, Any]:
+    """Build a self-contained broadcasting record without writing any files.
 
     The shape of ``result.fidelities`` is interpreted from the backend
     mode recorded in ``result.metadata["mode"]``:
@@ -79,18 +79,10 @@ def save_run(
     - ``hpc (...)``                   -> submission receipt, without measurements
 
     Executed metadata takes precedence over configuration defaults. Existing
-    paths are never replaced, including an explicitly supplied ``filepath``.
+    settings are preserved in the returned JSON-compatible dictionary.
     """
-    results_dir = Path(results_dir)
-    results_dir.mkdir(parents=True, exist_ok=True)
-
-    if filepath is None:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filepath = results_dir / f"run_{timestamp}{_default_run_suffix()}.json"
-    else:
-        filepath = Path(filepath)
-
     meta = dict(result.metadata)
+    meta.update(metadata or {})
     mode = str(meta.get("mode", "")).lower()
 
     if mode.startswith("hardware"):
@@ -198,22 +190,22 @@ def save_run(
     data.update(schema_version=SCHEMA_VERSION, experiment_kind="broadcasting",
                 record_id=uuid.uuid4().hex)
     data["sweep"]["unit"] = "dt" if sweep_axis == "tau" else "probability"
+    data["config"] = configuration_from_record(data)
+    data = json.loads(json.dumps(data, default=_json_default, allow_nan=False))
     validate_run_record(data)
-    return write_run_json(data, filepath)
+    return data
 
 
 # ---------------------------------------------------------------------------
 # Load
 # ---------------------------------------------------------------------------
 
-def save_memory_run(
+def make_memory_record(
     result: dict[str, Any],
-    filepath: str | Path | None = None,
-    results_dir: str | Path = RESULTS_DIR,
     *,
     metadata: dict[str, Any] | None = None,
-) -> Path:
-    """Save a measured one-qubit memory sweep using the common result schema.
+) -> dict[str, Any]:
+    """Build a measured one-qubit memory record without writing any files.
 
     ``result`` provides ``state_prep`` (theta and phi), ``use_qec``,
     ``tau_values``, ``backend_fidelities`` and optional ``backend_counts``.
@@ -264,16 +256,49 @@ def save_memory_run(
     if result.get("ideal_fidelities") is not None:
         reference = np.asarray(result["ideal_fidelities"], dtype=float)
         data["reference_fidelities"] = {"ideal": reference.reshape(len(sweep_values), 1).tolist()}
+    data["config"] = configuration_from_record(data)
+    data = json.loads(json.dumps(data, default=_json_default, allow_nan=False))
     validate_run_record(data)
-    if filepath is None:
-        filepath = Path(results_dir) / f"run_{data['record_id']}.json"
-    return write_run_json(data, filepath)
+    return data
+
+
+def save_run(result: BroadcastResult, config: ProtocolConfig,
+             filepath: str | Path | None = None, results_dir: str | Path = RESULTS_DIR,
+             *, optimization_level: int | None = None,
+             metadata: dict[str, Any] | None = None) -> Path:
+    """Save a self-contained broadcasting record, refusing existing destinations."""
+    data = make_run_record(result, config, metadata=metadata,
+                           optimization_level=optimization_level)
+    destination = filepath if filepath is not None else Path(results_dir) / f"run{_default_run_suffix()}.json"
+    return write_run_json(data, destination)
+
+
+def save_memory_run(result: dict[str, Any], filepath: str | Path | None = None,
+                    results_dir: str | Path = RESULTS_DIR,
+                    *, metadata: dict[str, Any] | None = None) -> Path:
+    """Save a self-contained memory record, refusing existing destinations."""
+    data = make_memory_record(result, metadata=metadata)
+    destination = filepath if filepath is not None else Path(results_dir) / f"run_{data['record_id']}.json"
+    return write_run_json(data, destination)
+
+
+def configuration_from_record(data: dict[str, Any]) -> dict[str, Any]:
+    """Expose all recorded executed settings without inventing missing metadata."""
+    return {"experiment_kind": data["experiment_kind"],
+            "experiment_type": data["experiment_type"], "backend": data.get("backend"),
+            "protocol": data["protocol"], "sweep": data["sweep"],
+            "shots": data.get("shots"), "seed": data.get("seed"),
+            "n_samples": data.get("n_samples"),
+            "optimization_level": data.get("optimization_level")}
 
 
 def validate_run_record(data: dict[str, Any]) -> None:
     """Validate record structure without estimating or changing any quantity."""
     if data.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"Expected measured-result schema_version={SCHEMA_VERSION}")
+    if data.get("experiment_kind") == "convergence_summary":
+        _validate_summary(data)
+        return
     if data.get("experiment_kind") not in {"broadcasting", "memory"}:
         raise ValueError("experiment_kind must be broadcasting or memory")
     if data.get("experiment_type") not in {"hardware", "simulation", "hpc_submission"}:
@@ -330,15 +355,93 @@ def validate_run_record(data: dict[str, Any]) -> None:
         raise ValueError("Result collection identity belongs in metadata.execution")
 
 
-def load_run(filepath: str | Path) -> dict[str, Any]:
-    """Read a canonical broadcasting or memory record and expose numeric views.
+def _validate_summary(data: dict[str, Any]) -> None:
+    if not isinstance(data.get("record_id"), str) or not data["record_id"]:
+        raise ValueError("A nonempty record_id is required")
+    if data.get("fidelities") is not None or data.get("counts") is not None:
+        raise ValueError("A convergence summary cannot claim unavailable raw measurements")
+    counts = data.get("sample_counts", [])
+    errors = np.asarray(data.get("errors_per_receiver"), dtype=float)
+    receivers = data.get("config", {}).get("N")
+    if (not counts or errors.shape != (len(counts), receivers)
+            or not np.isfinite(errors).all() or (errors < 0).any()):
+        raise ValueError("Convergence summary needs finite errors for every sample count and receiver")
+    if data.get("raw_fidelity_grids_available") is not False:
+        raise ValueError("Convergence summary must explicitly identify unavailable raw grids")
 
-    Original input formats are converted by the one-time migration script;
-    loading never consults plotting manifests or changes the saved evidence.
-    """
+
+def _read_document(filepath: str | Path) -> dict[str, Any]:
     with open(filepath, encoding="utf-8") as handle:
         raw = json.load(handle)
-    validate_run_record(raw)
+    if not isinstance(raw, dict):
+        raise ValueError(f"Result must be a JSON object: {filepath}")
+    return raw
+
+
+def _measurements(document: dict[str, Any]) -> list[dict[str, Any]]:
+    kind = document.get("document_type")
+    if kind in _EXECUTION_DOCUMENT_TYPES:
+        if document.get("schema_version") != 3:
+            raise ValueError("Expected execution schema_version=3")
+        records = document.get("measurements")
+        if not isinstance(records, list):
+            raise ValueError("Execution document needs a measurements list")
+        state = document.get("state")
+        if kind == "hpc_execution":
+            if state not in {"prepared", "running", "completed"}:
+                raise ValueError("Unknown HPC execution state")
+            if records and state == "prepared":
+                raise ValueError("Prepared HPC documents cannot contain measurements")
+        elif records and state != "collected":
+            raise ValueError("Only collected execution documents may contain measurements")
+        for record in records:
+            if not isinstance(record, dict):
+                raise ValueError("Execution measurements must be complete record objects")
+            validate_run_record(record)
+            if (record["experiment_kind"] == "convergence_summary"
+                    or record["experiment_type"] == "hpc_submission"
+                    or not record["sweep"]["values"]):
+                raise ValueError("Execution measurements must contain completed measurement grids")
+        identifiers = [record["record_id"] for record in records]
+        if len(set(identifiers)) != len(identifiers):
+            raise ValueError("Execution measurement record_id values must be unique")
+        return records
+    validate_run_record(document)
+    return [document]
+
+
+def load_runs(filepath: str | Path, *, include_summaries: bool = False) -> list[dict[str, Any]]:
+    """Read all logical measurements in one physical JSON, parsing it once.
+
+    Pending executions return an empty list. Completed tasks in a running HPC
+    document remain available. Rounded summaries are optional.
+    """
+    document = _read_document(filepath)
+    return [_run_view(record, filepath, document) for record in _measurements(document)
+            if include_summaries or record["experiment_kind"] != "convergence_summary"]
+
+
+def load_run(filepath: str | Path, *, record_id: str | None = None) -> dict[str, Any]:
+    """Read one result, selecting a case by record_id for jobs with multiple cases.
+
+    Every returned filepath names the physical JSON file. Execution provenance is
+    available in execution_record; no sidecar or external configuration is read.
+    """
+    document = _read_document(filepath)
+    records = _measurements(document)
+    if record_id is not None:
+        records = [record for record in records if record["record_id"] == record_id]
+    if not records:
+        raise ValueError(f"No matching measured record in {filepath}")
+    if len(records) != 1:
+        raise ValueError(f"Multiple measurements in {filepath}; specify record_id")
+    return _run_view(records[0], filepath, document)
+
+
+def _run_view(raw: dict[str, Any], filepath: str | Path,
+              document: dict[str, Any] | None = None) -> dict[str, Any]:
+    if raw["experiment_kind"] == "convergence_summary":
+        return {**raw, "filepath": str(filepath), "filename": Path(filepath).name}
     proto = raw["protocol"]
     sweep = raw["sweep"]
     theta_samples = proto["theta_samples"]
@@ -371,42 +474,55 @@ def load_run(filepath: str | Path) -> dict[str, Any]:
         run["state_prep"] = proto["state_prep"]
         ideal = (raw.get("reference_fidelities") or {}).get("ideal")
         run["ideal_fidelities"] = None if ideal is None else [row[0] for row in ideal]
+    if document and document.get("document_type") in _EXECUTION_DOCUMENT_TYPES:
+        run["execution_record"] = {key: value for key, value in document.items()
+                                   if key != "measurements"}
     return run
 
 
-def run_paths(results_dir: str | Path = RESULTS_DIR) -> list[Path]:
-    """Find canonical records by their schema, independent of execution layout."""
-    root = Path(results_dir)
-    if (root / "records").is_dir():
-        root = root / "records"
-    records = []
-    for path in sorted(root.rglob("*.json")):
-        try:
-            with path.open(encoding="utf-8") as handle:
-                data = json.load(handle)
-        except (OSError, ValueError) as error:
-            if path.name.startswith("run_"):
-                raise ValueError(f"Cannot read result record {path}") from error
+def run_paths(results_dir: str | Path = RESULTS_DIR, *,
+              include_summaries: bool = False) -> list[Path]:
+    """Find physical result JSON files directly inside the flat results directory."""
+    paths = []
+    for path in sorted(Path(results_dir).glob("*.json")):
+        document = _read_document(path)
+        if document.get("document_type") in _EXECUTION_DOCUMENT_TYPES:
+            if _measurements(document):
+                paths.append(path)
+        elif document.get("experiment_kind") in {"broadcasting", "memory"}:
+            validate_run_record(document)
+            paths.append(path)
+        elif include_summaries and document.get("experiment_kind") == "convergence_summary":
+            validate_run_record(document)
+            paths.append(path)
+    return paths
+
+
+def list_runs(results_dir: str | Path = RESULTS_DIR, *,
+              experiment_kind: str | None = None,
+              experiment_type: str | None = None, backend: str | None = None,
+              include_summaries: bool = False) -> list[dict[str, Any]]:
+    """Load logical measurements, expanding collected jobs into distinct cases.
+
+    Rounded convergence summaries are optional and never treated as measurements.
+    """
+    summaries = include_summaries or experiment_kind == "convergence_summary"
+    runs = []
+    for path in sorted(Path(results_dir).glob("*.json")):
+        document = _read_document(path)
+        if (document.get("document_type") not in _EXECUTION_DOCUMENT_TYPES
+                and document.get("experiment_kind") not in {"broadcasting", "memory", "convergence_summary"}):
             continue
-        if (isinstance(data, dict) and data.get("schema_version") == SCHEMA_VERSION
-                and data.get("experiment_kind") in {"broadcasting", "memory"}):
-            records.append(path)
-    return records
-
-
-def list_runs(
-    results_dir: str | Path = RESULTS_DIR,
-    *,
-    experiment_kind: str | None = None,
-    experiment_type: str | None = None,
-    backend: str | None = None,
-) -> list[dict[str, Any]]:
-    """Load measured records, optionally selecting their physical kind or backend."""
-    runs = [load_run(path) for path in run_paths(results_dir)]
-    return [run for run in runs if
-            (experiment_kind is None or run["experiment_kind"] == experiment_kind) and
-            (experiment_type is None or run["experiment_type"] == experiment_type) and
-            (backend is None or run.get("backend") == backend)]
+        if document.get("experiment_kind") == "convergence_summary" and not summaries:
+            continue
+        for record in _measurements(document):
+            if record["experiment_kind"] == "convergence_summary" and not summaries:
+                continue
+            if ((experiment_kind is None or record["experiment_kind"] == experiment_kind)
+                    and (experiment_type is None or record["experiment_type"] == experiment_type)
+                    and (backend is None or record.get("backend") == backend)):
+                runs.append(_run_view(record, path, document))
+    return runs
 
 
 # ---------------------------------------------------------------------------

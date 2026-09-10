@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Compute statistics and a Markdown report from saved unified hardware records.
 
-Reads results/records by default. Writes JSON and Markdown only; all figures are
+Reads results/ by default. Writes JSON and Markdown only; all figures are
 created in visualizations.ipynb. No hardware access or new experiment data.
 """
 from __future__ import annotations
@@ -24,13 +24,14 @@ from broadcasting.validation import dedupe_by_job, find_duplicate_jobs
 
 
 def _hardware_records(*results_dirs):
-    """Read unified records once per path, retaining distinct saved observations."""
-    by_path = {}
+    """Read each logical record once, including distinct cases sharing a job file."""
+    by_identity = {}
     for directory in results_dirs or [ROOT / RESULTS_DIR]:
         for run in list_runs(directory):
             if run["experiment_type"] == "hardware":
-                by_path.setdefault(Path(run["filepath"]).resolve(), run)
-    return [by_path[path] for path in sorted(by_path)]
+                identity = (Path(run["filepath"]).resolve(), run["record_id"])
+                by_identity.setdefault(identity, run)
+    return [by_identity[identity] for identity in sorted(by_identity)]
 
 
 def load_hardware_runs(*results_dirs):
@@ -51,6 +52,10 @@ def _histogram_points(run):
     if invalid_rates is not None and (len(invalid_rates) != len(theta_samples)
                                      or any(len(row) != len(delays) for row in invalid_rates)):
         raise ValueError(f"Sender diagnostic grid mismatch: {run['filename']}")
+    sender_counts = (run.get("metadata") or {}).get("sender_counts")
+    if sender_counts is not None and (len(sender_counts) != len(theta_samples)
+                                     or any(len(row) != len(delays) for row in sender_counts)):
+        raise ValueError(f"Sender count grid mismatch: {run['filename']}")
     points = []
     for theta_index, row in enumerate(counts_grid):
         if len(row) != len(delays):
@@ -62,6 +67,27 @@ def _histogram_points(run):
             invalid_rate = None if invalid_rates is None else invalid_rates[theta_index][sweep_index]
             if invalid_rate is not None and (not np.isfinite(invalid_rate) or not 0 <= invalid_rate <= 1):
                 raise ValueError(f"Invalid sender-outcome rate: {run['filename']}")
+            invalid_source = "saved_rate" if invalid_rate is not None else None
+            if sender_counts is not None:
+                histogram = sender_counts[theta_index][sweep_index]
+                width = int(run["N"]).bit_length()
+                invalid_count, sender_shots = 0, 0
+                for bits, count in histogram.items():
+                    clean = bits.replace(" ", "")
+                    if (len(clean) != run["M"] * width or set(clean) - {"0", "1"}
+                            or not isinstance(count, int) or isinstance(count, bool) or count < 0):
+                        raise ValueError(f"Invalid sender histogram: {run['filename']}")
+                    sender_shots += count
+                    value = int(clean, 2)
+                    if any(((value >> (sender * width)) & ((1 << width) - 1)) > run["N"]
+                           for sender in range(run["M"])):
+                        invalid_count += count
+                if sender_shots != statistics["shots"]:
+                    raise ValueError(f"Sender and receiver shot totals disagree: {run['filename']}")
+                measured_rate = invalid_count / sender_shots
+                if invalid_rate is not None and not np.isclose(invalid_rate, measured_rate, atol=1e-12, rtol=0):
+                    raise ValueError(f"Saved invalid sender rate disagrees with counts: {run['filename']}")
+                invalid_rate, invalid_source = measured_rate, "sender_counts"
             points.append({
                 "record_id": run["record_id"],
                 "filename": run["filename"],
@@ -73,6 +99,7 @@ def _histogram_points(run):
                 "sweep_index": sweep_index,
                 "tau_dt": delays[sweep_index],
                 "invalid_sender_rate": invalid_rate,
+                "invalid_sender_rate_source": invalid_source,
                 **statistics,
             })
     fidelities = np.asarray([point["local_fidelities"] for point in points]).reshape(
@@ -105,10 +132,42 @@ def _run_summary(run):
     metadata = run.get("metadata") or {}
     invalid_rates = [point["invalid_sender_rate"] for point in points
                      if point["invalid_sender_rate"] is not None]
+    compiled = []
+    for template in metadata.get("compiled_templates", []):
+        layout = template.get("layout") or {}
+        final_layout = layout.get("final_index_layout")
+        receiver_map = None
+        if (run["experiment_kind"] == "broadcasting" and not run["use_qec"]
+                and final_layout is not None):
+            first_receiver = run["M"] * int(run["N"]).bit_length()
+            receiver_map = final_layout[first_receiver:first_receiver + run["N"]]
+        compiled.append({
+            "sha256": template.get("sha256"),
+            "depth": template.get("depth"),
+            "operation_counts": template.get("operation_counts", {}),
+            "receiver_physical_qubits": receiver_map,
+        })
+    endpoints = []
+    if len(run["sweep"]["values"]) > 1:
+        for theta_index, theta_sample in enumerate(run["theta_samples"]):
+            trace = [point for point in points if point["theta_index"] == theta_index]
+            endpoints.append({
+                "theta_index": theta_index, "theta_sample": theta_sample,
+                **{label: {
+                    "tau_dt": point["tau_dt"], "mean_local": point["mean_local"],
+                    "local_fidelities": point["local_fidelities"],
+                    "paired_differences": [{"receivers": pair["receivers"],
+                                            **pair["fidelity_difference"]} for pair in point["pairs"]],
+                    "invalid_sender_rate": point["invalid_sender_rate"],
+                } for label, point in [("first", trace[0]), ("last", trace[-1])]},
+            })
     summary = {
         **{field: run.get(field) for field in fields},
         "execution": execution_summary(run),
         "dt_seconds": metadata.get("dt"),
+        "initial_layout": metadata.get("initial_layout"),
+        "compiled_templates": compiled,
+        "trace_endpoints": endpoints,
         "provenance": metadata.get("provenance", {}),
         "filepath": str(Path(run["filepath"]).resolve()),
         "sha256": hashlib.sha256(Path(run["filepath"]).read_bytes()).hexdigest(),
@@ -283,8 +342,41 @@ def _write_report(summary, output_dir):
                 f"{difference['estimate']:.5f} ± {difference['se']:.5f}",
             ))
     lines += [
+        "", "## Repeated delay observations", "",
+        "Rows retain each run and phase independently. Physical receiver indices follow "
+        "the final compiled layout; depth and CZ counts describe the compiled template, "
+        "not measured device duration. Endpoint intervals are conditional 95% shot intervals, "
+        "unadjusted across runs and endpoints. Differences across phase-changing repetitions "
+        "also include execution variation; these observations do not isolate phase dependence "
+        "or calibration drift.", "",
+        "| Backend / run | Phase (rad) | Physical receivers | Depth / CZ | Mean first → last | F1 − F2 first (95%) | F1 − F2 last (95%) | Invalid sender rate first → last |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for run in summary["runs"]:
+        if run["N"] != 2 or run["execution"].get("repeat_index") is None:
+            continue
+        for trace in run["trace_endpoints"]:
+            compiled = run["compiled_templates"]
+            template = compiled[trace["theta_index"]] if trace["theta_index"] < len(compiled) else {}
+            first, last = trace["first"], trace["last"]
+            invalid = [point["invalid_sender_rate"] for point in (first, last)]
+            lines.append(_table_row(
+                f"{run['backend']} / {_run_label(run, trace['theta_index'])}",
+                ", ".join(f"{phase:.5g}" for phase in trace["theta_sample"]),
+                template.get("receiver_physical_qubits", "unrecorded"),
+                f"{template.get('depth', '—')} / {template.get('operation_counts', {}).get('cz', '—')}",
+                f"{first['mean_local']['estimate']:.4f} → {last['mean_local']['estimate']:.4f}",
+                _interval_text(first["paired_differences"][0]),
+                _interval_text(last["paired_differences"][0]),
+                " → ".join("unrecorded" if rate is None else f"{rate:.4f}" for rate in invalid),
+            ))
+    lines += [
         "", "## Invalid sender outcomes", "",
-        "Saved invalid-outcome rates are retained for each histogram in `points.json`. "
+        "An outcome is invalid when any sender's binary value exceeds N. When N+1 is a "
+        "power of two there are no unused binary values, so a zero invalid rate is automatic "
+        "and does not imply an error-free circuit. Rates are recomputed from saved sender "
+        "histograms when available and checked against saved summaries and receiver shot "
+        "totals. Their evidence source is recorded per histogram in `points.json`. "
         "The range below spans recorded settings within a run; it is not an uncertainty "
         "interval. Unrecorded diagnostics remain unknown. No shots are postselected, and "
         "sender--receiver conditional analysis requires the saved aligned readouts.", "",
@@ -358,7 +450,7 @@ def _write_report(summary, output_dir):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-dir", type=Path, default=ROOT / RESULTS_DIR,
-                        help="Root searched recursively for unified experiment records.")
+                        help="Directory of measured run records and collected execution JSON files.")
     parser.add_argument("--include-results-dir", type=Path, action="append", default=[],
                         help="Additional saved-data root; repeat to compare separately stored records.")
     parser.add_argument("--output-dir", type=Path,

@@ -28,41 +28,11 @@ set -euo pipefail
 SCRATCH_DIR="${BROADCAST_SCRATCH_DIR:-/scratch/prest-hc-13/Broadcasting}"
 GLOBAL_DIR="${BROADCAST_GLOBAL_DIR:-/global/u/prest-hc-13/Broadcasting}"
 SUBMISSION_ID="${SLURM_ARRAY_JOB_ID:-${SLURM_JOB_ID:-manual_$(date +%s)_$$}}"
-SUBMISSION_DIR="${SCRATCH_DIR}/experiments/submissions/${SUBMISSION_ID}"
-CODE_DIR="${SUBMISSION_DIR}/source"
-RESULT_DIR="${SCRATCH_DIR}/results/records"
-ARCHIVE_DIR="${GLOBAL_DIR}/experiments/submissions/${SUBMISSION_ID}"
-ARCHIVE_RESULTS="${GLOBAL_DIR}/results/records"
-mkdir -p "${SUBMISSION_DIR}" "${RESULT_DIR}" "${SCRATCH_DIR}/slurm_logs"
-
-# Each submission gets its own source tree. A later submission cannot replace
-# code being imported by running array tasks. Publish the snapshot only once
-# the copy is complete, and make it read-only before any task uses it.
-(
-    flock -x 200
-    if [ ! -d "${CODE_DIR}" ]; then
-        STAGING_DIR="$(mktemp -d "${SUBMISSION_DIR}/.source.XXXXXX")"
-        trap 'rm -rf "${STAGING_DIR}"' EXIT
-        rsync -a --exclude='.git' --exclude='.venv' --exclude='__pycache__' \
-              --exclude='*.pyc' --exclude='results' --exclude='slurm_logs' \
-              --exclude='experiments' --exclude='.local-archive' "${GLOBAL_DIR}/" "${STAGING_DIR}/"
-        REVISION="$(git -C "${GLOBAL_DIR}" rev-parse HEAD 2>/dev/null || true)"
-        printf '{"submission_id":"%s","code_revision":"%s"}\n' \
-               "${SUBMISSION_ID}" "${REVISION}" > "${STAGING_DIR}/source_snapshot.json"
-        chmod -R a-w "${STAGING_DIR}"
-        mv "${STAGING_DIR}" "${CODE_DIR}"
-        trap - EXIT
-    fi
-    mkdir -p "${ARCHIVE_DIR}"
-    if [ ! -d "${ARCHIVE_DIR}/source" ]; then
-        rsync -a "${CODE_DIR}/" "${ARCHIVE_DIR}/.source/"
-        mv "${ARCHIVE_DIR}/.source" "${ARCHIVE_DIR}/source"
-    fi
-) 200>"${SUBMISSION_DIR}/.snapshot.lock"
+RESULT_DIR="${GLOBAL_DIR}/results"
+mkdir -p "${RESULT_DIR}" "${SCRATCH_DIR}/slurm_logs"
 
 module purge
 module load "${BROADCAST_PYTHON_MODULE:-Compilers/Python/3.12.13}"
-cd "${CODE_DIR}"
 if [ -f "${SCRATCH_DIR}/.venv/bin/activate" ]; then
     source "${SCRATCH_DIR}/.venv/bin/activate"
 else
@@ -96,9 +66,15 @@ else
     ARGS+=(--random-outcomes)
 fi
 if [ -n "${SEED:-}" ]; then ARGS+=(--seed "${SEED}"); fi
-python -m hpc.run_experiment "${ARGS[@]}"
-
-# Archive canonical measurements separately from submission source snapshots.
-mkdir -p "${ARCHIVE_RESULTS}"
-rsync -a --ignore-existing --include='run_*.json' --exclude='*' "${RESULT_DIR}/" "${ARCHIVE_RESULTS}/"
-echo "Done: ${SUBMISSION_ID}"
+# One persistent JSON owns the frozen source/configuration and every task result.
+# Source files exist only in this task's temporary runtime directory.
+SNAPSHOT_ARGS=(prepare --source-dir "${GLOBAL_DIR}" --results-dir "${RESULT_DIR}"
+               --submission-id "${SUBMISSION_ID}")
+if [ -z "${SLURM_ARRAY_TASK_ID:-}" ]; then SNAPSHOT_ARGS+=(--single); fi
+JOB_JSON="$(python "${GLOBAL_DIR}/hpc/archive.py" "${SNAPSHOT_ARGS[@]}" -- "${ARGS[@]}")"
+CODE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/broadcast-runtime.XXXXXX")"
+trap 'rm -rf "${CODE_DIR}"' EXIT
+python "${GLOBAL_DIR}/hpc/archive.py" extract "${JOB_JSON}" "${CODE_DIR}"
+cd "${CODE_DIR}"
+python -m hpc.run_experiment "${ARGS[@]}" --execution-file "${JOB_JSON}"
+echo "Saved self-contained job: ${JOB_JSON}"

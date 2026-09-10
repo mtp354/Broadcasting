@@ -1,6 +1,6 @@
 # Broadcasting
 
-Simulation and IBM Quantum experiments for the M-sender, N-receiver broadcasting
+Simulation and IBM Quantum measurements of the M-sender, N-receiver broadcasting
 protocol with optional `[[5,1,3]]` error correction.
 
 ## Setup
@@ -12,9 +12,9 @@ bash scripts/setup.sh
 source .venv/bin/activate
 ```
 
-Setup installs `requirements-tested.txt` and runs the offline tests excluding
-`slow`. Select `.venv/bin/python` as the notebook kernel. To check an existing
-environment or run the complete test suite:
+Select `.venv/bin/python` as the notebook kernel. Setup installs the tested
+requirements and runs the offline tests excluding `slow`. To check an existing
+environment or run every test:
 
 ```bash
 bash scripts/setup.sh --check
@@ -22,138 +22,101 @@ python -m pytest -q
 ```
 
 `BROADCAST_PYTHON` and `BROADCAST_VENV` override the interpreter and environment
-paths. IBM credentials belong in the Qiskit Runtime saved-account store. The
-execution notebook selects the saved profile and backend explicitly.
+paths. Save IBM credentials in Qiskit Runtime's account store; select the account
+and backend explicitly in the execution notebook.
 
 ## Two notebooks
 
-[run_broadcast.ipynb](run_broadcast.ipynb) generates and collects data. Its controls
-cover exact simulation, Pauli-trajectory sampling, convergence repetitions,
-broadcasting size/delay experiments, and encoded/bare single-qubit memory tests.
-All acquisition and execution switches default to `False`; Run All previews
-settings and reads saved state without contacting IBM or collecting new data.
+[run_broadcast.ipynb](run_broadcast.ipynb) contains the editable settings for exact
+simulation, Pauli-trajectory sampling, convergence repetitions, broadcasting
+size/delay measurements, and encoded/bare single-qubit memory tests. Execution
+switches default to `False`. Run All reads saved state and previews settings.
+Enable preparation, submission, and collection separately when collecting data.
 
-For hardware, edit the experiment settings, then use the separate **prepare**,
-**submit**, and **collect** cells. Preparation freezes compiled circuits and their
-configuration for review. Collection retrieves an existing job without submitting
-another. `experiments/` holds plans, circuits, submission attempts, and receipts;
-completed measurements go to `results/records/`. Resume with the same experiment
-folder. If a submission has no saved receipt, attach its existing job ID before
-continuing; ambiguous attempts are never automatically resubmitted.
+Each hardware job uses one JSON file in `results/`. It holds its configuration,
+compiled circuits, submission attempt and receipt, and measured cases. Resume
+using the same file. If submission was interrupted without a receipt, attach the
+existing job ID before continuing; an ambiguous submission is never automatically
+repeated. Completed measurements remain immutable.
 
-[visualizations.ipynb](visualizations.ipynb) contains all plotting code and produces
-manuscript Figures 1–6 from saved records. Each figure has editable source and style
-settings: dimensions, colours, lines, markers, axes, legends, and export controls.
-The notebook writes PNGs directly to `manuscript/` and records source hashes and
-plot settings in `manuscript/figure_sources.json`. Its optional final cell builds
-the manuscript PDF locally. Plotting launches no experiments.
+[visualizations.ipynb](visualizations.ipynb) contains all plotting code and exports
+all six figures directly into `manuscript/`, then optionally rebuilds the PDF.
+Each figure cell exposes its sources, dimensions, colours, lines, axes, legends,
+and layout. Shared controls include `FONT_SIZE`, `LEGEND_FONT_SIZE`,
+`INSET_FONT_SIZE`, and export resolution. Set `SAVE_MANUSCRIPT_FIGURES=False` for
+a preview without writing files, or `BUILD_MANUSCRIPT=False` to export only PNGs.
 
 | Figure | Content |
 |---|---|
-| 1 | Monte Carlo convergence: separate seed/receiver errors, total, and reference |
+| 1 | Separate Monte Carlo seed/receiver errors, their total, and a reference |
 | 2 | Encoded and bare single-qubit memory measurements |
-| 3 | Broadcasting circuit diagram |
-| 4 | Exact and sampled QEC crossover; optional analytical curves |
-| 5 | Three Marrakesh and three Kingston receiver-fidelity delay sweeps |
+| 3 | Broadcasting circuit in one uninterrupted row |
+| 4 | Exact and sampled QEC crossover, with an enlarged inset |
+| 5 | Three Marrakesh and three Kingston delay sweeps |
 | 6 | Hardware fidelity versus sender/receiver count |
 
-The optional command-line hardware workflow uses the same implementation:
+The optional `scripts/experiments.py` CLI uses the same hardware workflow. See its
+`--help`; the notebook is the primary place to edit experiment settings.
 
-```bash
-python scripts/experiments.py plan configs/hardware_scaling.json
-python scripts/experiments.py status experiments/scaling_02
-```
+## Self-contained results
 
-Run `python scripts/experiments.py --help` for prepare, submit, collect, and
-job-attachment commands. New experiments require a fresh folder when their frozen
-settings change. `configs/hardware_repeats.json` and `configs/memory.json` provide
-delay-sweep and standalone-memory templates for the same workflow.
+`results/` is flat: every file is a JSON result, with no configuration files,
+execution directories, study indexes, or migration manifests. Simulations contain
+their protocol, sweep, seed, measured values, and source evidence. Runtime job
+results additionally contain their preparation and recovery state; a job with
+several cases keeps those measurements together in the same file.
 
-## Saved records and numeric analysis
+`broadcasting.results.list_runs` exposes the measured cases as individual numeric
+records for analysis. Each case has a stable `record_id`; several cases may share
+a physical JSON path and a Runtime job ID. Use the case identity when selecting a
+measurement within such a file. Distinct jobs, cases, phase samples, and seeds
+remain separate observations.
 
-`broadcasting.results.load_run` and `list_runs` read the same schema from
-`results/records/`, regardless of collection date or execution route.
+Memory measurements use M=0, N=1 and the same sweep/receiver/count dimensions as
+broadcasting. Receiver 0 is the least-significant readout bit. Recorded backend
+`dt` converts delays to physical time; missing calibration remains unknown.
 
-| Field | Meaning |
-|---|---|
-| `record_id` | Stable identity of the saved record |
-| `experiment_type` | Simulation, hardware, or an HPC submission receipt |
-| `experiment_kind` | `broadcasting` or `memory` |
-| `protocol` | M, N, target state, QEC, and phase samples |
-| `sweep` | Axis and ordered values: depolarizing probability p or delay tau |
-| `fidelities` | Sweep × receiver, averaged over phase samples if present |
-| `per_theta_fidelities` | Optional phase sample × sweep × receiver values |
-| `counts` | Hardware phase sample × sweep joint receiver histograms |
-| `metadata.execution` | Experiment/run/repeat/case identity and execution settings |
-| `metadata.provenance` | Source hashes and evidence for attributed metadata |
+Each sampled convergence result embeds the exact reference and settings needed
+to recompute its error. Seed 0 retains the available rounded error measurements
+and states explicitly that its raw fidelity grids are unavailable. Convergence
+summaries are excluded from the default measured-record view. The inverse-square-
+root curve is an anchored reference, not a fitted exponent or confidence interval.
 
-Memory records use M=0, N=1 and the same fidelity/count dimensions. Receiver 0 is
-the least-significant readout bit. Backend `dt` converts saved delays to time;
-missing calibration values remain unknown. Distinct jobs, cases, phase samples,
-and seeds remain separate observations. A shared Runtime job does not make its
-cases independent repetitions.
+The figure export records its settings and source hashes in
+`manuscript/figure_sources.json`. This is a reproducibility record for the derived
+figures; it is not needed to load or interpret a measurement. Superseded source
+files are preserved in a verified local archive excluded from Git.
 
-Generate numeric hardware statistics and a Markdown report:
+## Numeric analysis and manuscript
 
 ```bash
 python scripts/analyze_saved_hardware.py
 ```
 
-Outputs in `analysis/hardware/` are `points.json`, `summary.json`,
-`scaling_points.json`, and `report.md`. Use `--results-dir`, repeatable
-`--include-results-dir`, and `--output-dir` to select other saved records. The
-report includes local, mean, worst-receiver and joint fidelity, paired covariance
-and asymmetry, recorded invalid sender-outcome rates, and exploratory delay
-spectra. It writes no figures. Shot intervals are conditional on each histogram;
-they do not quantify between-job drift or identify a physical noise mechanism.
+This writes JSON statistics and a Markdown report in `analysis/hardware/`, with
+no figures or new measurements. It includes local, mean, worst-receiver, and joint
+fidelity, paired covariance and asymmetry, recorded invalid sender outcomes, and
+exploratory delay spectra. Source paths and hashes connect summaries to the full
+records. Shot intervals are conditional on each histogram and do not measure
+between-job variation or identify a physical noise mechanism.
 
-## Reproducibility
-
-Record writes are atomic and refuse existing paths. Preserve source attribution,
-execution bundles, and complete saved records; edit plotting settings instead of
-measurement values. `results/migration_v2.json` maps imported source paths to
-canonical records and records their hashes. The local
-`.local-archive/before-results-v2.tar.gz` preserves the original source files and
-execution bundles; it is excluded from Git.
-
-The Monte Carlo convergence study stores each completed
-sample-size sweep and its exact reference so interrupted work can resume. Seeds
-are retained separately; the inverse-square-root line is an anchored reference,
-not a fitted convergence exponent or confidence interval.
-
-The encoded trajectory simulator retains all sampled state vectors and a decoded
-density accumulator. Its largest default convergence point needs several GB of
-memory. `ProtocolConfig` drives exact, sampled, hardware, and HPC backends; an
-`HPCBackend` submission receipt contains no completed measurement values.
-
-Build the paper after regenerating figures:
-
-```bash
-cd manuscript
-pdflatex -interaction=nonstopmode apstemplate.tex
-bibtex apstemplate
-pdflatex -interaction=nonstopmode apstemplate.tex
-pdflatex -interaction=nonstopmode apstemplate.tex
-```
-
-Open [docs/remaining_work.md](docs/remaining_work.md) for outstanding manuscript
-and release tasks.
+The manuscript includes the saved-repeat assessment and QEC implementation
+reference. Author details and the public archive/DOI will be finalized manually.
+The notebook builds LaTeX in a temporary directory and publishes the completed
+PDF to `manuscript/apstemplate.pdf`.
 
 ## Optional HPC
 
-The notebook workflow needs no cluster. For larger simulations, `hpc/` provides
-a local CLI, SLURM submission, immutable source snapshots, and archive transfer.
-Set the persistent and scratch paths before running `hpc/setup_scratch.sh`:
+`hpc/` provides a local simulation CLI, SLURM execution, and result transfer.
+Configure `BROADCAST_GLOBAL_DIR` and `BROADCAST_SCRATCH_DIR` for the cluster, then
+run `hpc/setup_scratch.sh`. Measured JSON files go directly into `results/`; source
+provenance travels inside each result. A cluster job JSON embeds its frozen source,
+requirements, arguments, and completed task measurements. Fetching accepts verified
+new tasks while preserving existing ones and rejects conflicting job histories.
+`scripts/merge_hpc_runs.py` combines only
+matching tasks with a complete intended probability grid and preserves their
+input evidence. Consult each script's `--help` or editable shell settings.
 
-```bash
-export BROADCAST_GLOBAL_DIR=/global/u/YOUR_USER/Broadcasting
-export BROADCAST_SCRATCH_DIR=/scratch/YOUR_USER/Broadcasting
-bash hpc/setup_scratch.sh
-```
-
-`hpc/slurm_broadcast.sh` submits exact or sampled simulations. Completed records
-go to `results/records/`; immutable source snapshots go to
-`experiments/submissions/JOB_ID/source/`. `hpc/backup_results.sh` and
-`hpc/fetch_results.sh` transfer measurements and snapshots into these folders.
-`scripts/merge_hpc_runs.py` combines only matching tasks with a complete intended
-probability grid. Use its `--help` for explicit inputs and destinations.
+The encoded trajectory simulator retains all sampled state vectors and a decoded
+density accumulator; the largest default convergence point requires several GB
+of memory. Plotting saved results does not rerun these simulations.

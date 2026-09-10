@@ -233,3 +233,59 @@ def test_report_references_execution_evidence_without_copying_large_payloads(tmp
         assert "aligned_shots" not in output_path.read_text()
     assert sum(output_path.stat().st_size for output_path in output.iterdir()) < 50000
     assert path.read_bytes() == original
+
+
+def test_sender_rates_are_verified_and_compiled_endpoint_summary_is_compact(tmp_path):
+    path = _write_case(tmp_path / "records", "all")
+    record = json.loads(path.read_text())
+    record["metadata"].update({
+        "sender_counts": [[{"00": 90, "11": 10}, {"01": 80, "11": 20}]],
+        "invalid_sender_rate": [[0.1, 0.2]],
+        "initial_layout": [4, 5, 6, 7],
+        "compiled_templates": [{
+            "qpy_base64": "large_payload", "sha256": "a" * 64, "depth": 80,
+            "layout": {"final_index_layout": [6, 7, 4, 5]},
+            "operation_counts": {"cz": 20, "measure": 4},
+        }],
+    })
+    path.write_text(json.dumps(record))
+    output = tmp_path / "analysis"
+    summary = analyze(output, results_dir=path.parent)
+    run = summary["runs"][0]
+    assert run["compiled_templates"][0]["receiver_physical_qubits"] == [4, 5]
+    assert "qpy_base64" not in run["compiled_templates"][0]
+    assert run["trace_endpoints"][0]["first"]["invalid_sender_rate"] == 0.1
+    assert run["trace_endpoints"][0]["last"]["invalid_sender_rate"] == 0.2
+    assert run["trace_endpoints"][0]["first"]["paired_differences"][0]["estimate"] == 0
+    points = json.loads((output / "points.json").read_text())
+    assert all(point["invalid_sender_rate_source"] == "sender_counts" for point in points)
+    assert "[4, 5] | 80 / 20" in (output / "report.md").read_text()
+
+
+@pytest.mark.parametrize("change", ["rate", "shots"])
+def test_inconsistent_sender_evidence_fails_before_outputs(tmp_path, change):
+    path = _write_case(tmp_path / "records", "all")
+    record = json.loads(path.read_text())
+    record["metadata"]["sender_counts"] = [[{"00": 90, "11": 10}] * 2]
+    if change == "rate":
+        record["metadata"]["invalid_sender_rate"] = [[0.2, 0.2]]
+        message = "invalid sender rate disagrees"
+    else:
+        record["metadata"]["sender_counts"][0][0] = {"00": 89, "11": 10}
+        message = "Sender and receiver shot totals disagree"
+    path.write_text(json.dumps(record))
+    with pytest.raises(ValueError, match=message):
+        analyze(tmp_path / "analysis", results_dir=path.parent)
+    assert not (tmp_path / "analysis").exists()
+
+
+def test_shared_file_views_preserve_distinct_record_ids(tmp_path, monkeypatch):
+    import scripts.analyze_saved_hardware as module
+    path = tmp_path / "shared-job.json"
+    records = [{"experiment_type": "hardware", "filepath": str(path),
+                "record_id": record_id, "job_id": "shared-job", "experiment_kind": "broadcasting",
+                "metadata": {"execution": {"case_id": record_id}}}
+               for record_id in ["m1_n1", "m1_n2"]]
+    monkeypatch.setattr(module, "list_runs", lambda directory: records)
+    loaded = module.load_hardware_runs(tmp_path, tmp_path)
+    assert [run["record_id"] for run in loaded] == ["m1_n1", "m1_n2"]

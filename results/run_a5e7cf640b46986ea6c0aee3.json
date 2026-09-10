@@ -1,0 +1,116 @@
+{
+  "timestamp": "2026-04-22T11:03:16.685651",
+  "experiment_type": "simulation",
+  "backend": "aer_exact",
+  "optimization_level": null,
+  "job_id": null,
+  "shots": null,
+  "seed": 42,
+  "n_samples": null,
+  "protocol": {
+    "M": 1,
+    "N": 2,
+    "alpha": 0.5773502691896258,
+    "use_qec": false,
+    "theta_samples": [
+      [
+        0.7853981633974483
+      ]
+    ]
+  },
+  "sweep": {
+    "axis": "p",
+    "values": [
+      0.0,
+      0.25,
+      0.5,
+      0.75,
+      1.0
+    ],
+    "unit": "probability"
+  },
+  "fidelities": [
+    [
+      0.9999999999999991,
+      0.9999999999999991
+    ],
+    [
+      0.8333333393125063,
+      0.8333333393125063
+    ],
+    [
+      0.6666666742297902,
+      0.6666666742297902
+    ],
+    [
+      0.5000000080219031,
+      0.5000000080219031
+    ],
+    [
+      0.333333340896457,
+      0.333333340896457
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": null,
+  "metadata": {
+    "provenance": {
+      "sources": [
+        {
+          "path": "results/run_20260422_110316.json",
+          "sha256": "3b96f58310938bd31046548f9a7c38a319f57917d1c41eaa59f822d64b587171"
+        },
+        {
+          "path": "results/legacy/run_20260422_110316.json",
+          "sha256": "f8dee16ad45fddea0958ac4504202c92ae1c0fecf0ba9af2306f1b31b35461aa",
+          "relationship": "verified earlier save of same measurement"
+        }
+      ],
+      "archive": {
+        "path": ".local-archive/before-results-v2.tar.gz",
+        "sha256": "5210d00f69b739208253264e450135143911bf8fba5cca5a84bd8ae2f55b16a8",
+        "source_count": 215
+      },
+      "source_records": [
+        {
+          "path": "results/records/run_a5e7cf640b46986ea6c0aee3.json",
+          "sha256": "913808fc7544cc2cbbd05047cc2537b25ef4bb9ac1076433cbe192ff7248d182"
+        }
+      ]
+    }
+  },
+  "experiment_kind": "broadcasting",
+  "schema_version": 2,
+  "record_id": "a5e7cf640b46986ea6c0aee3",
+  "config": {
+    "experiment_kind": "broadcasting",
+    "experiment_type": "simulation",
+    "backend": "aer_exact",
+    "protocol": {
+      "M": 1,
+      "N": 2,
+      "alpha": 0.5773502691896258,
+      "use_qec": false,
+      "theta_samples": [
+        [
+          0.7853981633974483
+        ]
+      ]
+    },
+    "sweep": {
+      "axis": "p",
+      "values": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "unit": "probability"
+    },
+    "shots": null,
+    "seed": 42,
+    "n_samples": null,
+    "optimization_level": null
+  }
+}

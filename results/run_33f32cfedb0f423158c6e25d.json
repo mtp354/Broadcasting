@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-09-08T13:27:38.171052",
+  "experiment_type": "hardware",
+  "backend": "ibm_marrakesh",
+  "optimization_level": 3,
+  "job_id": "dag4b0hhvn6c73cq3k80",
+  "shots": 4096,
+  "seed": 42,
+  "n_samples": null,
+  "protocol": {
+    "M": 1,
+    "N": 2,
+    "alpha": 0.7071067811865475,
+    "use_qec": false,
+    "theta_samples": [
+      [
+        4.862909272689599
+      ]
+    ]
+  },
+  "sweep": {
+    "axis": "tau",
+    "values": [
+      0
+    ],
+    "unit": "dt"
+  },
+  "fidelities": [
+    [
+      0.872314453125,
+      0.793701171875
+    ]
+  ],
+  "per_theta_fidelities": null,
+  "counts": [
+    [
+      {
+        "00": 2937,
+        "10": 636,
+        "11": 209,
+        "01": 314
+      }
+    ]
+  ],
+  "metadata": {
+    "dt": 4e-09,
+    "provenance": {
+      "sources": [
+        {
+          "path": "results/run_20260908_132738_ef85f542.json",
+          "sha256": "12f0c9b38626ee0dffeca8d1ebc42200f2ceb123d942082fd508f9dc2c85b478"
+        }
+      ],
+      "archive": {
+        "path": ".local-archive/before-results-v2.tar.gz",
+        "sha256": "5210d00f69b739208253264e450135143911bf8fba5cca5a84bd8ae2f55b16a8",
+        "source_count": 215
+      },
+      "source_records": [
+        {
+          "path": "results/records/run_33f32cfedb0f423158c6e25d.json",
+          "sha256": "93bc17cea16bd30886cb11ccf4c0ed7f14adaeddae2573216f3fe48d189d2393"
+        }
+      ]
+    }
+  },
+  "experiment_kind": "broadcasting",
+  "schema_version": 2,
+  "record_id": "33f32cfedb0f423158c6e25d",
+  "config": {
+    "experiment_kind": "broadcasting",
+    "experiment_type": "hardware",
+    "backend": "ibm_marrakesh",
+    "protocol": {
+      "M": 1,
+      "N": 2,
+      "alpha": 0.7071067811865475,
+      "use_qec": false,
+      "theta_samples": [
+        [
+          4.862909272689599
+        ]
+      ]
+    },
+    "sweep": {
+      "axis": "tau",
+      "values": [
+        0
+      ],
+      "unit": "dt"
+    },
+    "shots": 4096,
+    "seed": 42,
+    "n_samples": null,
+    "optimization_level": 3
+  }
+}

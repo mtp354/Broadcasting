@@ -31,7 +31,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from broadcasting.protocol import ProtocolConfig  # noqa: E402
 from broadcasting.backend import ExactBackend, SamplingBackend  # noqa: E402
-from broadcasting.results import save_run  # noqa: E402
+from broadcasting.results import make_run_record, save_run  # noqa: E402
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -93,14 +93,27 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--output-dir",
         type=str,
-        default="results/records",
+        default="results",
         help="Directory to write result JSON.",
     )
+    p.add_argument("--execution-file", type=Path, default=None,
+                   help="Embed this task in a prepared self-contained HPC job JSON.")
     return p.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> None:
-    args = _parse_args(argv)
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    args = _parse_args(arguments)
+    requested_arguments = []
+    skip = False
+    for argument in arguments:
+        if skip:
+            skip = False
+            continue
+        if argument == "--execution-file":
+            skip = True
+        elif not argument.startswith("--execution-file="):
+            requested_arguments.append(argument)
 
     p_full = np.asarray(args.p_values if args.p_values is not None else
                         np.linspace(args.p_min, args.p_max, args.p_steps), dtype=float)
@@ -120,6 +133,12 @@ def main(argv: list[str] | None = None) -> None:
         p_list = [float(p_full[idx])]
     else:
         p_list = p_full.tolist()
+
+    if args.execution_file is not None:
+        from hpc.archive import task_exists
+        if task_exists(args.execution_file, int(task_id) if task_id is not None else None):
+            print(f"Task already collected in {args.execution_file}; measurements are unchanged.")
+            return
 
     alpha = args.alpha if args.alpha is not None else 1.0 / np.sqrt(2)
 
@@ -157,9 +176,14 @@ def main(argv: list[str] | None = None) -> None:
         "sweep_task_index": int(task_id) if task_id is not None else None,
         "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
         "slurm_array_job_id": os.environ.get("SLURM_ARRAY_JOB_ID"),
+        "requested_argv": requested_arguments,
     })
 
-    out_path = save_run(result, config, results_dir=args.output_dir)
+    if args.execution_file is None:
+        out_path = save_run(result, config, results_dir=args.output_dir)
+    else:
+        from hpc.archive import publish_task
+        out_path = publish_task(args.execution_file, make_run_record(result, config))
     print(f"Saved → {out_path}")
 
 

@@ -1,10 +1,8 @@
 __pycache__/
 .pytest_cache/
 .venv/
-# Local execution bundles and the verified archive of superseded files.
-experiments/
+# Verified archives of superseded files.
 .local-archive/
-configs/*.local.json
 slurm_logs/
 
 # LaTeX build output
